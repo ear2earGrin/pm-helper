@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PM Helper — New Project</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body class="app-body">
+
+  <!-- API Key Modal -->
+  <div id="api-key-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-icon">◈</div>
+      <h2 class="modal-title">Connect your AI</h2>
+      <p class="modal-body">
+        PM Helper uses Claude to generate your PM² artefacts. Enter your Anthropic API key below.
+        It's stored locally in your browser and never sent anywhere except directly to Anthropic.
+      </p>
+      <div class="modal-field">
+        <label class="field-label" for="api-key-input">Anthropic API Key</label>
+        <input
+          type="password"
+          id="api-key-input"
+          class="field-input"
+          placeholder="sk-ant-..."
+          autocomplete="off"
+        />
+        <p class="field-hint">
+          Get your key at
+          <a href="https://console.anthropic.com" target="_blank" class="link">console.anthropic.com</a>
+        </p>
+      </div>
+      <button id="save-api-key-btn" class="btn btn-primary btn-full">
+        Save & Continue →
+      </button>
+      <p class="modal-small">Your key is stored in <code>localStorage</code> and only used to call the Anthropic API.</p>
+    </div>
+  </div>
+
+  <!-- App Shell -->
+  <div id="app-shell" class="app-shell">
+
+    <!-- App Nav -->
+    <nav class="app-nav">
+      <a href="index.html" class="brand">
+        <span class="brand-icon">◈</span>
+        <span class="brand-name">PM Helper</span>
+      </a>
+      <button id="change-key-btn" class="btn btn-ghost btn-sm" title="Change API key">
+        ⚙ API Key
+      </button>
+    </nav>
+
+    <!-- Wizard View -->
+    <div id="wizard-view" class="view">
+      <!-- Progress -->
+      <div class="wizard-progress">
+        <div class="progress-bar-wrap">
+          <div id="progress-bar" class="progress-bar" style="width: 12.5%"></div>
+        </div>
+        <div id="progress-label" class="progress-label">Step 1 of 8</div>
+      </div>
+
+      <!-- Question Container -->
+      <div class="wizard-container">
+        <div id="question-area" class="question-area">
+          <!-- Questions are rendered by JS -->
+        </div>
+
+        <!-- Navigation -->
+        <div class="wizard-nav">
+          <button id="back-btn" class="btn btn-ghost" style="visibility: hidden;">
+            ← Back
+          </button>
+          <button id="next-btn" class="btn btn-primary">
+            Next →
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading View -->
+    <div id="loading-view" class="view hidden">
+      <div class="loading-container">
+        <div class="loading-icon">◈</div>
+        <h2 class="loading-title">Generating your PM² artefacts</h2>
+        <p class="loading-sub" id="loading-sub">Analysing your project details…</p>
+        <div class="loading-steps">
+          <div class="ls-step" id="ls-1">
+            <div class="ls-dot"></div>
+            <span>Drafting Project Charter</span>
+          </div>
+          <div class="ls-step" id="ls-2">
+            <div class="ls-dot"></div>
+            <span>Building Stakeholder Matrix</span>
+          </div>
+          <div class="ls-step" id="ls-3">
+            <div class="ls-dot"></div>
+            <span>Structuring Risk Log (C→R→E)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results View -->
+    <div id="results-view" class="view hidden">
+      <div class="results-container">
+
+        <!-- Results header -->
+        <div class="results-header">
+          <div class="results-title-group">
+            <p class="results-eyebrow">PM² Artefacts · Initiating Phase</p>
+            <h1 id="results-project-name" class="results-title">Your Project</h1>
+          </div>
+          <div class="results-actions">
+            <button id="new-project-btn" class="btn btn-ghost btn-sm">+ New project</button>
+            <button id="export-btn" class="btn btn-pro btn-sm" title="Upgrade to Pro to export">
+              ↓ Export (Pro)
+            </button>
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="results-tabs">
+          <button class="rtab active" data-tab="charter">
+            <span class="rtab-icon">◉</span> Project Charter
+          </button>
+          <button class="rtab" data-tab="stakeholders">
+            <span class="rtab-icon">◈</span> Stakeholder Matrix
+          </button>
+          <button class="rtab" data-tab="risks">
+            <span class="rtab-icon">◬</span> Risk Log
+          </button>
+        </div>
+
+        <!-- Tab panels -->
+        <div id="tab-charter" class="tab-panel active">
+          <div class="panel-actions">
+            <button class="copy-btn" data-target="charter-content">Copy text</button>
+          </div>
+          <div id="charter-content" class="artefact-content"></div>
+        </div>
+
+        <div id="tab-stakeholders" class="tab-panel hidden">
+          <div class="panel-actions">
+            <button class="copy-btn" data-target="stakeholders-content">Copy text</button>
+          </div>
+          <div id="stakeholders-content" class="artefact-content"></div>
+        </div>
+
+        <div id="tab-risks" class="tab-panel hidden">
+          <div class="panel-actions">
+            <button class="copy-btn" data-target="risks-content">Copy text</button>
+          </div>
+          <div id="risks-content" class="artefact-content"></div>
+        </div>
+
+        <!-- Pro gate banner -->
+        <div class="pro-gate">
+          <div class="pro-gate-inner">
+            <div class="pro-gate-text">
+              <strong>Export to PDF & DOCX</strong>
+              <span>Generate governance-ready documents formatted to PM² standards</span>
+            </div>
+            <button class="btn btn-pro">Upgrade to Pro →</button>
+          </div>
+        </div>
+
+        <!-- PM² coaching nudge -->
+        <div id="coaching-nudge" class="coaching-nudge hidden">
+          <div class="nudge-icon">◎</div>
+          <div class="nudge-body">
+            <strong>Next step in PM²:</strong>
+            <span id="nudge-text">Once your Charter is reviewed and approved, hold a Planning Kick-off Meeting and begin building your Project Work Plan.</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Error View -->
+    <div id="error-view" class="view hidden">
+      <div class="error-container">
+        <div class="error-icon">◬</div>
+        <h2 class="error-title">Something went wrong</h2>
+        <p id="error-message" class="error-body">An unexpected error occurred.</p>
+        <button id="retry-btn" class="btn btn-primary">Try again</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="js/wizard.js"></script>
+</body>
+</html>
