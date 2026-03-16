@@ -11,35 +11,6 @@
 </head>
 <body class="app-body">
 
-  <!-- API Key Modal -->
-  <div id="api-key-modal" class="modal-overlay hidden">
-    <div class="modal">
-      <div class="modal-icon">◈</div>
-      <h2 class="modal-title">Connect your AI</h2>
-      <p class="modal-body">
-        PM Helper uses Claude to generate your PM² artefacts. Enter your Anthropic API key below.
-        It's stored locally in your browser and never sent anywhere except directly to Anthropic.
-      </p>
-      <div class="modal-field">
-        <label class="field-label" for="api-key-input">Anthropic API Key</label>
-        <input
-          type="password"
-          id="api-key-input"
-          class="field-input"
-          placeholder="sk-ant-..."
-          autocomplete="off"
-        />
-        <p class="field-hint">
-          Get your key at
-          <a href="https://console.anthropic.com" target="_blank" class="link">console.anthropic.com</a>
-        </p>
-      </div>
-      <button id="save-api-key-btn" class="btn btn-primary btn-full">
-        Save & Continue →
-      </button>
-      <p class="modal-small">Your key is stored in <code>localStorage</code> and only used to call the Anthropic API.</p>
-    </div>
-  </div>
 
   <!-- App Shell -->
   <div id="app-shell" class="app-shell">
@@ -50,9 +21,6 @@
         <span class="brand-icon">◈</span>
         <span class="brand-name">PM Helper</span>
       </a>
-      <button id="change-key-btn" class="btn btn-ghost btn-sm" title="Change API key">
-        ⚙ API Key
-      </button>
     </nav>
 
     <!-- Wizard View -->

@@ -7,10 +7,8 @@
 
 // ── Config ──────────────────────────────────────────────────
 const CONFIG = {
-  API_ENDPOINT: 'https://api.anthropic.com/v1/messages',
-  MODEL: 'claude-haiku-4-5-20251001',   // Fast model for Sprint 0 — swap to sonnet for richer output
-  MAX_TOKENS: 4096,
-  API_KEY_STORAGE: 'pmhelper_api_key',
+  // Replace this with your deployed Cloudflare Worker URL after running: wrangler deploy
+  WORKER_ENDPOINT: 'https://pm-helper-api.mindarvokn.workers.dev',
 };
 
 // ── Wizard Questions ─────────────────────────────────────────
@@ -125,42 +123,7 @@ const dom = {
   coachingNudge: $('coaching-nudge'),
 };
 
-// ── API Key Management ────────────────────────────────────────
-function getApiKey() {
-  return localStorage.getItem(CONFIG.API_KEY_STORAGE) || '';
-}
-
-function saveApiKey(key) {
-  localStorage.setItem(CONFIG.API_KEY_STORAGE, key.trim());
-}
-
-function showApiModal() {
-  dom.apiModal.classList.remove('hidden');
-  dom.apiKeyInput.value = getApiKey();
-  dom.apiKeyInput.focus();
-}
-
-function hideApiModal() {
-  dom.apiModal.classList.add('hidden');
-}
-
-dom.saveKeyBtn.addEventListener('click', () => {
-  const key = dom.apiKeyInput.value.trim();
-  if (!key.startsWith('sk-ant-')) {
-    dom.apiKeyInput.style.borderColor = 'var(--danger)';
-    dom.apiKeyInput.placeholder = 'Must start with sk-ant-...';
-    return;
-  }
-  dom.apiKeyInput.style.borderColor = '';
-  saveApiKey(key);
-  hideApiModal();
-});
-
-dom.apiKeyInput.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') dom.saveKeyBtn.click();
-});
-
-dom.changeKeyBtn.addEventListener('click', showApiModal);
+// ── API Key Management (removed — key is server-side) ─────────
 
 // ── View Switching ────────────────────────────────────────────
 function showView(viewId) {
@@ -354,32 +317,19 @@ Generate at least 5 stakeholders across different PM² layers and at least 4 ris
 
 // ── API Call ──────────────────────────────────────────────────
 async function callClaudeAPI(prompt) {
-  const apiKey = getApiKey();
-  if (!apiKey) throw new Error('No API key set');
-
-  const response = await fetch(CONFIG.API_ENDPOINT, {
+  const response = await fetch(CONFIG.WORKER_ENDPOINT, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true',
-    },
-    body: JSON.stringify({
-      model: CONFIG.MODEL,
-      max_tokens: CONFIG.MAX_TOKENS,
-      messages: [{ role: 'user', content: prompt }],
-    }),
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt }),
   });
 
   if (!response.ok) {
     const err = await response.json().catch(() => ({}));
-    const msg = err?.error?.message || `API error ${response.status}`;
-    throw new Error(msg);
+    throw new Error(err?.error || `API error ${response.status}`);
   }
 
   const data = await response.json();
-  const text = data.content?.[0]?.text || '';
+  const text = data.text || '';
 
   // Strip any accidental markdown fences
   const clean = text.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
@@ -711,12 +661,6 @@ function renderResults(artefacts) {
 
 // ── Init ──────────────────────────────────────────────────────
 function init() {
-  // Check for API key
-  if (!getApiKey()) {
-    showApiModal();
-  }
-
-  // Render first question
   renderQuestion(0);
 }
 
