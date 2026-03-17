@@ -616,9 +616,13 @@ function renderResults(artefacts) {
   renderStakeholders(artefacts.stakeholders);
   renderRisks(artefacts.risks);
 
-  // Init planning tools with project name pre-filled
+  // Init planning tools with project context pre-filled
   if (typeof initTools === 'function') {
-    initTools(artefacts.charter?.projectName || state.answers.projectName || 'My Project');
+    initTools(
+      artefacts.charter?.projectName || state.answers.projectName || 'My Project',
+      artefacts,
+      state.answers
+    );
   }
 
   // Show coaching nudge

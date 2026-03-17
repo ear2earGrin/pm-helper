@@ -24,14 +24,20 @@ function escapeAttr(str) {
 let _nodeCounter = 100;
 function newNodeId() { return 'n' + (++_nodeCounter); }
 
-function makeTreeState(rootLabel, childLabels) {
+// items = array of { label, ghost?, children?: [{label, ghost?}] }
+function makeTreeState(rootLabel, items) {
   const rootId = newNodeId();
   const state = { rootId, nodes: {} };
-  state.nodes[rootId] = { id: rootId, label: rootLabel, children: [] };
-  for (const label of childLabels) {
+  state.nodes[rootId] = { id: rootId, label: rootLabel, ghost: false, children: [] };
+  for (const item of items) {
     const id = newNodeId();
-    state.nodes[id] = { id, label, children: [] };
+    state.nodes[id] = { id, label: item.label || '', ghost: !!item.ghost, children: [] };
     state.nodes[rootId].children.push(id);
+    for (const child of (item.children || [])) {
+      const cid = newNodeId();
+      state.nodes[cid] = { id: cid, label: child.label || '', ghost: !!child.ghost, children: [] };
+      state.nodes[id].children.push(cid);
+    }
   }
   return state;
 }
@@ -74,11 +80,13 @@ function buildNodeHTML(state, nodeId, treeType) {
   const isRoot = nodeId === state.rootId;
   const depth = getNodeDepth(state, nodeId);
   const placeholder = treeType === 'pbs' ? getPbsPlaceholder(depth) : getWbsPlaceholder(depth);
-  const rootClass = isRoot ? ' root-node' : '';
+  const rootClass = isRoot ? ' root-node' : (node.ghost ? ' ghost-node' : '');
+  const displayValue = node.ghost ? '' : node.label;
+  const displayPlaceholder = node.ghost ? '...' : placeholder;
 
   let html = '<div class="tree-node" data-node-id="' + nodeId + '">';
   html += '<div class="tree-node-inner' + rootClass + '">';
-  html += '<input type="text" class="tree-node-label" value="' + escapeAttr(node.label) + '" placeholder="' + escapeAttr(placeholder) + '" data-node-id="' + nodeId + '" />';
+  html += '<input type="text" class="tree-node-label' + (node.ghost ? ' ghost-label' : '') + '" value="' + escapeAttr(displayValue) + '" placeholder="' + escapeAttr(displayPlaceholder) + '" data-node-id="' + nodeId + '" />';
   html += '<button class="tree-add-btn" data-action="add" data-node-id="' + nodeId + '" title="Add child">+</button>';
   if (!isRoot) {
     html += '<button class="tree-del-btn" data-action="delete" data-node-id="' + nodeId + '" title="Remove">×</button>';
@@ -105,7 +113,15 @@ function renderTree(state, containerId, treeType) {
   container.querySelectorAll('.tree-node-label').forEach(function(input) {
     input.addEventListener('input', function() {
       const nid = this.dataset.nodeId;
-      if (state.nodes[nid]) state.nodes[nid].label = this.value;
+      if (state.nodes[nid]) {
+        state.nodes[nid].label = this.value;
+        // Promote ghost to real node when user starts typing
+        if (state.nodes[nid].ghost && this.value.length > 0) {
+          state.nodes[nid].ghost = false;
+          this.classList.remove('ghost-label');
+          this.closest('.tree-node-inner').classList.remove('ghost-node');
+        }
+      }
     });
   });
 
@@ -149,17 +165,44 @@ function deleteTreeNode(state, nodeId, containerId, treeType) {
 // ── WBS ──────────────────────────────────────────────────────
 
 var wbsState;
+var _lastWbsItems = null;
+
 function resetWBS() {
-  wbsState = makeTreeState(wbsState ? wbsState.nodes[wbsState.rootId].label : 'My Project', ['Planning', 'Execution', 'Closeout']);
+  const name = wbsState ? wbsState.nodes[wbsState.rootId].label : 'My Project';
+  const items = _lastWbsItems || defaultWbsItems();
+  wbsState = makeTreeState(name, items);
   renderTree(wbsState, 'wbs-tree', 'wbs');
+}
+
+function defaultWbsItems() {
+  return [
+    { label: 'Project Management', children: [{ label: '', ghost: true }, { label: '', ghost: true }] },
+    { label: 'Requirements', children: [{ label: '', ghost: true }, { label: '', ghost: true }] },
+    { label: 'Delivery', children: [{ label: '', ghost: true }, { label: '', ghost: true }] },
+    { label: '', ghost: true },
+  ];
 }
 
 // ── PBS ──────────────────────────────────────────────────────
 
 var pbsState;
+var _lastPbsItems = null;
+
 function resetPBS() {
-  pbsState = makeTreeState(pbsState ? pbsState.nodes[pbsState.rootId].label : 'My Project', ['Planning activities', 'Execution activities', 'Monitoring activities']);
+  const name = pbsState ? pbsState.nodes[pbsState.rootId].label : 'My Project';
+  const items = _lastPbsItems || defaultPbsItems();
+  pbsState = makeTreeState(name, items);
   renderTree(pbsState, 'pbs-tree', 'pbs');
+}
+
+function defaultPbsItems() {
+  return [
+    { label: 'Initiating', children: [{ label: 'Draft Project Charter' }, { label: 'Identify Stakeholders' }, { label: '', ghost: true }] },
+    { label: 'Planning', children: [{ label: 'Create WBS' }, { label: 'Develop Schedule' }, { label: 'Estimate Costs' }, { label: '', ghost: true }] },
+    { label: 'Executing', children: [{ label: '', ghost: true }, { label: '', ghost: true }, { label: '', ghost: true }] },
+    { label: 'Monitoring & Control', children: [{ label: 'Track Progress' }, { label: 'Manage Risks' }, { label: '', ghost: true }] },
+    { label: 'Closing', children: [{ label: 'Lessons Learned' }, { label: 'Project Sign-off' }, { label: '', ghost: true }] },
+  ];
 }
 
 // ── Stakeholders ──────────────────────────────────────────────
@@ -332,42 +375,144 @@ function renderGantt() {
 
 // ── initTools — called after AI results are rendered ─────────
 
-function initTools(projectName) {
+function initTools(projectName, artefacts, answers) {
   const name = projectName || 'My Project';
 
-  // Reset counters so IDs don't clash on re-init
+  // Reset counters
   shRowCount = 0;
   costRowCount = 0;
   ganttRowCount = 0;
-
-  // Clear any existing rows (for re-runs)
   ['sh-tbody', 'cost-activities', 'gantt-tbody'].forEach(function(id) {
     const el = document.getElementById(id);
     if (el) el.innerHTML = '';
   });
 
-  // Trees
-  wbsState = makeTreeState(name, ['Planning', 'Execution', 'Closeout']);
-  pbsState = makeTreeState(name, ['Planning activities', 'Execution activities', 'Monitoring activities']);
+  // ── WBS: Level 1 = AI-generated in-scope items ──────────────
+  const inScope = (artefacts && artefacts.charter && artefacts.charter.scope && artefacts.charter.scope.inScope) || [];
+
+  const wbsItems = inScope.slice(0, 6).map(function(item) {
+    // Truncate long labels
+    const label = item.length > 40 ? item.slice(0, 38) + '…' : item;
+    return {
+      label: label,
+      children: [{ label: '', ghost: true }, { label: '', ghost: true }]
+    };
+  });
+
+  // Always add "Project Management" if not already in scope
+  const hasPM = wbsItems.some(function(i) { return i.label.toLowerCase().includes('project manag'); });
+  if (!hasPM) {
+    wbsItems.unshift({
+      label: 'Project Management',
+      children: [
+        { label: 'Project Charter' },
+        { label: 'Project Work Plan' },
+        { label: '', ghost: true }
+      ]
+    });
+  }
+
+  // Add ghost node at end for user to expand
+  wbsItems.push({ label: '', ghost: true });
+
+  _lastWbsItems = wbsItems;
+  wbsState = makeTreeState(name, wbsItems);
   renderTree(wbsState, 'wbs-tree', 'wbs');
+
+  // ── PBS: PM² phases with context-aware activities ───────────
+  const risks = (artefacts && artefacts.risks) || [];
+  const riskActions = risks.slice(0, 2).map(function(r) {
+    return { label: r.responseAction ? r.responseAction.slice(0, 40) : 'Manage: ' + (r.cause || '').slice(0, 30) };
+  });
+
+  const pbsItems = [
+    {
+      label: 'Initiating',
+      children: [
+        { label: 'Draft Project Charter' },
+        { label: 'Identify Stakeholders' },
+        { label: 'Define Scope & Objectives' },
+        { label: '', ghost: true }
+      ]
+    },
+    {
+      label: 'Planning',
+      children: [
+        { label: 'Build WBS & PBS' },
+        { label: 'Develop Project Schedule' },
+        { label: 'Estimate Costs & Budget' },
+        { label: 'Plan Risk Responses' },
+        { label: '', ghost: true }
+      ]
+    },
+    {
+      label: 'Executing',
+      children: inScope.slice(0, 3).map(function(item) {
+        return { label: 'Deliver: ' + (item.length > 30 ? item.slice(0, 28) + '…' : item) };
+      }).concat([{ label: '', ghost: true }, { label: '', ghost: true }])
+    },
+    {
+      label: 'Monitoring & Control',
+      children: [
+        { label: 'Track Progress vs. Plan' },
+        { label: 'Report to Steering Committee' },
+      ].concat(riskActions).concat([{ label: '', ghost: true }])
+    },
+    {
+      label: 'Closing',
+      children: [
+        { label: 'Lessons Learned Review' },
+        { label: 'Project Acceptance Sign-off' },
+        { label: 'Archive Project Documents' },
+        { label: '', ghost: true }
+      ]
+    },
+  ];
+
+  _lastPbsItems = pbsItems;
+  pbsState = makeTreeState(name, pbsItems);
   renderTree(pbsState, 'pbs-tree', 'pbs');
 
-  // Stakeholders
-  addStakeholderRow('Project Sponsor', 'Sponsor', 'H', 'H', 'Monthly steering committee');
-  addStakeholderRow('End Users', 'End User', 'H', 'M', 'Regular demos and feedback sessions');
+  // ── Stakeholders: seed from AI stakeholder matrix ───────────
+  const aiStakeholders = (artefacts && artefacts.stakeholders) || [];
+  if (aiStakeholders.length > 0) {
+    aiStakeholders.slice(0, 6).forEach(function(sh) {
+      const interest = (sh.interest || 'M').charAt(0).toUpperCase();
+      const influence = (sh.influence || 'M').charAt(0).toUpperCase();
+      addStakeholderRow(
+        sh.nameOrGroup || sh.role || '',
+        sh.role || '',
+        interest,
+        influence,
+        sh.engagementStrategy || ''
+      );
+    });
+  } else {
+    addStakeholderRow('Project Sponsor', 'Sponsor', 'H', 'H', 'Monthly steering committee');
+    addStakeholderRow('End Users', 'End User', 'H', 'M', 'Regular demos and feedback sessions');
+  }
 
-  // Cost
-  addCostRow('Requirements & analysis', 2000);
-  addCostRow('Design & prototyping', 5000);
-  addCostRow('Development', 18000);
+  // ── Cost: seed with activities from in-scope items ──────────
+  if (inScope.length > 0) {
+    inScope.slice(0, 4).forEach(function(item) {
+      addCostRow(item.length > 35 ? item.slice(0, 33) + '…' : item, '');
+    });
+  } else {
+    addCostRow('Requirements & analysis', '');
+    addCostRow('Design & prototyping', '');
+    addCostRow('Development', '');
+  }
+  addCostRow('Testing & QA', '');
+  addCostRow('Project Management', '');
   recalcCosts();
 
-  // Gantt
+  // ── Gantt: seed with PBS phases as tasks ────────────────────
   const today = GANTT_TODAY;
-  const d = new Date(today);
-  const w1 = new Date(d); w1.setDate(d.getDate() + 7);
-  const w3 = new Date(d); w3.setDate(d.getDate() + 21);
-  addGanttRow('Requirements gathering', today, 5);
-  addGanttRow('Design', w1.toISOString().slice(0, 10), 7);
-  addGanttRow('Development', w3.toISOString().slice(0, 10), 14);
+  const d0 = new Date(today);
+  function addWeeks(d, w) { const n = new Date(d); n.setDate(n.getDate() + w * 7); return n.toISOString().slice(0, 10); }
+  addGanttRow('Initiating', today, 5);
+  addGanttRow('Planning', addWeeks(d0, 1), 10);
+  addGanttRow('Executing', addWeeks(d0, 3), 30);
+  addGanttRow('Monitoring & Control', addWeeks(d0, 3), 35);
+  addGanttRow('Closing', addWeeks(d0, 12), 5);
 }
