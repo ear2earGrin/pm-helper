@@ -258,23 +258,29 @@ Return ONLY valid JSON — no markdown, no preamble, no explanation. The JSON mu
   "charter": {
     "projectName": "string",
     "phase": "Initiating",
-    "objective": "string — 2-3 sentences, clear and measurable",
+    "background": "1-2 sentences: business context and why this project is needed now",
+    "objective": "string — 2-3 sentences, SMART, clear and measurable",
+    "deliverables": ["key output/deliverable 1", "key output/deliverable 2"],
     "scope": {
-      "inScope": ["array", "of", "in-scope", "deliverables"],
-      "outOfScope": ["array", "of", "explicitly", "excluded", "items"]
+      "inScope": ["in-scope item 1", "in-scope item 2"],
+      "outOfScope": ["explicitly excluded item 1", "explicitly excluded item 2"]
     },
     "roles": {
       "projectOwner": "string",
       "businessManager": "string — infer from context or state TBD",
       "projectManager": "TBD",
-      "userRepresentatives": ["array", "of", "user", "rep", "groups"],
+      "userRepresentatives": ["user group 1", "user group 2"],
       "solutionProvider": "TBD"
     },
+    "milestones": [
+      {"milestone": "milestone name", "target": "date or period e.g. Week 2"}
+    ],
     "timeline": "string",
     "budget": "string",
-    "constraints": ["array", "of", "project", "constraints"],
-    "assumptions": ["array", "of", "project", "assumptions"],
-    "successCriteria": ["array", "of", "measurable", "success", "criteria"],
+    "constraints": ["constraint 1", "constraint 2"],
+    "assumptions": ["assumption 1", "assumption 2"],
+    "successCriteria": ["measurable criterion 1", "measurable criterion 2"],
+    "governance": "Brief statement on steering committee, phase gates, and escalation path",
     "approvalNote": "This Project Charter is to be reviewed and approved by the Project Steering Committee at the Initiating Phase Gate."
   },
   "stakeholders": [
@@ -306,41 +312,31 @@ Return ONLY valid JSON — no markdown, no preamble, no explanation. The JSON mu
   "wbs": {
     "children": [
       {
-        "label": "Level-1 deliverable group (noun phrase, e.g. Project Management, System Design)",
+        "label": "PM² Phase (Initiating | Planning | Executing | Monitoring & Control | Closing)",
         "children": [
-          {"label": "Level-2 sub-deliverable (noun, e.g. Project Charter)"},
-          {"label": "Level-2 sub-deliverable"}
+          {"label": "Work package or activity — verb phrase specific to this project"},
+          {"label": "Another work package for this phase"}
         ]
       }
     ]
   },
-  "pbs": [
-    {
-      "phase": "Initiating",
-      "activities": ["Verb-phrase activity specific to this project", "e.g. Conduct stakeholder identification workshop"]
-    },
-    {
-      "phase": "Planning",
-      "activities": ["Verb-phrase activity", "e.g. Develop detailed WBS and cost estimates"]
-    },
-    {
-      "phase": "Executing",
-      "activities": ["Verb-phrase activity specific to delivering this project's outputs"]
-    },
-    {
-      "phase": "Monitoring & Control",
-      "activities": ["Verb-phrase activity", "e.g. Review progress against baseline weekly"]
-    },
-    {
-      "phase": "Closing",
-      "activities": ["Verb-phrase activity", "e.g. Conduct lessons-learned review session"]
-    }
-  ]
+  "pbs": {
+    "children": [
+      {
+        "label": "Top-level product component (noun, e.g. Web Application, Database, Documentation)",
+        "children": [
+          {"label": "Sub-component or feature (noun, e.g. User Authentication Module)"},
+          {"label": "Another sub-component"}
+        ]
+      }
+    ]
+  }
 }
 
-Rules:
-- WBS = WHAT will be produced (deliverables, nouns). Include 4-6 Level-1 groups. Always include a "Project Management" group. Each group should have 2-4 Level-2 sub-deliverables specific to this project.
-- PBS = HOW work gets done (activities, verb phrases) organised by PM² phase. Each phase must have 3-5 activities that are specific to THIS project — not generic boilerplate.
+Critical rules — read carefully:
+- WBS = Work Breakdown Structure = WHAT WORK must be done. Organise by PM² phases (Initiating, Planning, Executing, Monitoring & Control, Closing). Each phase has 3-5 specific work packages/activities (verb phrases) for THIS project.
+- PBS = Product Breakdown Structure = WHAT PRODUCT will be built. Decompose the solution/product into its components (nouns). 3-5 top-level components, each with 2-4 sub-components. Do NOT use PM² phase names here — these are product traits, not project management activities.
+- Charter: milestones array must have at least 4 entries covering key project phases.
 - Generate at least 5 stakeholders across different PM² layers and at least 4 risks.
 - All content must be specific to this project — no generic placeholder text.`;
 }
@@ -456,44 +452,57 @@ function renderCharter(charter) {
   const el = $('charter-content');
   if (!el) return;
 
-  const inScope = (charter.scope?.inScope || []).map((i) => `<li>${i}</li>`).join('');
-  const outScope = (charter.scope?.outOfScope || []).map((i) => `<li>${i}</li>`).join('');
-  const criteria = (charter.successCriteria || []).map((i) => `<li>${i}</li>`).join('');
+  const inScope    = (charter.scope?.inScope || []).map((i) => `<li>◈ ${i}</li>`).join('');
+  const outScope   = (charter.scope?.outOfScope || []).map((i) => `<li>✕ ${i}</li>`).join('');
+  const deliverables = (charter.deliverables || []).map((i) => `<li>${i}</li>`).join('');
+  const criteria   = (charter.successCriteria || []).map((i) => `<li>${i}</li>`).join('');
   const constraints = (charter.constraints || []).map((i) => `<li>${i}</li>`).join('');
   const assumptions = (charter.assumptions || []).map((i) => `<li>${i}</li>`).join('');
-  const ureps = (charter.roles?.userRepresentatives || []).join(', ');
+  const ureps      = (charter.roles?.userRepresentatives || []).join(', ');
+  const milestones = (charter.milestones || []).map((m) =>
+    `<tr><td style="padding:7px 12px;border-bottom:1px solid var(--border-subtle);font-size:13px;">${m.milestone}</td><td style="padding:7px 12px;border-bottom:1px solid var(--border-subtle);font-size:13px;font-family:var(--font-mono);color:var(--accent-text);">${m.target}</td></tr>`
+  ).join('');
 
   el.innerHTML = `
     <div class="charter-section">
       <div class="cs-header">
         <span class="cs-title">Project Charter</span>
-        <span class="cs-badge">Phase: ${charter.phase}</span>
+        <span class="cs-badge">PM² · ${charter.phase || 'Initiating'} Phase</span>
       </div>
       <div class="cs-body">
-        <div class="cs-value">
-          <h2 style="font-family: var(--font-display); font-size: 22px; margin-bottom: 8px;">${charter.projectName}</h2>
-        </div>
+        <h2 style="font-family:var(--font-display);font-size:22px;margin-bottom:${charter.background ? '12px' : '0'};">${charter.projectName}</h2>
+        ${charter.background ? `<p style="font-size:14px;color:var(--text-secondary);line-height:1.7;">${charter.background}</p>` : ''}
       </div>
     </div>
 
     <div class="charter-section">
       <div class="cs-header"><span class="cs-title">Project Objective</span></div>
-      <div class="cs-body"><div class="cs-value">${charter.objective}</div></div>
+      <div class="cs-body"><p style="font-size:14px;line-height:1.75;color:var(--text-primary);">${charter.objective}</p></div>
     </div>
 
+    ${deliverables ? `
     <div class="charter-section">
-      <div class="cs-header"><span class="cs-title">Scope</span></div>
+      <div class="cs-header"><span class="cs-title">Key Deliverables</span></div>
+      <div class="cs-body">
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--text-primary);">
+          ${deliverables}
+        </ul>
+      </div>
+    </div>` : ''}
+
+    <div class="charter-section">
+      <div class="cs-header"><span class="cs-title">Project Scope</span></div>
       <div class="cs-body">
         <div class="cs-grid">
           <div>
-            <p style="font-size:12px;font-family:var(--font-mono);color:var(--accent-text);margin-bottom:8px;">IN SCOPE</p>
-            <ul style="list-style:none;display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--text-primary);">
+            <p style="font-size:11px;font-family:var(--font-mono);color:var(--accent-text);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">In Scope</p>
+            <ul style="list-style:none;display:flex;flex-direction:column;gap:7px;font-size:14px;color:var(--text-primary);">
               ${inScope || '<li style="color:var(--text-muted)">—</li>'}
             </ul>
           </div>
           <div>
-            <p style="font-size:12px;font-family:var(--font-mono);color:var(--danger);margin-bottom:8px;">OUT OF SCOPE</p>
-            <ul style="list-style:none;display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--text-primary);">
+            <p style="font-size:11px;font-family:var(--font-mono);color:var(--danger);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">Out of Scope</p>
+            <ul style="list-style:none;display:flex;flex-direction:column;gap:7px;font-size:14px;color:var(--text-primary);">
               ${outScope || '<li style="color:var(--text-muted)">—</li>'}
             </ul>
           </div>
@@ -505,42 +514,64 @@ function renderCharter(charter) {
       <div class="cs-header"><span class="cs-title">PM² Governance Roles</span></div>
       <div class="cs-body">
         <div class="cs-grid">
-          <div style="display:flex;flex-direction:column;gap:12px;">
-            ${roleRow('Project Owner', charter.roles?.projectOwner)}
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            ${roleRow('Project Owner (Sponsor)', charter.roles?.projectOwner)}
             ${roleRow('Business Manager', charter.roles?.businessManager)}
             ${roleRow('Project Manager', charter.roles?.projectManager)}
           </div>
-          <div style="display:flex;flex-direction:column;gap:12px;">
+          <div style="display:flex;flex-direction:column;gap:14px;">
             ${roleRow('User Representatives', ureps || 'TBD')}
             ${roleRow('Solution Provider', charter.roles?.solutionProvider)}
-            ${roleRow('Target Completion', charter.timeline)}
-            ${charter.budget ? roleRow('Budget / Resources', charter.budget) : ''}
           </div>
         </div>
+        ${charter.governance ? `<p style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border-subtle);font-size:13px;color:var(--text-secondary);line-height:1.7;"><strong style="color:var(--text-muted);font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:4px;">Governance</strong>${charter.governance}</p>` : ''}
       </div>
     </div>
+
+    ${milestones ? `
+    <div class="charter-section">
+      <div class="cs-header"><span class="cs-title">High-Level Milestone Plan</span></div>
+      <div class="cs-body" style="padding:0;">
+        <table style="width:100%;border-collapse:collapse;">
+          <thead><tr>
+            <th style="text-align:left;padding:7px 12px;background:var(--bg-3);font-size:10px;font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);border-bottom:1px solid var(--border-default);">Milestone</th>
+            <th style="text-align:left;padding:7px 12px;background:var(--bg-3);font-size:10px;font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);border-bottom:1px solid var(--border-default);">Target</th>
+          </tr></thead>
+          <tbody>${milestones}</tbody>
+        </table>
+      </div>
+    </div>` : `
+    <div class="charter-section">
+      <div class="cs-header"><span class="cs-title">Timeline &amp; Budget</span></div>
+      <div class="cs-body">
+        <div class="cs-grid">
+          ${roleRow('Target Completion', charter.timeline)}
+          ${charter.budget ? roleRow('Budget / Resources', charter.budget) : ''}
+        </div>
+      </div>
+    </div>`}
 
     <div class="charter-section">
       <div class="cs-header"><span class="cs-title">Success Criteria</span></div>
       <div class="cs-body">
-        <ul style="list-style:none;display:flex;flex-direction:column;gap:8px;">
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:8px;font-size:14px;">
           ${criteria || '<li style="color:var(--text-muted)">—</li>'}
         </ul>
       </div>
     </div>
 
     <div class="charter-section">
-      <div class="cs-header"><span class="cs-title">Constraints & Assumptions</span></div>
+      <div class="cs-header"><span class="cs-title">Constraints &amp; Assumptions</span></div>
       <div class="cs-body">
         <div class="cs-grid">
           <div>
-            <p style="font-size:12px;font-family:var(--font-mono);color:var(--text-muted);margin-bottom:8px;">CONSTRAINTS</p>
+            <p style="font-size:11px;font-family:var(--font-mono);color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">Constraints</p>
             <ul style="list-style:none;display:flex;flex-direction:column;gap:6px;font-size:14px;">
               ${constraints || '<li style="color:var(--text-muted)">—</li>'}
             </ul>
           </div>
           <div>
-            <p style="font-size:12px;font-family:var(--font-mono);color:var(--text-muted);margin-bottom:8px;">ASSUMPTIONS</p>
+            <p style="font-size:11px;font-family:var(--font-mono);color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">Assumptions</p>
             <ul style="list-style:none;display:flex;flex-direction:column;gap:6px;font-size:14px;">
               ${assumptions || '<li style="color:var(--text-muted)">—</li>'}
             </ul>
@@ -549,14 +580,30 @@ function renderCharter(charter) {
       </div>
     </div>
 
-    <div class="charter-section" style="border-color: var(--accent-border); background: var(--accent-dim);">
+    <div class="charter-section" style="border-color:var(--accent-border);background:var(--accent-dim);">
+      <div class="cs-header"><span class="cs-title">Approval</span></div>
       <div class="cs-body">
-        <p style="font-size:13px;color:var(--accent-text);font-family:var(--font-mono);">
+        <p style="font-size:13px;color:var(--accent-text);font-family:var(--font-mono);margin-bottom:20px;">
           ${charter.approvalNote || 'This Project Charter is to be reviewed and approved by the Project Steering Committee at the Initiating Phase Gate.'}
         </p>
+        <div class="cs-grid" style="gap:32px;">
+          ${approvalBlock('Project Owner', charter.roles?.projectOwner)}
+          ${approvalBlock('Business Manager', charter.roles?.businessManager)}
+          ${approvalBlock('Project Manager', charter.roles?.projectManager)}
+        </div>
       </div>
     </div>
   `;
+}
+
+function approvalBlock(role, name) {
+  return `
+    <div style="border-top:1px solid var(--border-default);padding-top:12px;">
+      <p style="font-size:11px;font-family:var(--font-mono);color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">${role}</p>
+      <p style="font-size:13px;color:var(--text-primary);margin-bottom:16px;">${name || 'TBD'}</p>
+      <p style="font-size:11px;font-family:var(--font-mono);color:var(--text-muted);">Signature: ________________________</p>
+      <p style="font-size:11px;font-family:var(--font-mono);color:var(--text-muted);margin-top:8px;">Date: ____________________________</p>
+    </div>`;
 }
 
 function roleRow(label, value) {

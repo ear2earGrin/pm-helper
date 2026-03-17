@@ -562,30 +562,35 @@ function initTools(projectName, artefacts, answers) {
   wbsState = makeTreeState(name, wbsItems);
   renderTree(wbsState, 'wbs-tree', 'wbs');
 
-  // ── PBS: use AI-generated structure if available ──────────────
+  // ── PBS: Product Breakdown Structure — AI-generated product components ──
   let pbsItems;
 
-  if (artefacts && Array.isArray(artefacts.pbs) && artefacts.pbs.length > 0) {
-    pbsItems = artefacts.pbs.map(function(phase) {
-      const activities = (phase.activities || []).map(function(a) {
-        return { label: (a || '').slice(0, 60) };
+  if (artefacts && artefacts.pbs && Array.isArray(artefacts.pbs.children) && artefacts.pbs.children.length > 0) {
+    pbsItems = artefacts.pbs.children.map(function(l1) {
+      const l1label = (l1.label || '').slice(0, 50);
+      const l2nodes = (l1.children || []).map(function(l2) {
+        const lbl = typeof l2 === 'string' ? l2 : (l2.label || '');
+        return { label: lbl.slice(0, 50) };
       });
-      activities.push({ label: '', ghost: true });
-      return { label: phase.phase || 'Phase', children: activities };
+      l2nodes.push({ label: '', ghost: true });
+      return { label: l1label, children: l2nodes };
     });
+    pbsItems.push({ label: '', ghost: true });
   } else {
-    // Fallback: hardcoded PM² phases
-    const risks = (artefacts && artefacts.risks) || [];
-    const riskActions = risks.slice(0, 2).map(function(r) {
-      return { label: r.responseAction ? r.responseAction.slice(0, 40) : 'Manage: ' + (r.cause || '').slice(0, 30) };
+    // Fallback: generic product areas derived from scope
+    pbsItems = inScope.slice(0, 5).map(function(item) {
+      return {
+        label: item.length > 40 ? item.slice(0, 38) + '…' : item,
+        children: [{ label: '', ghost: true }, { label: '', ghost: true }]
+      };
     });
-    pbsItems = [
-      { label: 'Initiating',  children: [{ label: 'Draft Project Charter' }, { label: 'Identify Stakeholders' }, { label: 'Define Scope & Objectives' }, { label: '', ghost: true }] },
-      { label: 'Planning',    children: [{ label: 'Build WBS & PBS' }, { label: 'Develop Project Schedule' }, { label: 'Estimate Costs & Budget' }, { label: 'Plan Risk Responses' }, { label: '', ghost: true }] },
-      { label: 'Executing',   children: inScope.slice(0, 3).map(function(item) { return { label: 'Deliver: ' + (item.length > 30 ? item.slice(0, 28) + '…' : item) }; }).concat([{ label: '', ghost: true }, { label: '', ghost: true }]) },
-      { label: 'Monitoring & Control', children: [{ label: 'Track Progress vs. Plan' }, { label: 'Report to Steering Committee' }].concat(riskActions).concat([{ label: '', ghost: true }]) },
-      { label: 'Closing',     children: [{ label: 'Lessons Learned Review' }, { label: 'Project Acceptance Sign-off' }, { label: 'Archive Project Documents' }, { label: '', ghost: true }] },
-    ];
+    if (pbsItems.length === 0) {
+      pbsItems = [
+        { label: 'Core Product', children: [{ label: '', ghost: true }, { label: '', ghost: true }] },
+        { label: 'Supporting Components', children: [{ label: '', ghost: true }, { label: '', ghost: true }] },
+      ];
+    }
+    pbsItems.push({ label: '', ghost: true });
   }
 
   _lastPbsItems = pbsItems;
@@ -625,15 +630,31 @@ function initTools(projectName, artefacts, answers) {
   addCostRow('Project Management', '');
   recalcCosts();
 
-  // ── Gantt: seed with PBS phases as tasks ────────────────────
+  // ── Gantt: seed from WBS phases ──────────────────────────────
   const today = GANTT_TODAY;
   const d0 = new Date(today);
   function addWeeks(d, w) { const n = new Date(d); n.setDate(n.getDate() + w * 7); return n.toISOString().slice(0, 10); }
-  addGanttRow('Initiating',           today,              5,  'must',    8);
-  addGanttRow('Planning',             addWeeks(d0, 1),    10, 'must',    9);
-  addGanttRow('Executing',            addWeeks(d0, 3),    30, 'must',    10);
-  addGanttRow('Monitoring & Control', addWeeks(d0, 3),    35, 'crucial', 7);
-  addGanttRow('Closing',              addWeeks(d0, 12),   5,  'nice',    5);
+
+  const PHASE_PRIORITY = { 'initiating': ['must', 8], 'planning': ['must', 9], 'executing': ['must', 10], 'monitoring': ['crucial', 7], 'closing': ['nice', 5] };
+
+  if (wbsItems && wbsItems.length > 1) {
+    var offset = 0;
+    wbsItems.filter(function(p) { return p.label && !p.ghost; }).forEach(function(phase) {
+      const actCount = (phase.children || []).filter(function(c) { return c.label && !c.ghost; }).length;
+      const dur = Math.max(5, actCount * 4);
+      const key = phase.label.toLowerCase().split(' ')[0];
+      const pri = (PHASE_PRIORITY[key] || ['crucial', 6]);
+      addGanttRow(phase.label, addWeeks(d0, offset), dur, pri[0], pri[1]);
+      offset += Math.ceil(dur / 7);
+    });
+  } else {
+    // Fallback if WBS not generated
+    addGanttRow('Initiating',           today,           5,  'must',    8);
+    addGanttRow('Planning',             addWeeks(d0, 1), 10, 'must',    9);
+    addGanttRow('Executing',            addWeeks(d0, 3), 30, 'must',    10);
+    addGanttRow('Monitoring & Control', addWeeks(d0, 3), 35, 'crucial', 7);
+    addGanttRow('Closing',              addWeeks(d0, 12), 5, 'nice',    5);
+  }
 }
 
 // ── PDF Print System ──────────────────────────────────────────
