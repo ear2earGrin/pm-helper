@@ -617,12 +617,12 @@ function renderResults(artefacts) {
   renderRisks(artefacts.risks);
 
   // Init planning tools with project context pre-filled
+  const projectName = artefacts.charter?.projectName || state.answers.projectName || 'My Project';
   if (typeof initTools === 'function') {
-    initTools(
-      artefacts.charter?.projectName || state.answers.projectName || 'My Project',
-      artefacts,
-      state.answers
-    );
+    initTools(projectName, artefacts, state.answers);
+  }
+  if (typeof setPrintProjectName === 'function') {
+    setPrintProjectName(projectName);
   }
 
   // Show coaching nudge

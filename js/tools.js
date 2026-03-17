@@ -516,3 +516,236 @@ function initTools(projectName, artefacts, answers) {
   addGanttRow('Monitoring & Control', addWeeks(d0, 3), 35);
   addGanttRow('Closing', addWeeks(d0, 12), 5);
 }
+
+// ── PDF Print System ──────────────────────────────────────────
+
+var _printProjectName = 'My Project';
+
+function setPrintProjectName(name) {
+  _printProjectName = name || 'My Project';
+}
+
+function printStyles() {
+  return `
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap');
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: 'DM Sans', sans-serif; font-size: 13px; color: #1a1a2e; background: #fff; padding: 32px; }
+      .doc-header { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 16px; border-bottom: 2px solid #0BBF8C; margin-bottom: 24px; }
+      .doc-title { font-size: 22px; font-weight: 600; color: #05080F; }
+      .doc-subtitle { font-size: 12px; color: #666; margin-top: 4px; font-family: 'Space Mono', monospace; }
+      .doc-meta { text-align: right; font-size: 11px; color: #888; font-family: 'Space Mono', monospace; line-height: 1.8; }
+      .doc-meta strong { color: #0BBF8C; }
+      .doc-footer { margin-top: 32px; padding-top: 12px; border-top: 1px solid #e0e0e0; font-size: 11px; color: #aaa; font-family: 'Space Mono', monospace; display: flex; justify-content: space-between; }
+      h3 { font-size: 13px; font-family: 'Space Mono', monospace; text-transform: uppercase; letter-spacing: 0.06em; color: #0BBF8C; margin: 20px 0 8px; }
+      table { width: 100%; border-collapse: collapse; margin: 8px 0; }
+      th { text-align: left; padding: 7px 10px; background: #f4f6fa; font-size: 10px; font-family: 'Space Mono', monospace; text-transform: uppercase; letter-spacing: 0.04em; color: #666; border-bottom: 1px solid #ddd; }
+      td { padding: 8px 10px; border-bottom: 1px solid #eee; font-size: 12px; vertical-align: top; }
+      tr:last-child td { border-bottom: none; }
+      .pill { display: inline-block; padding: 2px 8px; border-radius: 100px; font-size: 10px; font-family: 'Space Mono', monospace; font-weight: 700; }
+      .pill-h { background: rgba(248,113,113,0.15); color: #dc2626; }
+      .pill-m { background: rgba(245,166,35,0.15); color: #b45309; }
+      .pill-l { background: rgba(15,217,160,0.15); color: #059669; }
+      /* Tree */
+      .tree-list { list-style: none; padding-left: 0; }
+      .tree-list li { padding: 4px 0; }
+      .tree-list li::before { content: '◈ '; color: #0BBF8C; font-size: 10px; }
+      .tree-list .tree-l1 { font-weight: 600; font-size: 13px; margin-top: 10px; }
+      .tree-list .tree-l2 { padding-left: 20px; color: #444; }
+      .tree-list .tree-l2::before { content: '└ '; color: #ccc; }
+      .tree-list .tree-l3 { padding-left: 40px; color: #666; font-size: 12px; }
+      .tree-list .tree-l3::before { content: '└ '; color: #ddd; }
+      /* Cost */
+      .cost-table { width: 100%; }
+      .cost-row { display: flex; justify-content: space-between; padding: 8px 12px; border-bottom: 1px solid #eee; }
+      .cost-row.calc { background: #f9fafb; }
+      .cost-row.result { background: rgba(15,217,160,0.08); font-weight: 600; color: #059669; }
+      .cost-row.final { background: rgba(245,166,35,0.08); font-weight: 700; font-size: 15px; color: #b45309; }
+      .cost-label { font-size: 11px; font-family: 'Space Mono', monospace; text-transform: uppercase; color: #888; }
+      .cost-value { font-family: 'Space Mono', monospace; font-weight: 700; }
+      /* Gantt */
+      .gantt-table { width: 100%; border-collapse: collapse; }
+      .gantt-bar-cell { width: 55%; }
+      .bar-bg { background: #f0f0f0; border-radius: 3px; height: 14px; position: relative; }
+      .bar-fill { background: #0BBF8C; border-radius: 3px; height: 14px; min-width: 4px; }
+      @media print {
+        body { padding: 20px; }
+        @page { margin: 15mm; size: A4; }
+      }
+    </style>`;
+}
+
+function docHeader(title, subtitle) {
+  const date = new Date().toLocaleDateString('en-IE', { day: 'numeric', month: 'long', year: 'numeric' });
+  return `
+    <div class="doc-header">
+      <div>
+        <div class="doc-title">${title}</div>
+        <div class="doc-subtitle">${subtitle || ''}</div>
+      </div>
+      <div class="doc-meta">
+        <div><strong>Project:</strong> ${escapeAttr(_printProjectName)}</div>
+        <div><strong>Date:</strong> ${date}</div>
+        <div><strong>Methodology:</strong> PM²</div>
+      </div>
+    </div>`;
+}
+
+function docFooter() {
+  return `<div class="doc-footer"><span>PM Brief · pm-brief.com</span><span>Generated ${new Date().toLocaleDateString('en-IE')}</span></div>`;
+}
+
+function openPrintWindow(html) {
+  const w = window.open('', '_blank', 'width=900,height=700');
+  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>PM Brief — Print</title>' + printStyles() + '</head><body>' + html + docFooter() + '</body></html>');
+  w.document.close();
+  setTimeout(function() { w.focus(); w.print(); }, 800);
+}
+
+// ── Print: WBS ───────────────────────────────────────────────
+
+function printWBS() {
+  if (!wbsState) return;
+  function renderNode(state, nodeId, depth) {
+    const node = state.nodes[nodeId];
+    if (!node || (node.ghost && !node.label)) return '';
+    const label = node.label || '(unnamed)';
+    const cls = depth === 0 ? '' : depth === 1 ? 'tree-l1' : depth === 2 ? 'tree-l2' : 'tree-l3';
+    let html = '<li class="' + cls + '">' + escapeAttr(label) + '</li>';
+    for (const cid of node.children) html += renderNode(state, cid, depth + 1);
+    return html;
+  }
+  const body = docHeader('Work Breakdown Structure', 'PM² Deliverable Decomposition') +
+    '<ul class="tree-list">' + renderNode(wbsState, wbsState.rootId, 0) + '</ul>';
+  openPrintWindow(body);
+}
+
+// ── Print: PBS ───────────────────────────────────────────────
+
+function printPBS() {
+  if (!pbsState) return;
+  function renderNode(state, nodeId, depth) {
+    const node = state.nodes[nodeId];
+    if (!node || (node.ghost && !node.label)) return '';
+    const label = node.label || '(unnamed)';
+    const cls = depth === 0 ? '' : depth === 1 ? 'tree-l1' : depth === 2 ? 'tree-l2' : 'tree-l3';
+    let html = '<li class="' + cls + '">' + escapeAttr(label) + '</li>';
+    for (const cid of node.children) html += renderNode(state, cid, depth + 1);
+    return html;
+  }
+  const body = docHeader('Project Breakdown Structure', 'PM² Activity Decomposition') +
+    '<ul class="tree-list">' + renderNode(pbsState, pbsState.rootId, 0) + '</ul>';
+  openPrintWindow(body);
+}
+
+// ── Print: Stakeholder Management Plan ───────────────────────
+
+function printStakeholders() {
+  const tbody = document.getElementById('sh-tbody');
+  if (!tbody) return;
+  let rows = '';
+  tbody.querySelectorAll('tr').forEach(function(tr) {
+    const inputs = tr.querySelectorAll('input');
+    const selects = tr.querySelectorAll('select');
+    if (!inputs.length) return;
+    const name = inputs[0] ? inputs[0].value : '';
+    const role = inputs[1] ? inputs[1].value : '';
+    const interest = selects[0] ? selects[0].value : '';
+    const influence = selects[1] ? selects[1].value : '';
+    const strategy = inputs[2] ? inputs[2].value : '';
+    const pillClass = function(v) { return v === 'H' ? 'pill-h' : v === 'M' ? 'pill-m' : 'pill-l'; };
+    rows += '<tr>' +
+      '<td>' + escapeAttr(name) + '</td>' +
+      '<td>' + escapeAttr(role) + '</td>' +
+      '<td><span class="pill ' + pillClass(interest) + '">' + interest + '</span></td>' +
+      '<td><span class="pill ' + pillClass(influence) + '">' + influence + '</span></td>' +
+      '<td>' + escapeAttr(strategy) + '</td>' +
+      '</tr>';
+  });
+  const body = docHeader('Stakeholder Management Plan', 'PM² Stakeholder Register') +
+    '<table><thead><tr><th>Name / Group</th><th>Role</th><th>Interest</th><th>Influence</th><th>Engagement Strategy</th></tr></thead><tbody>' + rows + '</tbody></table>';
+  openPrintWindow(body);
+}
+
+// ── Print: Cost Estimation ────────────────────────────────────
+
+function printCost() {
+  const container = document.getElementById('cost-activities');
+  if (!container) return;
+  let actRows = '';
+  let total = 0;
+  container.querySelectorAll('.cost-activity-row').forEach(function(row) {
+    const inputs = row.querySelectorAll('input');
+    const name = inputs[0] ? inputs[0].value : '';
+    const amt = parseFloat(inputs[1] ? inputs[1].value : 0) || 0;
+    total += amt;
+    actRows += '<tr><td>' + escapeAttr(name || '—') + '</td><td style="text-align:right;font-family:\'Space Mono\',monospace;">' + (amt ? formatCurrency(amt) : '—') + '</td></tr>';
+  });
+  const crPct = parseFloat((document.getElementById('cost-cr-pct') || {}).value) || 0;
+  const mrPct = parseFloat((document.getElementById('cost-mr-pct') || {}).value) || 0;
+  const cr = total * crPct / 100;
+  const bac = total + cr;
+  const mr = bac * mrPct / 100;
+  const budget = bac + mr;
+
+  const row = function(label, value, cls) {
+    return '<div class="cost-row ' + (cls || '') + '"><span class="cost-label">' + label + '</span><span class="cost-value">' + value + '</span></div>';
+  };
+
+  const body = docHeader('Cost Estimation', 'PM² Bottom-Up Cost Hierarchy') +
+    '<h3>Activity Estimates</h3>' +
+    '<table><thead><tr><th>Activity</th><th style="text-align:right;">Estimate</th></tr></thead><tbody>' + actRows + '</tbody></table>' +
+    '<div style="margin-top:16px;">' +
+    row('Work Package Estimate', formatCurrency(total), 'calc') +
+    row('Control Account Estimate', formatCurrency(total), 'calc') +
+    row('Project Estimate', formatCurrency(total), 'calc') +
+    row('Contingency Reserve (' + crPct + '%)', formatCurrency(cr), '') +
+    row('Cost Performance Baseline (BAC)', formatCurrency(bac), 'result') +
+    row('Management Reserve (' + mrPct + '%)', formatCurrency(mr), '') +
+    row('Project Budget', formatCurrency(budget), 'final') +
+    '</div>';
+  openPrintWindow(body);
+}
+
+// ── Print: Gantt / Time Estimation ───────────────────────────
+
+function printGantt() {
+  const tbody = document.getElementById('gantt-tbody');
+  if (!tbody) return;
+  const tasks = [];
+  tbody.querySelectorAll('tr').forEach(function(tr) {
+    const inputs = tr.querySelectorAll('input');
+    if (inputs.length < 3) return;
+    const name = inputs[0].value.trim() || 'Task';
+    const startStr = inputs[1].value;
+    const dur = parseInt(inputs[2].value, 10);
+    if (!startStr || isNaN(dur)) return;
+    const startMs = new Date(startStr).getTime();
+    if (isNaN(startMs)) return;
+    tasks.push({ name, startMs, endMs: startMs + (dur - 1) * 86400000, dur, startStr });
+  });
+  if (!tasks.length) return;
+
+  const projectStart = Math.min.apply(null, tasks.map(function(t) { return t.startMs; }));
+  const projectEnd   = Math.max.apply(null, tasks.map(function(t) { return t.endMs; }));
+  const totalSpan    = projectEnd - projectStart || 86400000;
+  const fmtDate = function(str) { return new Date(str).toLocaleDateString('en-IE', { day: 'numeric', month: 'short', year: 'numeric' }); };
+  const endDate = function(t) { return new Date(t.endMs).toISOString().slice(0, 10); };
+
+  let rows = '';
+  tasks.forEach(function(t) {
+    const offsetPct = ((t.startMs - projectStart) / totalSpan * 100).toFixed(1);
+    const widthPct  = Math.max(2, ((t.endMs - t.startMs + 86400000) / totalSpan * 100).toFixed(1));
+    rows += '<tr>' +
+      '<td>' + escapeAttr(t.name) + '</td>' +
+      '<td style="font-family:\'Space Mono\',monospace;font-size:11px;">' + fmtDate(t.startStr) + '</td>' +
+      '<td style="font-family:\'Space Mono\',monospace;font-size:11px;">' + fmtDate(endDate(t)) + '</td>' +
+      '<td style="text-align:center;font-family:\'Space Mono\',monospace;">' + t.dur + 'd</td>' +
+      '<td class="gantt-bar-cell"><div class="bar-bg"><div class="bar-fill" style="margin-left:' + offsetPct + '%;width:' + widthPct + '%;"></div></div></td>' +
+      '</tr>';
+  });
+
+  const body = docHeader('Time Estimation — Project Schedule', 'PM² Gantt Chart') +
+    '<table class="gantt-table"><thead><tr><th style="width:22%;">Task</th><th style="width:14%;">Start</th><th style="width:14%;">End</th><th style="width:8%;">Duration</th><th class="gantt-bar-cell">Timeline</th></tr></thead><tbody>' + rows + '</tbody></table>';
+  openPrintWindow(body);
+}

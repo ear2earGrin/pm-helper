@@ -230,7 +230,10 @@
             <div class="tool-main">
               <div class="tool-header">
                 <span class="tool-title">Work Breakdown Structure</span>
-                <button class="btn btn-ghost btn-sm" onclick="resetWBS()">Reset</button>
+                <div style="display:flex;gap:8px;">
+                  <button class="btn btn-ghost btn-sm" onclick="resetWBS()">Reset</button>
+                  <button class="btn btn-primary btn-sm" onclick="printWBS()">↓ Save as PDF</button>
+                </div>
               </div>
               <div class="tool-body">
                 <div class="tree-container" id="wbs-tree"></div>
@@ -256,7 +259,10 @@
             <div class="tool-main">
               <div class="tool-header">
                 <span class="tool-title">Project Breakdown Structure</span>
-                <button class="btn btn-ghost btn-sm" onclick="resetPBS()">Reset</button>
+                <div style="display:flex;gap:8px;">
+                  <button class="btn btn-ghost btn-sm" onclick="resetPBS()">Reset</button>
+                  <button class="btn btn-primary btn-sm" onclick="printPBS()">↓ Save as PDF</button>
+                </div>
               </div>
               <div class="tool-body">
                 <div class="tree-container" id="pbs-tree"></div>
@@ -280,7 +286,10 @@
             <div class="tool-main">
               <div class="tool-header">
                 <span class="tool-title">Stakeholder Register</span>
-                <button class="btn btn-ghost btn-sm" onclick="addStakeholderRow()">+ Add row</button>
+                <div style="display:flex;gap:8px;">
+                  <button class="btn btn-ghost btn-sm" onclick="addStakeholderRow()">+ Add row</button>
+                  <button class="btn btn-primary btn-sm" onclick="printStakeholders()">↓ Save as PDF</button>
+                </div>
               </div>
               <div class="tool-body" style="padding:0;">
                 <div class="sh-table-wrap" style="border:none;border-radius:0;">
@@ -318,7 +327,10 @@
             <div class="tool-main">
               <div class="tool-header">
                 <span class="tool-title">Cost Estimation</span>
-                <button class="btn btn-ghost btn-sm" onclick="addCostRow()">+ Add activity</button>
+                <div style="display:flex;gap:8px;">
+                  <button class="btn btn-ghost btn-sm" onclick="addCostRow()">+ Add activity</button>
+                  <button class="btn btn-primary btn-sm" onclick="printCost()">↓ Save as PDF</button>
+                </div>
               </div>
               <div class="tool-body">
                 <div class="cost-hierarchy">
@@ -393,7 +405,10 @@
             <div class="tool-main">
               <div class="tool-header">
                 <span class="tool-title">Gantt Chart</span>
-                <button class="btn btn-ghost btn-sm" onclick="addGanttRow()">+ Add task</button>
+                <div style="display:flex;gap:8px;">
+                  <button class="btn btn-ghost btn-sm" onclick="addGanttRow()">+ Add task</button>
+                  <button class="btn btn-primary btn-sm" onclick="printGantt()">↓ Save as PDF</button>
+                </div>
               </div>
               <div class="tool-body">
                 <table class="gantt-input-table">
