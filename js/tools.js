@@ -315,7 +315,7 @@ function addGanttRow(name, startDate, duration, priority, importance) {
   const imp = importance !== undefined ? importance : 5;
 
   const prioritySelect =
-    '<select onchange="renderGantt()" style="color:' + PRIORITY_CONFIG[pri].color + ';">' +
+    '<select onchange="_ganttPriChange(this)" style="color:' + PRIORITY_CONFIG[pri].color + ';">' +
     Object.keys(PRIORITY_CONFIG).map(function(k) {
       return '<option value="' + k + '"' + (k === pri ? ' selected' : '') + ' style="color:' + PRIORITY_CONFIG[k].color + ';">' + PRIORITY_CONFIG[k].label + '</option>';
     }).join('') +
@@ -366,6 +366,12 @@ function _attachGanttDrag(tr) {
       }
     }
   });
+}
+
+function _ganttPriChange(sel) {
+  const cfg = PRIORITY_CONFIG[sel.value];
+  if (cfg) sel.style.color = cfg.color;
+  renderGantt();
 }
 
 function deleteGanttRow(rowId) {
