@@ -524,87 +524,69 @@ function initTools(projectName, artefacts, answers) {
     if (el) el.innerHTML = '';
   });
 
-  // ── WBS: Level 1 = AI-generated in-scope items ──────────────
+  // ── WBS: use AI-generated structure if available ─────────────
   const inScope = (artefacts && artefacts.charter && artefacts.charter.scope && artefacts.charter.scope.inScope) || [];
+  let wbsItems;
 
-  const wbsItems = inScope.slice(0, 6).map(function(item) {
-    // Truncate long labels
-    const label = item.length > 40 ? item.slice(0, 38) + '…' : item;
-    return {
-      label: label,
-      children: [{ label: '', ghost: true }, { label: '', ghost: true }]
-    };
-  });
-
-  // Always add "Project Management" if not already in scope
-  const hasPM = wbsItems.some(function(i) { return i.label.toLowerCase().includes('project manag'); });
-  if (!hasPM) {
-    wbsItems.unshift({
-      label: 'Project Management',
-      children: [
-        { label: 'Project Charter' },
-        { label: 'Project Work Plan' },
-        { label: '', ghost: true }
-      ]
+  if (artefacts && artefacts.wbs && Array.isArray(artefacts.wbs.children) && artefacts.wbs.children.length > 0) {
+    // Map AI output → tree node format
+    wbsItems = artefacts.wbs.children.map(function(l1) {
+      const l1label = (l1.label || '').slice(0, 50);
+      const l2nodes = (l1.children || []).map(function(l2) {
+        const lbl = typeof l2 === 'string' ? l2 : (l2.label || '');
+        return { label: lbl.slice(0, 50) };
+      });
+      l2nodes.push({ label: '', ghost: true });
+      return { label: l1label, children: l2nodes };
     });
+    wbsItems.push({ label: '', ghost: true });
+  } else {
+    // Fallback: build from in-scope items
+    wbsItems = inScope.slice(0, 6).map(function(item) {
+      return {
+        label: item.length > 40 ? item.slice(0, 38) + '…' : item,
+        children: [{ label: '', ghost: true }, { label: '', ghost: true }]
+      };
+    });
+    const hasPM = wbsItems.some(function(i) { return i.label.toLowerCase().includes('project manag'); });
+    if (!hasPM) {
+      wbsItems.unshift({
+        label: 'Project Management',
+        children: [{ label: 'Project Charter' }, { label: 'Project Work Plan' }, { label: '', ghost: true }]
+      });
+    }
+    wbsItems.push({ label: '', ghost: true });
   }
-
-  // Add ghost node at end for user to expand
-  wbsItems.push({ label: '', ghost: true });
 
   _lastWbsItems = wbsItems;
   wbsState = makeTreeState(name, wbsItems);
   renderTree(wbsState, 'wbs-tree', 'wbs');
 
-  // ── PBS: PM² phases with context-aware activities ───────────
-  const risks = (artefacts && artefacts.risks) || [];
-  const riskActions = risks.slice(0, 2).map(function(r) {
-    return { label: r.responseAction ? r.responseAction.slice(0, 40) : 'Manage: ' + (r.cause || '').slice(0, 30) };
-  });
+  // ── PBS: use AI-generated structure if available ──────────────
+  let pbsItems;
 
-  const pbsItems = [
-    {
-      label: 'Initiating',
-      children: [
-        { label: 'Draft Project Charter' },
-        { label: 'Identify Stakeholders' },
-        { label: 'Define Scope & Objectives' },
-        { label: '', ghost: true }
-      ]
-    },
-    {
-      label: 'Planning',
-      children: [
-        { label: 'Build WBS & PBS' },
-        { label: 'Develop Project Schedule' },
-        { label: 'Estimate Costs & Budget' },
-        { label: 'Plan Risk Responses' },
-        { label: '', ghost: true }
-      ]
-    },
-    {
-      label: 'Executing',
-      children: inScope.slice(0, 3).map(function(item) {
-        return { label: 'Deliver: ' + (item.length > 30 ? item.slice(0, 28) + '…' : item) };
-      }).concat([{ label: '', ghost: true }, { label: '', ghost: true }])
-    },
-    {
-      label: 'Monitoring & Control',
-      children: [
-        { label: 'Track Progress vs. Plan' },
-        { label: 'Report to Steering Committee' },
-      ].concat(riskActions).concat([{ label: '', ghost: true }])
-    },
-    {
-      label: 'Closing',
-      children: [
-        { label: 'Lessons Learned Review' },
-        { label: 'Project Acceptance Sign-off' },
-        { label: 'Archive Project Documents' },
-        { label: '', ghost: true }
-      ]
-    },
-  ];
+  if (artefacts && Array.isArray(artefacts.pbs) && artefacts.pbs.length > 0) {
+    pbsItems = artefacts.pbs.map(function(phase) {
+      const activities = (phase.activities || []).map(function(a) {
+        return { label: (a || '').slice(0, 60) };
+      });
+      activities.push({ label: '', ghost: true });
+      return { label: phase.phase || 'Phase', children: activities };
+    });
+  } else {
+    // Fallback: hardcoded PM² phases
+    const risks = (artefacts && artefacts.risks) || [];
+    const riskActions = risks.slice(0, 2).map(function(r) {
+      return { label: r.responseAction ? r.responseAction.slice(0, 40) : 'Manage: ' + (r.cause || '').slice(0, 30) };
+    });
+    pbsItems = [
+      { label: 'Initiating',  children: [{ label: 'Draft Project Charter' }, { label: 'Identify Stakeholders' }, { label: 'Define Scope & Objectives' }, { label: '', ghost: true }] },
+      { label: 'Planning',    children: [{ label: 'Build WBS & PBS' }, { label: 'Develop Project Schedule' }, { label: 'Estimate Costs & Budget' }, { label: 'Plan Risk Responses' }, { label: '', ghost: true }] },
+      { label: 'Executing',   children: inScope.slice(0, 3).map(function(item) { return { label: 'Deliver: ' + (item.length > 30 ? item.slice(0, 28) + '…' : item) }; }).concat([{ label: '', ghost: true }, { label: '', ghost: true }]) },
+      { label: 'Monitoring & Control', children: [{ label: 'Track Progress vs. Plan' }, { label: 'Report to Steering Committee' }].concat(riskActions).concat([{ label: '', ghost: true }]) },
+      { label: 'Closing',     children: [{ label: 'Lessons Learned Review' }, { label: 'Project Acceptance Sign-off' }, { label: 'Archive Project Documents' }, { label: '', ghost: true }] },
+    ];
+  }
 
   _lastPbsItems = pbsItems;
   pbsState = makeTreeState(name, pbsItems);

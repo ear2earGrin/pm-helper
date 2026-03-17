@@ -240,7 +240,7 @@ dom.backBtn.addEventListener('click', () => {
 
 // ── Prompt Builder ────────────────────────────────────────────
 function buildPrompt(answers) {
-  return `You are a senior PM² project management expert. Given the following project information, generate three PM²-compliant artefacts.
+  return `You are a senior PM² project management expert. Given the following project information, generate five PM²-compliant artefacts.
 
 PROJECT INFORMATION:
 - Name: ${answers.projectName}
@@ -252,7 +252,7 @@ PROJECT INFORMATION:
 - Key Risks identified by PM: ${answers.risks}
 - Success Criteria: ${answers.successCriteria}
 
-Generate the following three PM² artefacts. Return ONLY valid JSON — no markdown, no preamble, no explanation. The JSON must exactly match this structure:
+Return ONLY valid JSON — no markdown, no preamble, no explanation. The JSON must exactly match this structure:
 
 {
   "charter": {
@@ -260,7 +260,7 @@ Generate the following three PM² artefacts. Return ONLY valid JSON — no markd
     "phase": "Initiating",
     "objective": "string — 2-3 sentences, clear and measurable",
     "scope": {
-      "inScope": ["array", "of", "in-scope", "items"],
+      "inScope": ["array", "of", "in-scope", "deliverables"],
       "outOfScope": ["array", "of", "explicitly", "excluded", "items"]
     },
     "roles": {
@@ -302,10 +302,47 @@ Generate the following three PM² artefacts. Return ONLY valid JSON — no markd
       "responseStrategy": "Avoid | Mitigate | Transfer | Accept",
       "responseAction": "Specific action to address this risk"
     }
+  ],
+  "wbs": {
+    "children": [
+      {
+        "label": "Level-1 deliverable group (noun phrase, e.g. Project Management, System Design)",
+        "children": [
+          {"label": "Level-2 sub-deliverable (noun, e.g. Project Charter)"},
+          {"label": "Level-2 sub-deliverable"}
+        ]
+      }
+    ]
+  },
+  "pbs": [
+    {
+      "phase": "Initiating",
+      "activities": ["Verb-phrase activity specific to this project", "e.g. Conduct stakeholder identification workshop"]
+    },
+    {
+      "phase": "Planning",
+      "activities": ["Verb-phrase activity", "e.g. Develop detailed WBS and cost estimates"]
+    },
+    {
+      "phase": "Executing",
+      "activities": ["Verb-phrase activity specific to delivering this project's outputs"]
+    },
+    {
+      "phase": "Monitoring & Control",
+      "activities": ["Verb-phrase activity", "e.g. Review progress against baseline weekly"]
+    },
+    {
+      "phase": "Closing",
+      "activities": ["Verb-phrase activity", "e.g. Conduct lessons-learned review session"]
+    }
   ]
 }
 
-Generate at least 5 stakeholders across different PM² layers and at least 4 risks based on the information provided. Make all content specific to this project — no generic placeholder text.`;
+Rules:
+- WBS = WHAT will be produced (deliverables, nouns). Include 4-6 Level-1 groups. Always include a "Project Management" group. Each group should have 2-4 Level-2 sub-deliverables specific to this project.
+- PBS = HOW work gets done (activities, verb phrases) organised by PM² phase. Each phase must have 3-5 activities that are specific to THIS project — not generic boilerplate.
+- Generate at least 5 stakeholders across different PM² layers and at least 4 risks.
+- All content must be specific to this project — no generic placeholder text.`;
 }
 
 // ── API Call ──────────────────────────────────────────────────
