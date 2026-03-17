@@ -647,17 +647,19 @@ code { font-family: var(--font-mono); font-size: 0.85em; }
 /* Tabs */
 .results-tabs {
   display: flex;
-  gap: var(--space-xs);
+  gap: 2px;
   border-bottom: 1px solid var(--border-default);
   margin-bottom: var(--space-lg);
   overflow-x: auto;
+  scrollbar-width: none;
 }
+.results-tabs::-webkit-scrollbar { display: none; }
 .rtab {
   display: flex;
   align-items: center;
-  gap: var(--space-sm);
-  padding: 10px 16px;
-  font-size: 14px;
+  gap: 6px;
+  padding: 8px 12px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--text-secondary);
   background: transparent;
@@ -666,10 +668,11 @@ code { font-family: var(--font-mono); font-size: 0.85em; }
   margin-bottom: -1px;
   transition: color var(--duration);
   white-space: nowrap;
+  flex-shrink: 0;
 }
 .rtab:hover { color: var(--text-primary); }
 .rtab.active { color: var(--text-primary); border-bottom-color: var(--accent); }
-.rtab-icon { font-size: 14px; color: var(--accent); }
+.rtab-icon { font-size: 13px; color: var(--accent); }
 
 /* Tab panels */
 .tab-panel { animation: fadeIn 0.2s ease; }
