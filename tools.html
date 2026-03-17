@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PM Helper — Planning Tools</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .tool-layout {
+      display: grid;
+      grid-template-columns: 1fr 260px;
+      gap: 40px;
+      align-items: start;
+    }
+    .tool-main {
+      background: var(--bg-2);
+      border: 1px solid var(--border-default);
+      border-radius: var(--r-lg);
+      overflow: hidden;
+    }
+    .tool-panel {
+      background: var(--accent-dim);
+      border: 1px solid var(--accent-border);
+      border-radius: var(--r-lg);
+      padding: 24px;
+      position: sticky;
+      top: 80px;
+    }
+    .tool-panel-title {
+      font-size: 11px;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent-text);
+      margin-bottom: 12px;
+    }
+    .tool-panel-body {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+    }
+    .tool-panel-body p + p { margin-top: 8px; }
+    .tool-panel-body strong { color: var(--text-primary); }
+    .tool-panel-example {
+      margin-top: 12px;
+      padding: 12px;
+      background: var(--bg-3);
+      border-radius: var(--r-md);
+      font-size: 12px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      line-height: 1.8;
+    }
+    .tool-header {
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .tool-title {
+      font-size: 12px;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--accent-text);
+    }
+    .tool-body { padding: 20px; }
+
+    /* Tree */
+    .tree-container { overflow-x: auto; padding: 8px 0; min-height: 120px; }
+    .tree-row { display: flex; flex-direction: column; align-items: center; }
+    .tree-children-row { display: flex; flex-direction: row; gap: 12px; position: relative; padding-top: 24px; flex-wrap: wrap; justify-content: center; }
+    .tree-children-row::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 2px; height: 24px; background: var(--border-default); }
+    .tree-node { display: flex; flex-direction: column; align-items: center; }
+    .tree-node-inner { display: flex; align-items: center; gap: 6px; padding: 7px 12px; background: var(--bg-3); border: 1px solid var(--border-default); border-radius: var(--r-md); min-width: 100px; max-width: 180px; transition: border-color 0.2s; }
+    .tree-node-inner:hover { border-color: var(--border-strong); }
+    .tree-node-inner.root-node { background: var(--accent-dim); border-color: var(--accent-border); }
+    .tree-node-label { flex: 1; font-size: 12px; color: var(--text-primary); background: transparent; border: none; outline: none; min-width: 50px; font-family: var(--font-body); }
+    .tree-node-label:focus { color: var(--accent); }
+    .tree-add-btn, .tree-del-btn { font-size: 13px; background: transparent; border: none; cursor: pointer; padding: 0 2px; line-height: 1; opacity: 0; transition: opacity 0.2s; }
+    .tree-add-btn { color: var(--accent-text); }
+    .tree-del-btn { color: var(--text-muted); }
+    .tree-node-inner:hover .tree-add-btn,
+    .tree-node-inner:hover .tree-del-btn { opacity: 1; }
+    .tree-connector { width: 2px; height: 18px; background: var(--border-default); margin: 0 auto; }
+
+    /* Cost */
+    .cost-hierarchy { display: flex; flex-direction: column; gap: 0; }
+    .cost-level { padding: 14px 18px; border-radius: var(--r-md); border: 1px solid var(--border-default); margin: 3px 0; }
+    .cost-level--input { background: var(--bg-3); }
+    .cost-level--calc { background: var(--bg-4); }
+    .cost-level--result { background: var(--accent-dim); border-color: var(--accent-border); }
+    .cost-level--final { background: var(--amber-dim); border-color: var(--amber-border); }
+    .cost-level-label { font-size: 11px; font-family: var(--font-mono); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 8px; }
+    .cost-level-value { font-size: 22px; font-family: var(--font-mono); font-weight: 700; color: var(--text-primary); }
+    .cost-level-value--accent { color: var(--accent); }
+    .cost-level-value--amber { color: var(--amber); }
+    .cost-arrow { text-align: center; font-size: 13px; font-family: var(--font-mono); color: var(--text-muted); padding: 2px 0; }
+    .cost-connector { text-align: center; font-size: 16px; font-family: var(--font-mono); font-weight: 700; padding: 2px 0; color: var(--text-secondary); }
+    .cost-activity-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .cost-activity-row input.field-input { margin: 0; }
+
+    /* Gantt */
+    .gantt-wrap { border: 1px solid var(--border-default); border-radius: var(--r-md); overflow: hidden; margin-top: 16px; }
+    .gantt-header-row { display: flex; background: var(--bg-3); border-bottom: 1px solid var(--border-default); height: 32px; }
+    .gantt-label-col { width: 160px; flex-shrink: 0; border-right: 1px solid var(--border-subtle); }
+    .gantt-timeline-header { flex: 1; position: relative; overflow: hidden; }
+    .gantt-tick-label { position: absolute; bottom: 4px; font-size: 10px; font-family: var(--font-mono); color: var(--text-muted); white-space: nowrap; transform: translateX(-50%); }
+    .gantt-tick-line { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--border-subtle); }
+    .gantt-row { display: flex; align-items: center; min-height: 36px; border-bottom: 1px solid var(--border-subtle); }
+    .gantt-row:last-child { border-bottom: none; }
+    .gantt-row-label { width: 160px; flex-shrink: 0; padding: 6px 12px; font-size: 12px; color: var(--text-primary); border-right: 1px solid var(--border-subtle); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .gantt-track { flex: 1; position: relative; height: 36px; background: var(--bg-2); }
+    .gantt-bar { position: absolute; top: 50%; transform: translateY(-50%); height: 18px; background: var(--accent); border-radius: 4px; display: flex; align-items: center; padding: 0 6px; min-width: 4px; box-sizing: border-box; }
+    .gantt-bar-label { font-size: 10px; font-family: var(--font-mono); color: #05080F; white-space: nowrap; overflow: hidden; }
+    .gantt-empty { padding: 24px; text-align: center; font-size: 13px; color: var(--text-muted); }
+
+    /* Stakeholder table inline inputs */
+    .sh-table td input, .sh-table td select {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text-primary);
+      font-size: 13px;
+      font-family: var(--font-body);
+      width: 100%;
+      padding: 0;
+    }
+    .sh-table td input::placeholder { color: var(--text-muted); }
+    .sh-table td select option { background: var(--bg-2); }
+
+    /* Page header */
+    .tools-hero {
+      padding: var(--space-2xl) var(--space-xl) var(--space-xl);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .tools-hero-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .tools-eyebrow {
+      font-size: 12px;
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent-text);
+      margin-bottom: var(--space-md);
+    }
+    .tools-title {
+      font-family: var(--font-display);
+      font-size: clamp(28px, 4vw, 44px);
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      margin-bottom: var(--space-md);
+    }
+    .tools-sub {
+      font-size: 16px;
+      color: var(--text-secondary);
+      max-width: 600px;
+      line-height: 1.7;
+    }
+
+    /* Section spacing overrides for tool sections */
+    .section .section-inner { max-width: 1100px; }
+    .section-tool-header { margin-bottom: var(--space-xl); }
+    .section-tool-header .section-eyebrow { text-align: left; }
+    .section-tool-header .section-title { text-align: left; font-size: clamp(22px, 3vw, 30px); margin-bottom: var(--space-sm); }
+    .section-tool-header .section-sub { text-align: left; margin: 0; font-size: 14px; }
+
+    /* Add row button */
+    .btn-add-row {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-family: var(--font-mono);
+      color: var(--accent-text);
+      background: transparent;
+      border: 1px dashed var(--accent-border);
+      border-radius: var(--r-md);
+      padding: 7px 14px;
+      cursor: pointer;
+      transition: all var(--duration) var(--ease);
+    }
+    .btn-add-row:hover { background: var(--accent-dim); border-style: solid; }
+
+    /* Delete row button */
+    .btn-del-row {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 16px;
+      cursor: pointer;
+      padding: 0 4px;
+      line-height: 1;
+      transition: color var(--duration);
+      flex-shrink: 0;
+    }
+    .btn-del-row:hover { color: var(--danger); }
+
+    /* Cost percent input */
+    .cost-pct-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .cost-pct-row label {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      white-space: nowrap;
+    }
+    .cost-pct-row input {
+      width: 64px;
+      background: var(--bg-3);
+      border: 1px solid var(--border-default);
+      border-radius: var(--r-sm);
+      padding: 4px 8px;
+      color: var(--text-primary);
+      font-size: 13px;
+      font-family: var(--font-mono);
+      outline: none;
+    }
+    .cost-pct-row input:focus { border-color: var(--accent-border); }
+    .cost-pct-row .cost-pct-result {
+      font-size: 13px;
+      font-family: var(--font-mono);
+      color: var(--text-secondary);
+    }
+
+    /* Gantt input table */
+    .gantt-input-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 4px; }
+    .gantt-input-table th {
+      text-align: left;
+      padding: 8px 10px;
+      background: var(--bg-3);
+      border-bottom: 1px solid var(--border-default);
+      font-size: 11px;
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+    .gantt-input-table td {
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border-subtle);
+      vertical-align: middle;
+    }
+    .gantt-input-table tr:last-child td { border-bottom: none; }
+    .gantt-input-table td input {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text-primary);
+      font-size: 13px;
+      font-family: var(--font-body);
+      width: 100%;
+    }
+    .gantt-input-table td input[type="number"] { font-family: var(--font-mono); }
+    .gantt-input-table td input::placeholder { color: var(--text-muted); }
+    .gantt-input-table td input[type="date"] { color-scheme: dark; }
+
+    @media (max-width: 768px) {
+      .tool-layout { grid-template-columns: 1fr; }
+      .tool-panel { position: static; }
+      .gantt-label-col, .gantt-row-label { width: 90px; }
+    }
+  </style>
+</head>
+<body class="landing-body">
+
+  <!-- Nav -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="brand">
+        <span class="brand-icon">◈</span>
+        <span class="brand-name">PM Helper</span>
+      </a>
+      <div class="nav-links">
+        <a href="index.html#how-it-works" class="nav-link">How it works</a>
+        <a href="index.html#artefacts" class="nav-link">Artefacts</a>
+        <a href="tools.html" class="nav-link" style="color: var(--accent-text);">Tools</a>
+        <a href="app.html" class="btn btn-primary">Start a project →</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Page hero -->
+  <div class="tools-hero">
+    <div class="tools-hero-inner">
+      <p class="tools-eyebrow">Interactive Planning Tools</p>
+      <h1 class="tools-title">Build your project structure</h1>
+      <p class="tools-sub">Five hands-on tools to plan, scope, and estimate your project — grounded in PM² methodology. No account required.</p>
+    </div>
+  </div>
+
+  <!-- ── Tool 1: WBS ──────────────────────────────────────── -->
+  <section class="section" id="wbs">
+    <div class="section-inner">
+      <div class="section-tool-header">
+        <p class="section-eyebrow">Tool 1 of 5</p>
+        <h2 class="section-title">Work Breakdown Structure (WBS)</h2>
+        <p class="section-sub">Decompose your project into deliverables. Click + to add children, × to remove nodes, and click any label to rename it.</p>
+      </div>
+      <div class="tool-layout">
+        <div class="tool-main">
+          <div class="tool-header">
+            <span class="tool-title">WBS Editor</span>
+            <button class="btn btn-ghost btn-sm" onclick="resetWBS()">Reset</button>
+          </div>
+          <div class="tool-body">
+            <div class="tree-container" id="wbs-tree"></div>
+          </div>
+        </div>
+        <div class="tool-panel">
+          <div class="tool-panel-title">About WBS</div>
+          <div class="tool-panel-body">
+            <p>A <strong>Work Breakdown Structure</strong> decomposes project deliverables into smaller, manageable components — using <strong>nouns, not verbs</strong>.</p>
+            <p>In PM², the WBS is required before you can build the Project Work Plan.</p>
+            <p><strong>Level 0</strong> — The project itself</p>
+            <p><strong>Level 1</strong> — Major deliverables</p>
+            <p><strong>Level 2</strong> — Sub-deliverables</p>
+            <p><strong>Level 3</strong> — Work packages</p>
+            <div class="tool-panel-example">
+              My Project<br>
+              └── Project Charter<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;└── Charter draft<br>
+              └── Training Module<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;└── Course content
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Tool 2: Stakeholders ─────────────────────────────── -->
+  <section class="section section--alt" id="stakeholders">
+    <div class="section-inner">
+      <div class="section-tool-header">
+        <p class="section-eyebrow">Tool 2 of 5</p>
+        <h2 class="section-title">Stakeholder Register</h2>
+        <p class="section-sub">Map every person or group who affects or is affected by the project. Rate their interest and influence to determine the right engagement strategy.</p>
+      </div>
+      <div class="tool-layout">
+        <div class="tool-main">
+          <div class="tool-header">
+            <span class="tool-title">Stakeholder Register</span>
+            <button class="btn btn-ghost btn-sm" onclick="addStakeholderRow()">+ Add row</button>
+          </div>
+          <div class="tool-body" style="padding: 0;">
+            <div class="sh-table-wrap" style="border: none; border-radius: 0;">
+              <table class="sh-table" id="sh-table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Name / Group</th>
+                    <th style="width: 15%;">Role</th>
+                    <th style="width: 8%;">Interest</th>
+                    <th style="width: 8%;">Influence</th>
+                    <th>Engagement Strategy</th>
+                    <th style="width: 32px;"></th>
+                  </tr>
+                </thead>
+                <tbody id="sh-tbody">
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="tool-panel">
+          <div class="tool-panel-title">About Stakeholders</div>
+          <div class="tool-panel-body">
+            <p>List <strong>every person or group</strong> who affects or is affected by your project — internal and external.</p>
+            <p><strong>Interest</strong> = how much they care about the outcome.</p>
+            <p><strong>Influence</strong> = their power to impact the project.</p>
+            <p>Use the combination to set strategy:</p>
+            <div class="tool-panel-example">
+              High/High → Manage closely<br>
+              High/Low &nbsp;→ Keep satisfied<br>
+              Low/High &nbsp;→ Keep informed<br>
+              Low/Low &nbsp;&nbsp;→ Monitor
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Tool 3: PBS ──────────────────────────────────────── -->
+  <section class="section" id="pbs">
+    <div class="section-inner">
+      <div class="section-tool-header">
+        <p class="section-eyebrow">Tool 3 of 5</p>
+        <h2 class="section-title">Project Breakdown Structure (PBS)</h2>
+        <p class="section-sub">Decompose your project into activities, tasks, and actions — the HOW, not just the WHAT.</p>
+      </div>
+      <div class="tool-layout">
+        <div class="tool-main">
+          <div class="tool-header">
+            <span class="tool-title">PBS Editor</span>
+            <button class="btn btn-ghost btn-sm" onclick="resetPBS()">Reset</button>
+          </div>
+          <div class="tool-body">
+            <div class="tree-container" id="pbs-tree"></div>
+          </div>
+        </div>
+        <div class="tool-panel">
+          <div class="tool-panel-title">WBS vs PBS</div>
+          <div class="tool-panel-body">
+            <p><strong>WBS</strong> = WHAT will be produced (deliverables, nouns).</p>
+            <p><strong>PBS</strong> = HOW it will be done (activities, tasks, actions — verbs).</p>
+            <p>The PBS maps directly onto the WBS: each deliverable spawns the activities needed to produce it.</p>
+            <div class="tool-panel-example">
+              WBS: "Project Charter"<br>
+              → PBS: "Draft charter"<br>
+              → PBS: "Review charter"<br>
+              → PBS: "Obtain approval"
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Tool 4: Cost Estimation ──────────────────────────── -->
+  <section class="section section--alt" id="cost">
+    <div class="section-inner">
+      <div class="section-tool-header">
+        <p class="section-eyebrow">Tool 4 of 5</p>
+        <h2 class="section-title">Cost Estimation</h2>
+        <p class="section-sub">Build a bottom-up cost estimate from individual activities up to the full Project Budget, including contingency and management reserves.</p>
+      </div>
+      <div class="tool-layout">
+        <div class="tool-main">
+          <div class="tool-header">
+            <span class="tool-title">Cost Hierarchy</span>
+            <button class="btn btn-ghost btn-sm" onclick="addCostRow()">+ Add activity</button>
+          </div>
+          <div class="tool-body">
+            <div class="cost-hierarchy">
+
+              <!-- Activity estimates -->
+              <div class="cost-level cost-level--input">
+                <div class="cost-level-label">Activity Estimates</div>
+                <div id="cost-activities">
+                  <!-- rows injected by JS -->
+                </div>
+              </div>
+
+              <div class="cost-arrow">↓ sum</div>
+
+              <!-- Work Package Estimate -->
+              <div class="cost-level cost-level--calc">
+                <div class="cost-level-label">Work Package Estimate</div>
+                <div class="cost-level-value" id="cost-wp">€ 0</div>
+              </div>
+
+              <div class="cost-arrow">↓ (= Work Package in simplified model)</div>
+
+              <!-- Control Account Estimate -->
+              <div class="cost-level cost-level--calc">
+                <div class="cost-level-label">Control Account Estimate</div>
+                <div class="cost-level-value" id="cost-ca">€ 0</div>
+              </div>
+
+              <div class="cost-arrow">↓</div>
+
+              <!-- Project Estimate -->
+              <div class="cost-level cost-level--calc">
+                <div class="cost-level-label">Project Estimate</div>
+                <div class="cost-level-value" id="cost-pe">€ 0</div>
+              </div>
+
+              <div class="cost-connector">+</div>
+
+              <!-- Contingency Reserve -->
+              <div class="cost-level cost-level--input">
+                <div class="cost-level-label">Contingency Reserve</div>
+                <div class="cost-pct-row">
+                  <label>%</label>
+                  <input type="number" id="cost-cr-pct" value="10" min="0" max="100" oninput="recalcCosts()" />
+                  <span class="cost-pct-result">= <span id="cost-cr-val">€ 0</span></span>
+                </div>
+              </div>
+
+              <div class="cost-connector">=</div>
+
+              <!-- Cost Performance Baseline (BAC) -->
+              <div class="cost-level cost-level--result">
+                <div class="cost-level-label">Cost Performance Baseline (BAC)</div>
+                <div class="cost-level-value cost-level-value--accent" id="cost-bac">€ 0</div>
+              </div>
+
+              <div class="cost-connector">+</div>
+
+              <!-- Management Reserve -->
+              <div class="cost-level cost-level--input">
+                <div class="cost-level-label">Management Reserve</div>
+                <div class="cost-pct-row">
+                  <label>%</label>
+                  <input type="number" id="cost-mr-pct" value="5" min="0" max="100" oninput="recalcCosts()" />
+                  <span class="cost-pct-result">= <span id="cost-mr-val">€ 0</span></span>
+                </div>
+              </div>
+
+              <div class="cost-connector">=</div>
+
+              <!-- Project Budget -->
+              <div class="cost-level cost-level--final">
+                <div class="cost-level-label">Project Budget</div>
+                <div class="cost-level-value cost-level-value--amber" id="cost-budget">€ 0</div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+        <div class="tool-panel">
+          <div class="tool-panel-title">About Cost Estimation</div>
+          <div class="tool-panel-body">
+            <p><strong>Activity Estimate</strong> — the cost of one specific piece of work [e.g. workshop facilitation, development sprint].</p>
+            <p><strong>Work Package</strong> — sum of related activity estimates [a PM² control unit].</p>
+            <p><strong>Control Account</strong> — groups work packages for EVM tracking [links scope, schedule, cost].</p>
+            <p><strong>Project Estimate</strong> — total of all control accounts.</p>
+            <p><strong>Contingency Reserve</strong> — buffer for known risks [part of the BAC baseline].</p>
+            <p><strong>BAC (Budget at Completion)</strong> — the approved cost baseline used for EVM.</p>
+            <p><strong>Management Reserve</strong> — buffer for unknown risks [held outside BAC, released by PM²  steering].</p>
+            <div class="tool-panel-example">
+              BAC = Project Estimate<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ Contingency<br>
+              Budget = BAC + Mgmt Reserve
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Tool 5: Gantt ────────────────────────────────────── -->
+  <section class="section" id="gantt">
+    <div class="section-inner">
+      <div class="section-tool-header">
+        <p class="section-eyebrow">Tool 5 of 5</p>
+        <h2 class="section-title">Gantt Chart</h2>
+        <p class="section-sub">Enter tasks with start dates and durations to generate a visual timeline. The chart updates automatically as you type.</p>
+      </div>
+      <div class="tool-layout">
+        <div class="tool-main">
+          <div class="tool-header">
+            <span class="tool-title">Task List</span>
+            <button class="btn btn-ghost btn-sm" onclick="addGanttRow()">+ Add task</button>
+          </div>
+          <div class="tool-body">
+            <table class="gantt-input-table" id="gantt-table">
+              <thead>
+                <tr>
+                  <th style="width: 40%;">Task Name</th>
+                  <th style="width: 28%;">Start Date</th>
+                  <th style="width: 18%;">Duration (days)</th>
+                  <th style="width: 32px;"></th>
+                </tr>
+              </thead>
+              <tbody id="gantt-tbody">
+              </tbody>
+            </table>
+            <div id="gantt-chart"></div>
+          </div>
+        </div>
+        <div class="tool-panel">
+          <div class="tool-panel-title">About Gantt Charts</div>
+          <div class="tool-panel-body">
+            <p>Each <strong>bar</strong> represents one task. Its position is set by the start date and its width by the duration.</p>
+            <p><strong>Duration</strong> should be in working days. A 5-day task that starts Monday ends Friday.</p>
+            <p>The <strong>critical path</strong> is the longest chain of dependent tasks — it determines the minimum project duration.</p>
+            <p>In PM², the Gantt is part of the <strong>Project Work Plan</strong> and is updated throughout Executing.</p>
+            <div class="tool-panel-example">
+              Task A: day 1–5<br>
+              Task B: day 3–8 (overlap)<br>
+              Task C: day 6–10 (seq.)<br>
+              Critical path = A → C
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="brand brand--small">
+        <span class="brand-icon">◈</span>
+        <span class="brand-name">PM Helper</span>
+      </div>
+      <p class="footer-note">Built with PM² methodology · Powered by Claude AI · Sprint 0</p>
+    </div>
+  </footer>
+
+  <script>
+  'use strict';
+
+  /* ============================================================
+     1. UTILITY FUNCTIONS
+     ============================================================ */
+
+  function debounce(fn, delay) {
+    let timer;
+    return function(...args) {
+      clearTimeout(timer);
+      timer = setTimeout(() => fn.apply(this, args), delay);
+    };
+  }
+
+  function getNodeDepth(state, nodeId) {
+    function findDepth(id, depth) {
+      if (id === nodeId) return depth;
+      const node = state.nodes[id];
+      if (!node) return -1;
+      for (const childId of node.children) {
+        const d = findDepth(childId, depth + 1);
+        if (d !== -1) return d;
+      }
+      return -1;
+    }
+    return findDepth(state.rootId, 0);
+  }
+
+  function formatCurrency(n) {
+    return '€ ' + n.toLocaleString('en-IE', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  }
+
+  /* ============================================================
+     2. TREE ENGINE
+     ============================================================ */
+
+  let _nodeCounter = 0;
+  function newNodeId() { return 'n' + (++_nodeCounter); }
+
+  function makeTreeState(rootLabel, childLabels) {
+    const rootId = newNodeId();
+    const state = { rootId, nodes: {} };
+    state.nodes[rootId] = { id: rootId, label: rootLabel, children: [] };
+    for (const label of childLabels) {
+      const id = newNodeId();
+      state.nodes[id] = { id, label, children: [] };
+      state.nodes[rootId].children.push(id);
+    }
+    return state;
+  }
+
+  function getWbsPlaceholder(depth) {
+    switch (depth) {
+      case 0: return '(e.g. My Project)';
+      case 1: return '(e.g. Planning, Execution)';
+      case 2: return '(e.g. Project Charter)';
+      default: return '(e.g. Charter draft)';
+    }
+  }
+
+  function getPbsPlaceholder(depth) {
+    switch (depth) {
+      case 0: return '(e.g. My Project)';
+      case 1: return '(e.g. Planning activities)';
+      case 2: return '(e.g. Draft plan)';
+      default: return '(e.g. Write section)';
+    }
+  }
+
+  function buildNodeHTML(state, nodeId, treeType) {
+    const node = state.nodes[nodeId];
+    if (!node) return '';
+    const isRoot = nodeId === state.rootId;
+    const depth = getNodeDepth(state, nodeId);
+    const placeholder = treeType === 'pbs' ? getPbsPlaceholder(depth) : getWbsPlaceholder(depth);
+    const rootClass = isRoot ? ' root-node' : '';
+
+    let html = '<div class="tree-node" data-node-id="' + nodeId + '">';
+    html += '<div class="tree-node-inner' + rootClass + '">';
+    html += '<input type="text" class="tree-node-label" value="' + escapeAttr(node.label) + '" placeholder="' + escapeAttr(placeholder) + '" data-node-id="' + nodeId + '" />';
+    html += '<button class="tree-add-btn" data-action="add" data-node-id="' + nodeId + '" title="Add child">+</button>';
+    if (!isRoot) {
+      html += '<button class="tree-del-btn" data-action="delete" data-node-id="' + nodeId + '" title="Remove node">×</button>';
+    }
+    html += '</div>';
+
+    if (node.children.length > 0) {
+      html += '<div class="tree-connector"></div>';
+      html += '<div class="tree-children-row">';
+      for (const childId of node.children) {
+        html += buildNodeHTML(state, childId, treeType);
+      }
+      html += '</div>';
+    }
+
+    html += '</div>';
+    return html;
+  }
+
+  function escapeAttr(str) {
+    return String(str).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function renderTree(state, containerId, treeType) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    const html = '<div class="tree-row">' + buildNodeHTML(state, state.rootId, treeType) + '</div>';
+    container.innerHTML = html;
+
+    // Event delegation — labels
+    container.querySelectorAll('.tree-node-label').forEach(function(input) {
+      input.addEventListener('input', function() {
+        const nid = this.dataset.nodeId;
+        if (state.nodes[nid]) {
+          state.nodes[nid].label = this.value;
+        }
+      });
+    });
+
+    // Event delegation — buttons
+    container.addEventListener('click', function(e) {
+      const btn = e.target.closest('[data-action]');
+      if (!btn) return;
+      const action = btn.dataset.action;
+      const nid = btn.dataset.nodeId;
+      if (action === 'add') {
+        addTreeNode(state, nid, containerId, treeType);
+      } else if (action === 'delete') {
+        deleteTreeNode(state, nid, containerId, treeType);
+      }
+    });
+  }
+
+  function addTreeNode(state, parentId, containerId, treeType) {
+    const id = newNodeId();
+    state.nodes[id] = { id, label: '', children: [] };
+    state.nodes[parentId].children.push(id);
+    renderTree(state, containerId, treeType);
+    // Focus the new node
+    const container = document.getElementById(containerId);
+    const newInput = container.querySelector('[data-node-id="' + id + '"].tree-node-label');
+    if (newInput) newInput.focus();
+  }
+
+  function deleteTreeNode(state, nodeId, containerId, treeType) {
+    if (nodeId === state.rootId) return;
+    // Recursively delete descendants
+    function removeSubtree(id) {
+      const node = state.nodes[id];
+      if (!node) return;
+      for (const childId of node.children) removeSubtree(childId);
+      delete state.nodes[id];
+    }
+    // Remove from parent's children array
+    for (const nid in state.nodes) {
+      const node = state.nodes[nid];
+      const idx = node.children.indexOf(nodeId);
+      if (idx !== -1) {
+        node.children.splice(idx, 1);
+        break;
+      }
+    }
+    removeSubtree(nodeId);
+    renderTree(state, containerId, treeType);
+  }
+
+  /* ============================================================
+     3. WBS INIT
+     ============================================================ */
+
+  var wbsState = makeTreeState('My Project', ['Planning', 'Execution', 'Closeout']);
+
+  function resetWBS() {
+    wbsState = makeTreeState('My Project', ['Planning', 'Execution', 'Closeout']);
+    renderTree(wbsState, 'wbs-tree', 'wbs');
+  }
+
+  /* ============================================================
+     4. PBS INIT
+     ============================================================ */
+
+  var pbsState = makeTreeState('My Project', ['Planning activities', 'Execution activities', 'Monitoring activities']);
+
+  function resetPBS() {
+    pbsState = makeTreeState('My Project', ['Planning activities', 'Execution activities', 'Monitoring activities']);
+    renderTree(pbsState, 'pbs-tree', 'pbs');
+  }
+
+  /* ============================================================
+     5. STAKEHOLDER FUNCTIONS
+     ============================================================ */
+
+  var shRowCount = 0;
+
+  function addStakeholderRow(name, role, interest, influence, strategy) {
+    shRowCount++;
+    const tbody = document.getElementById('sh-tbody');
+    const rowId = 'sh-row-' + shRowCount;
+    const tr = document.createElement('tr');
+    tr.id = rowId;
+
+    const interestVal = interest || 'H';
+    const influenceVal = influence || 'H';
+
+    tr.innerHTML =
+      '<td><input type="text" value="' + escapeAttr(name || '') + '" placeholder="(e.g. Marketing Director, IT Department)" oninput="" /></td>' +
+      '<td><input type="text" value="' + escapeAttr(role || '') + '" placeholder="(e.g. Project Owner, Sponsor, End User)" /></td>' +
+      '<td>' + buildSelectHTML(['H', 'M', 'L'], interestVal) + '</td>' +
+      '<td>' + buildSelectHTML(['H', 'M', 'L'], influenceVal) + '</td>' +
+      '<td><input type="text" value="' + escapeAttr(strategy || '') + '" placeholder="(e.g. Weekly steering update)" /></td>' +
+      '<td><button class="btn-del-row" onclick="deleteStakeholderRow(\'' + rowId + '\')" title="Remove row">×</button></td>';
+
+    tbody.appendChild(tr);
+  }
+
+  function buildSelectHTML(options, selected) {
+    let html = '<select>';
+    for (const opt of options) {
+      const sel = opt === selected ? ' selected' : '';
+      html += '<option value="' + opt + '"' + sel + '>' + opt + '</option>';
+    }
+    html += '</select>';
+    return html;
+  }
+
+  function deleteStakeholderRow(rowId) {
+    const row = document.getElementById(rowId);
+    if (row) row.remove();
+  }
+
+  /* ============================================================
+     6. COST FUNCTIONS
+     ============================================================ */
+
+  var costRowCount = 0;
+
+  function addCostRow(name, amount) {
+    costRowCount++;
+    const container = document.getElementById('cost-activities');
+    const rowId = 'cost-row-' + costRowCount;
+    const div = document.createElement('div');
+    div.id = rowId;
+    div.className = 'cost-activity-row';
+    div.innerHTML =
+      '<input type="text" class="field-input" style="flex:1;" value="' + escapeAttr(name || '') + '" placeholder="(e.g. Requirements workshop)" />' +
+      '<input type="number" class="field-input" style="width:120px; font-family: var(--font-mono);" value="' + (amount !== undefined ? amount : '') + '" placeholder="(e.g. 2000)" min="0" oninput="recalcCosts()" />' +
+      '<button class="btn-del-row" onclick="deleteCostRow(\'' + rowId + '\')" title="Remove">×</button>';
+    container.appendChild(div);
+    recalcCosts();
+  }
+
+  function deleteCostRow(rowId) {
+    const row = document.getElementById(rowId);
+    if (row) row.remove();
+    recalcCosts();
+  }
+
+  function recalcCosts() {
+    const container = document.getElementById('cost-activities');
+    let total = 0;
+    container.querySelectorAll('input[type="number"]').forEach(function(inp) {
+      const v = parseFloat(inp.value);
+      if (!isNaN(v) && v > 0) total += v;
+    });
+
+    const crPct = parseFloat(document.getElementById('cost-cr-pct').value) || 0;
+    const mrPct = parseFloat(document.getElementById('cost-mr-pct').value) || 0;
+
+    const crVal = total * crPct / 100;
+    const bac = total + crVal;
+    const mrVal = bac * mrPct / 100;
+    const budget = bac + mrVal;
+
+    document.getElementById('cost-wp').textContent = formatCurrency(total);
+    document.getElementById('cost-ca').textContent = formatCurrency(total);
+    document.getElementById('cost-pe').textContent = formatCurrency(total);
+    document.getElementById('cost-cr-val').textContent = formatCurrency(crVal);
+    document.getElementById('cost-bac').textContent = formatCurrency(bac);
+    document.getElementById('cost-mr-val').textContent = formatCurrency(mrVal);
+    document.getElementById('cost-budget').textContent = formatCurrency(budget);
+  }
+
+  /* ============================================================
+     7. GANTT FUNCTIONS
+     ============================================================ */
+
+  var ganttRowCount = 0;
+  var TODAY = '2026-03-17';
+
+  function addGanttRow(name, startDate, duration) {
+    ganttRowCount++;
+    const tbody = document.getElementById('gantt-tbody');
+    const rowId = 'gantt-row-' + ganttRowCount;
+    const tr = document.createElement('tr');
+    tr.id = rowId;
+    tr.innerHTML =
+      '<td><input type="text" value="' + escapeAttr(name || '') + '" placeholder="(e.g. Requirements gathering, Design, Development)" oninput="renderGantt()" /></td>' +
+      '<td><input type="date" value="' + escapeAttr(startDate || TODAY) + '" oninput="renderGantt()" /></td>' +
+      '<td><input type="number" value="' + (duration !== undefined ? duration : 5) + '" min="1" oninput="renderGantt()" /></td>' +
+      '<td><button class="btn-del-row" onclick="deleteGanttRow(\'' + rowId + '\')" title="Remove">×</button></td>';
+    tbody.appendChild(tr);
+    renderGantt();
+  }
+
+  function deleteGanttRow(rowId) {
+    const row = document.getElementById(rowId);
+    if (row) row.remove();
+    renderGantt();
+  }
+
+  function parseGanttTasks() {
+    const tbody = document.getElementById('gantt-tbody');
+    const rows = tbody.querySelectorAll('tr');
+    const tasks = [];
+    rows.forEach(function(tr) {
+      const inputs = tr.querySelectorAll('input');
+      if (inputs.length < 3) return;
+      const name = inputs[0].value.trim() || 'Task';
+      const startStr = inputs[1].value;
+      const dur = parseInt(inputs[2].value, 10);
+      if (!startStr || isNaN(dur) || dur < 1) return;
+      const startMs = new Date(startStr).getTime();
+      if (isNaN(startMs)) return;
+      const endMs = startMs + (dur - 1) * 86400000;
+      tasks.push({ name, startMs, endMs, dur });
+    });
+    return tasks;
+  }
+
+  function renderGantt() {
+    const tasks = parseGanttTasks();
+    const container = document.getElementById('gantt-chart');
+
+    if (tasks.length === 0) {
+      container.innerHTML = '<div class="gantt-empty">Add tasks above to see the Gantt chart.</div>';
+      return;
+    }
+
+    const projectStart = Math.min.apply(null, tasks.map(function(t) { return t.startMs; }));
+    const projectEnd   = Math.max.apply(null, tasks.map(function(t) { return t.endMs; }));
+    const totalSpan    = projectEnd - projectStart || 86400000;
+
+    // Determine tick interval
+    const spanDays = totalSpan / 86400000;
+    const tickIntervalDays = spanDays > 14 ? 7 : 3;
+
+    // Build tick dates
+    const ticks = [];
+    let tickMs = projectStart;
+    while (tickMs <= projectEnd + tickIntervalDays * 86400000) {
+      ticks.push(tickMs);
+      tickMs += tickIntervalDays * 86400000;
+    }
+
+    function pct(ms) {
+      return ((ms - projectStart) / totalSpan * 100).toFixed(2) + '%';
+    }
+
+    function fmtDate(ms) {
+      const d = new Date(ms);
+      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      return d.getDate() + ' ' + months[d.getMonth()];
+    }
+
+    let html = '<div class="gantt-wrap">';
+
+    // Header row
+    html += '<div class="gantt-header-row">';
+    html += '<div class="gantt-label-col"></div>';
+    html += '<div class="gantt-timeline-header">';
+    for (const tick of ticks) {
+      const left = pct(tick);
+      html += '<div class="gantt-tick-line" style="left:' + left + '"></div>';
+      html += '<div class="gantt-tick-label" style="left:' + left + '">' + fmtDate(tick) + '</div>';
+    }
+    html += '</div>';
+    html += '</div>';
+
+    // Task rows
+    for (const task of tasks) {
+      const offsetPct = ((task.startMs - projectStart) / totalSpan * 100).toFixed(2);
+      const widthPct  = ((task.endMs - task.startMs + 86400000) / totalSpan * 100).toFixed(2);
+
+      html += '<div class="gantt-row">';
+      html += '<div class="gantt-row-label" title="' + escapeAttr(task.name) + '">' + escapeAttr(task.name) + '</div>';
+      html += '<div class="gantt-track">';
+      // Tick lines on track
+      for (const tick of ticks) {
+        html += '<div style="position:absolute;top:0;bottom:0;left:' + pct(tick) + ';width:1px;background:var(--border-subtle);"></div>';
+      }
+      html += '<div class="gantt-bar" style="left:' + offsetPct + '%;width:' + widthPct + '%;">';
+      html += '<span class="gantt-bar-label">' + escapeAttr(task.name) + '</span>';
+      html += '</div>';
+      html += '</div>';
+      html += '</div>';
+    }
+
+    html += '</div>';
+    container.innerHTML = html;
+  }
+
+  /* ============================================================
+     8. DOMContentLoaded INIT
+     ============================================================ */
+
+  document.addEventListener('DOMContentLoaded', function() {
+
+    // WBS
+    renderTree(wbsState, 'wbs-tree', 'wbs');
+
+    // PBS
+    renderTree(pbsState, 'pbs-tree', 'pbs');
+
+    // Stakeholders — pre-seed 2 rows
+    addStakeholderRow('Project Sponsor', 'Sponsor', 'H', 'H', 'Monthly steering committee');
+    addStakeholderRow('End Users', 'End User', 'H', 'M', 'Regular demos and feedback sessions');
+
+    // Cost — pre-seed 3 activity rows
+    addCostRow('Requirements workshop', 2000);
+    addCostRow('Design & prototyping', 5000);
+    addCostRow('Development sprints', 18000);
+
+    // Gantt — pre-seed 3 tasks
+    addGanttRow('Requirements gathering', '2026-03-17', 5);
+    addGanttRow('Design', '2026-03-24', 7);
+    addGanttRow('Development', '2026-04-07', 14);
+  });
+
+  </script>
+</body>
+</html>
