@@ -81,6 +81,16 @@
     .gantt-input-table td input[type="number"] { font-family: var(--font-mono); }
     .gantt-input-table td input::placeholder { color: var(--text-muted); }
     .gantt-input-table td input[type="date"] { color-scheme: dark; }
+    .gantt-input-table td select { background: transparent; border: none; outline: none; font-size: 12px; font-family: var(--font-mono); cursor: pointer; }
+    .gantt-input-table td select option { background: var(--bg-2); }
+    .drag-handle { cursor: grab; color: var(--text-muted); font-size: 14px; padding: 0 4px; user-select: none; }
+    .drag-handle:active { cursor: grabbing; }
+    .gantt-input-table tr.dragging { opacity: 0.4; }
+    .gantt-input-table tr.drag-over { border-top: 2px solid var(--accent); }
+    .priority-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; vertical-align: middle; }
+    .priority-must { color: #ef4444; }
+    .priority-crucial { color: var(--text-primary); }
+    .priority-nice { color: #10b981; }
     /* Stakeholder table inline inputs */
     .sh-table td input, .sh-table td select { background: transparent; border: none; outline: none; color: var(--text-primary); font-size: 13px; font-family: var(--font-body); width: 100%; padding: 0; }
     .sh-table td input::placeholder { color: var(--text-muted); }
@@ -414,9 +424,12 @@
                 <table class="gantt-input-table">
                   <thead>
                     <tr>
-                      <th style="width:40%;">Task Name</th>
-                      <th style="width:28%;">Start Date</th>
-                      <th style="width:18%;">Duration (days)</th>
+                      <th style="width:28px;"></th>
+                      <th style="width:28%;">Task Name</th>
+                      <th style="width:16%;">Start Date</th>
+                      <th style="width:10%;">Days</th>
+                      <th style="width:14%;">Priority</th>
+                      <th style="width:10%;">Importance</th>
                       <th style="width:32px;"></th>
                     </tr>
                   </thead>

@@ -294,21 +294,78 @@ function recalcCosts() {
 
 var ganttRowCount = 0;
 var GANTT_TODAY = new Date().toISOString().slice(0, 10);
+var _ganttDragSrc = null;
 
-function addGanttRow(name, startDate, duration) {
+var PRIORITY_CONFIG = {
+  must:    { label: 'Must',          color: '#ef4444', printColor: '#dc2626' },
+  crucial: { label: 'Crucial',       color: '#e2e8f0', printColor: '#111827' },
+  nice:    { label: 'Nice to have',  color: '#10b981', printColor: '#059669' },
+};
+
+function addGanttRow(name, startDate, duration, priority, importance) {
   ganttRowCount++;
   const tbody = document.getElementById('gantt-tbody');
   if (!tbody) return;
   const rowId = 'gantt-row-' + ganttRowCount;
   const tr = document.createElement('tr');
   tr.id = rowId;
+  tr.setAttribute('draggable', 'true');
+
+  const pri = priority || 'must';
+  const imp = importance !== undefined ? importance : 5;
+
+  const prioritySelect =
+    '<select onchange="renderGantt()" style="color:' + PRIORITY_CONFIG[pri].color + ';">' +
+    Object.keys(PRIORITY_CONFIG).map(function(k) {
+      return '<option value="' + k + '"' + (k === pri ? ' selected' : '') + ' style="color:' + PRIORITY_CONFIG[k].color + ';">' + PRIORITY_CONFIG[k].label + '</option>';
+    }).join('') +
+    '</select>';
+
   tr.innerHTML =
+    '<td><span class="drag-handle" title="Drag to reorder">⠿</span></td>' +
     '<td><input type="text" value="' + escapeAttr(name || '') + '" placeholder="(e.g. Requirements gathering)" oninput="renderGantt()" /></td>' +
     '<td><input type="date" value="' + escapeAttr(startDate || GANTT_TODAY) + '" oninput="renderGantt()" /></td>' +
     '<td><input type="number" value="' + (duration !== undefined ? duration : 5) + '" min="1" oninput="renderGantt()" /></td>' +
+    '<td>' + prioritySelect + '</td>' +
+    '<td><input type="number" value="' + imp + '" min="1" max="10" style="width:44px;" oninput="renderGantt()" /></td>' +
     '<td><button class="btn-del-row" onclick="deleteGanttRow(\'' + rowId + '\')" title="Remove">×</button></td>';
+
   tbody.appendChild(tr);
+  _attachGanttDrag(tr);
   renderGantt();
+}
+
+function _attachGanttDrag(tr) {
+  tr.addEventListener('dragstart', function(e) {
+    _ganttDragSrc = tr;
+    tr.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+  });
+  tr.addEventListener('dragend', function() {
+    tr.classList.remove('dragging');
+    document.querySelectorAll('#gantt-tbody tr').forEach(function(r) { r.classList.remove('drag-over'); });
+    renderGantt();
+  });
+  tr.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    document.querySelectorAll('#gantt-tbody tr').forEach(function(r) { r.classList.remove('drag-over'); });
+    tr.classList.add('drag-over');
+  });
+  tr.addEventListener('drop', function(e) {
+    e.preventDefault();
+    if (_ganttDragSrc && _ganttDragSrc !== tr) {
+      const tbody = document.getElementById('gantt-tbody');
+      const rows = Array.from(tbody.querySelectorAll('tr'));
+      const srcIdx = rows.indexOf(_ganttDragSrc);
+      const tgtIdx = rows.indexOf(tr);
+      if (srcIdx < tgtIdx) {
+        tbody.insertBefore(_ganttDragSrc, tr.nextSibling);
+      } else {
+        tbody.insertBefore(_ganttDragSrc, tr);
+      }
+    }
+  });
 }
 
 function deleteGanttRow(rowId) {
@@ -317,42 +374,53 @@ function deleteGanttRow(rowId) {
   renderGantt();
 }
 
-function renderGantt() {
+function _getGanttTasks() {
   const tbody = document.getElementById('gantt-tbody');
-  const container = document.getElementById('gantt-chart');
-  if (!tbody || !container) return;
-
+  if (!tbody) return [];
   const tasks = [];
   tbody.querySelectorAll('tr').forEach(function(tr) {
     const inputs = tr.querySelectorAll('input');
+    const select = tr.querySelector('select');
     if (inputs.length < 3) return;
     const name = inputs[0].value.trim() || 'Task';
     const startStr = inputs[1].value;
     const dur = parseInt(inputs[2].value, 10);
+    const imp = parseInt(inputs[3] ? inputs[3].value : 5, 10) || 5;
+    const pri = select ? select.value : 'must';
     if (!startStr || isNaN(dur) || dur < 1) return;
     const startMs = new Date(startStr).getTime();
     if (isNaN(startMs)) return;
-    tasks.push({ name, startMs, endMs: startMs + (dur - 1) * 86400000, dur });
+    tasks.push({ name, startMs, endMs: startMs + (dur - 1) * 86400000, dur, pri, imp, startStr });
   });
+  return tasks;
+}
+
+function renderGantt() {
+  const container = document.getElementById('gantt-chart');
+  if (!container) return;
+  const tasks = _getGanttTasks();
 
   if (tasks.length === 0) {
     container.innerHTML = '<div class="gantt-empty">Add tasks above to see the chart.</div>';
     return;
   }
 
-  const projectStart = Math.min(...tasks.map(t => t.startMs));
-  const projectEnd   = Math.max(...tasks.map(t => t.endMs));
+  const projectStart = Math.min.apply(null, tasks.map(function(t) { return t.startMs; }));
+  const projectEnd   = Math.max.apply(null, tasks.map(function(t) { return t.endMs; }));
   const totalSpan    = projectEnd - projectStart || 86400000;
   const spanDays     = totalSpan / 86400000;
   const tickInterval = spanDays > 14 ? 7 : 3;
 
   const ticks = [];
-  for (let ms = projectStart; ms <= projectEnd + tickInterval * 86400000; ms += tickInterval * 86400000) {
+  for (var ms = projectStart; ms <= projectEnd + tickInterval * 86400000; ms += tickInterval * 86400000) {
     ticks.push(ms);
   }
 
-  const pct = ms => ((ms - projectStart) / totalSpan * 100).toFixed(2) + '%';
-  const fmtDate = ms => { const d = new Date(ms); return d.getDate() + ' ' + ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]; };
+  const pct = function(ms) { return ((ms - projectStart) / totalSpan * 100).toFixed(2) + '%'; };
+  const fmtDate = function(ms) {
+    const d = new Date(ms);
+    return d.getDate() + ' ' + ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()];
+  };
 
   let html = '<div class="gantt-wrap"><div class="gantt-header-row"><div class="gantt-label-col"></div><div class="gantt-timeline-header">';
   for (const tick of ticks) {
@@ -363,10 +431,21 @@ function renderGantt() {
 
   for (const task of tasks) {
     const offsetPct = ((task.startMs - projectStart) / totalSpan * 100).toFixed(2);
-    const widthPct  = ((task.endMs - task.startMs + 86400000) / totalSpan * 100).toFixed(2);
-    html += '<div class="gantt-row"><div class="gantt-row-label" title="' + escapeAttr(task.name) + '">' + escapeAttr(task.name) + '</div><div class="gantt-track">';
-    for (const tick of ticks) html += '<div style="position:absolute;top:0;bottom:0;left:' + pct(tick) + ';width:1px;background:var(--border-subtle);"></div>';
-    html += '<div class="gantt-bar" style="left:' + offsetPct + '%;width:' + widthPct + '%;"><span class="gantt-bar-label">' + escapeAttr(task.name) + '</span></div></div></div>';
+    const widthPct  = Math.max(1, ((task.endMs - task.startMs + 86400000) / totalSpan * 100).toFixed(2));
+    const barColor  = PRIORITY_CONFIG[task.pri] ? PRIORITY_CONFIG[task.pri].color : '#0FD9A0';
+    const textColor = task.pri === 'crucial' ? '#05080F' : '#05080F';
+
+    html += '<div class="gantt-row">';
+    html += '<div class="gantt-row-label" title="' + escapeAttr(task.name) + '">' +
+      '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + barColor + ';margin-right:6px;flex-shrink:0;vertical-align:middle;"></span>' +
+      escapeAttr(task.name) + '</div>';
+    html += '<div class="gantt-track">';
+    for (const tick of ticks) {
+      html += '<div style="position:absolute;top:0;bottom:0;left:' + pct(tick) + ';width:1px;background:var(--border-subtle);"></div>';
+    }
+    html += '<div class="gantt-bar" style="left:' + offsetPct + '%;width:' + widthPct + '%;background:' + barColor + ';">';
+    html += '<span class="gantt-bar-label" style="color:' + textColor + ';">' + task.imp + ' · ' + escapeAttr(task.name) + '</span>';
+    html += '</div></div></div>';
   }
 
   html += '</div>';
@@ -510,11 +589,11 @@ function initTools(projectName, artefacts, answers) {
   const today = GANTT_TODAY;
   const d0 = new Date(today);
   function addWeeks(d, w) { const n = new Date(d); n.setDate(n.getDate() + w * 7); return n.toISOString().slice(0, 10); }
-  addGanttRow('Initiating', today, 5);
-  addGanttRow('Planning', addWeeks(d0, 1), 10);
-  addGanttRow('Executing', addWeeks(d0, 3), 30);
-  addGanttRow('Monitoring & Control', addWeeks(d0, 3), 35);
-  addGanttRow('Closing', addWeeks(d0, 12), 5);
+  addGanttRow('Initiating',           today,              5,  'must',    8);
+  addGanttRow('Planning',             addWeeks(d0, 1),    10, 'must',    9);
+  addGanttRow('Executing',            addWeeks(d0, 3),    30, 'must',    10);
+  addGanttRow('Monitoring & Control', addWeeks(d0, 3),    35, 'crucial', 7);
+  addGanttRow('Closing',              addWeeks(d0, 12),   5,  'nice',    5);
 }
 
 // ── PDF Print System ──────────────────────────────────────────
@@ -710,20 +789,7 @@ function printCost() {
 // ── Print: Gantt / Time Estimation ───────────────────────────
 
 function printGantt() {
-  const tbody = document.getElementById('gantt-tbody');
-  if (!tbody) return;
-  const tasks = [];
-  tbody.querySelectorAll('tr').forEach(function(tr) {
-    const inputs = tr.querySelectorAll('input');
-    if (inputs.length < 3) return;
-    const name = inputs[0].value.trim() || 'Task';
-    const startStr = inputs[1].value;
-    const dur = parseInt(inputs[2].value, 10);
-    if (!startStr || isNaN(dur)) return;
-    const startMs = new Date(startStr).getTime();
-    if (isNaN(startMs)) return;
-    tasks.push({ name, startMs, endMs: startMs + (dur - 1) * 86400000, dur, startStr });
-  });
+  const tasks = _getGanttTasks();
   if (!tasks.length) return;
 
   const projectStart = Math.min.apply(null, tasks.map(function(t) { return t.startMs; }));
@@ -736,16 +802,31 @@ function printGantt() {
   tasks.forEach(function(t) {
     const offsetPct = ((t.startMs - projectStart) / totalSpan * 100).toFixed(1);
     const widthPct  = Math.max(2, ((t.endMs - t.startMs + 86400000) / totalSpan * 100).toFixed(1));
+    const priCfg    = PRIORITY_CONFIG[t.pri] || PRIORITY_CONFIG.must;
+    const barColor  = priCfg.printColor;
     rows += '<tr>' +
-      '<td>' + escapeAttr(t.name) + '</td>' +
+      '<td style="display:flex;align-items:center;gap:6px;">' +
+        '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + barColor + ';flex-shrink:0;"></span>' +
+        escapeAttr(t.name) +
+      '</td>' +
       '<td style="font-family:\'Space Mono\',monospace;font-size:11px;">' + fmtDate(t.startStr) + '</td>' +
       '<td style="font-family:\'Space Mono\',monospace;font-size:11px;">' + fmtDate(endDate(t)) + '</td>' +
       '<td style="text-align:center;font-family:\'Space Mono\',monospace;">' + t.dur + 'd</td>' +
-      '<td class="gantt-bar-cell"><div class="bar-bg"><div class="bar-fill" style="margin-left:' + offsetPct + '%;width:' + widthPct + '%;"></div></div></td>' +
+      '<td style="text-align:center;font-family:\'Space Mono\',monospace;color:' + barColor + ';font-weight:700;">' + priCfg.label + '</td>' +
+      '<td style="text-align:center;font-family:\'Space Mono\',monospace;">' + t.imp + '/10</td>' +
+      '<td class="gantt-bar-cell"><div class="bar-bg"><div class="bar-fill" style="margin-left:' + offsetPct + '%;width:' + widthPct + '%;background:' + barColor + ';"></div></div></td>' +
       '</tr>';
   });
 
   const body = docHeader('Time Estimation — Project Schedule', 'PM² Gantt Chart') +
-    '<table class="gantt-table"><thead><tr><th style="width:22%;">Task</th><th style="width:14%;">Start</th><th style="width:14%;">End</th><th style="width:8%;">Duration</th><th class="gantt-bar-cell">Timeline</th></tr></thead><tbody>' + rows + '</tbody></table>';
+    '<table class="gantt-table"><thead><tr>' +
+    '<th style="width:22%;">Task</th>' +
+    '<th style="width:12%;">Start</th>' +
+    '<th style="width:12%;">End</th>' +
+    '<th style="width:6%;">Dur.</th>' +
+    '<th style="width:10%;">Priority</th>' +
+    '<th style="width:6%;">Imp.</th>' +
+    '<th class="gantt-bar-cell">Timeline</th>' +
+    '</tr></thead><tbody>' + rows + '</tbody></table>';
   openPrintWindow(body);
 }
