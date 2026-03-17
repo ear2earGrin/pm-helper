@@ -89,12 +89,6 @@ const state = {
 // ── DOM References ────────────────────────────────────────────
 const $ = (id) => document.getElementById(id);
 const dom = {
-  // Modal
-  apiModal: $('api-key-modal'),
-  apiKeyInput: $('api-key-input'),
-  saveKeyBtn: $('save-api-key-btn'),
-  changeKeyBtn: $('change-key-btn'),
-
   // Views
   wizardView: $('wizard-view'),
   loadingView: $('loading-view'),
@@ -119,7 +113,6 @@ const dom = {
   retryBtn: $('retry-btn'),
   errorMessage: $('error-message'),
   newProjectBtn: $('new-project-btn'),
-  exportBtn: $('export-btn'),
   coachingNudge: $('coaching-nudge'),
 };
 
@@ -414,9 +407,6 @@ dom.newProjectBtn.addEventListener('click', () => {
   showView('wizard-view');
 });
 
-dom.exportBtn.addEventListener('click', () => {
-  alert('Export to PDF and DOCX is available in PM Helper Pro.\n\nUpgrade coming soon — contact us to join the waitlist.');
-});
 
 // ── Result Rendering ──────────────────────────────────────────
 function pill(value) {
@@ -625,6 +615,11 @@ function renderResults(artefacts) {
   renderCharter(artefacts.charter);
   renderStakeholders(artefacts.stakeholders);
   renderRisks(artefacts.risks);
+
+  // Init planning tools with project name pre-filled
+  if (typeof initTools === 'function') {
+    initTools(artefacts.charter?.projectName || state.answers.projectName || 'My Project');
+  }
 
   // Show coaching nudge
   dom.coachingNudge.classList.remove('hidden');
