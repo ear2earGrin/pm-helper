@@ -295,6 +295,7 @@ function recalcCosts() {
 var ganttRowCount = 0;
 var GANTT_TODAY = new Date().toISOString().slice(0, 10);
 var _ganttDragSrc = null;
+var _ganttMeta = { projectStart: 0, totalSpan: 0 };
 
 var PRIORITY_CONFIG = {
   must:    { label: 'Must',          color: '#ef4444', printColor: '#dc2626' },
@@ -396,7 +397,7 @@ function _getGanttTasks() {
     if (!startStr || isNaN(dur) || dur < 1) return;
     const startMs = new Date(startStr).getTime();
     if (isNaN(startMs)) return;
-    tasks.push({ name, startMs, endMs: startMs + (dur - 1) * 86400000, dur, pri, imp, startStr });
+    tasks.push({ name, startMs, endMs: startMs + (dur - 1) * 86400000, dur, pri, imp, startStr, rowId: tr.id });
   });
   return tasks;
 }
@@ -413,12 +414,17 @@ function renderGantt() {
 
   const projectStart = Math.min.apply(null, tasks.map(function(t) { return t.startMs; }));
   const projectEnd   = Math.max.apply(null, tasks.map(function(t) { return t.endMs; }));
-  const totalSpan    = projectEnd - projectStart || 86400000;
+  // Add 15% breathing room so the last task isn't jammed against the edge
+  const rawSpan      = projectEnd - projectStart || 86400000;
+  const totalSpan    = rawSpan * 1.15;
+  _ganttMeta.projectStart = projectStart;
+  _ganttMeta.totalSpan    = totalSpan;
+
   const spanDays     = totalSpan / 86400000;
   const tickInterval = spanDays > 14 ? 7 : 3;
 
   const ticks = [];
-  for (var ms = projectStart; ms <= projectEnd + tickInterval * 86400000; ms += tickInterval * 86400000) {
+  for (var ms = projectStart; ms <= projectStart + totalSpan; ms += tickInterval * 86400000) {
     ticks.push(ms);
   }
 
@@ -439,7 +445,6 @@ function renderGantt() {
     const offsetPct = ((task.startMs - projectStart) / totalSpan * 100).toFixed(2);
     const widthPct  = Math.max(1, ((task.endMs - task.startMs + 86400000) / totalSpan * 100).toFixed(2));
     const barColor  = PRIORITY_CONFIG[task.pri] ? PRIORITY_CONFIG[task.pri].color : '#0FD9A0';
-    const textColor = task.pri === 'crucial' ? '#05080F' : '#05080F';
 
     html += '<div class="gantt-row">';
     html += '<div class="gantt-row-label" title="' + escapeAttr(task.name) + '">' +
@@ -449,13 +454,60 @@ function renderGantt() {
     for (const tick of ticks) {
       html += '<div style="position:absolute;top:0;bottom:0;left:' + pct(tick) + ';width:1px;background:var(--border-subtle);"></div>';
     }
-    html += '<div class="gantt-bar" style="left:' + offsetPct + '%;width:' + widthPct + '%;background:' + barColor + ';">';
-    html += '<span class="gantt-bar-label" style="color:' + textColor + ';">' + task.imp + ' · ' + escapeAttr(task.name) + '</span>';
+    html += '<div class="gantt-bar" data-row-id="' + escapeAttr(task.rowId || '') + '" style="left:' + offsetPct + '%;width:' + widthPct + '%;background:' + barColor + ';cursor:grab;">';
+    html += '<span class="gantt-bar-label" style="color:#05080F;">' + task.imp + ' · ' + escapeAttr(task.name) + '</span>';
     html += '</div></div></div>';
   }
 
   html += '</div>';
   container.innerHTML = html;
+
+  // Attach horizontal drag to each bar
+  container.querySelectorAll('.gantt-bar[data-row-id]').forEach(function(bar) {
+    _attachBarHDrag(bar);
+  });
+}
+
+function _attachBarHDrag(bar) {
+  bar.addEventListener('mousedown', function(e) {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const rowId = bar.dataset.rowId;
+    const track = bar.closest('.gantt-track');
+    if (!track) return;
+    const trackRect = track.getBoundingClientRect();
+    const startX = e.clientX;
+    const originalLeft = parseFloat(bar.style.left) || 0;
+    bar.style.cursor = 'grabbing';
+    bar.style.opacity = '0.75';
+
+    function onMove(e) {
+      const dpct = ((e.clientX - startX) / trackRect.width) * 100;
+      bar.style.left = Math.max(0, originalLeft + dpct) + '%';
+    }
+
+    function onUp() {
+      bar.style.cursor = 'grab';
+      bar.style.opacity = '';
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      // Convert final position back to a snapped date
+      const finalPct = parseFloat(bar.style.left) / 100;
+      const newStartMs = _ganttMeta.projectStart + finalPct * _ganttMeta.totalSpan;
+      const snapped = Math.round(newStartMs / 86400000) * 86400000;
+      const newDate = new Date(snapped).toISOString().slice(0, 10);
+      const row = document.getElementById(rowId);
+      if (row) {
+        const dateInput = row.querySelectorAll('input')[1];
+        if (dateInput) dateInput.value = newDate;
+      }
+      renderGantt();
+    }
+
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  });
 }
 
 // ── initTools — called after AI results are rendered ─────────
