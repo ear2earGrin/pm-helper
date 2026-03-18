@@ -99,6 +99,9 @@
     .btn-del-row { background: transparent; border: none; color: var(--text-muted); font-size: 16px; cursor: pointer; padding: 0 4px; line-height: 1; transition: color 0.2s; flex-shrink: 0; }
     .btn-del-row:hover { color: var(--danger); }
     @media (max-width: 768px) { .tool-layout { grid-template-columns: 1fr; } .tool-panel { position: static; } .gantt-label-col, .gantt-row-label { width: 90px; } }
+    .lang-selector select { background: var(--bg-3); border: 1px solid var(--border-default); border-radius: var(--r-sm); color: var(--text-primary); font-size: 12px; font-family: var(--font-mono); padding: 4px 8px; cursor: pointer; outline: none; }
+    .lang-selector select:hover { border-color: var(--border-strong); }
+    .lang-selector select option { background: var(--bg-2); }
   </style>
 </head>
 <body class="app-body">
@@ -114,7 +117,16 @@
         <span class="brand-name">PM Helper</span>
       </a>
       <div class="nav-links">
-        <a href="tools.html" class="nav-link">Tools</a>
+        <a href="tools.html" class="nav-link" id="nav-tools-link">Tools</a>
+        <div class="lang-selector">
+          <select id="lang-select" onchange="handleLangChange(this.value)" title="Language">
+            <option value="en">🌐 EN</option>
+            <option value="de">DE</option>
+            <option value="fr">FR</option>
+            <option value="bg">BG</option>
+            <option value="es">ES</option>
+          </select>
+        </div>
       </div>
     </nav>
 
@@ -476,6 +488,7 @@
 
   </div>
 
+  <script src="js/i18n.js"></script>
   <script src="js/tools.js"></script>
   <script src="js/wizard.js"></script>
 </body>

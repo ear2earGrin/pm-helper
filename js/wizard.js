@@ -79,6 +79,59 @@ const QUESTIONS = [
   },
 ];
 
+// ── Language Handling ─────────────────────────────────────────
+function handleLangChange(lang) {
+  setLanguage(lang);
+  applyTranslations();
+  // Re-render current question with new language
+  renderQuestion(state.currentStep);
+}
+
+function applyTranslations() {
+  // Nav
+  var toolsLink = document.getElementById('nav-tools-link');
+  if (toolsLink) toolsLink.textContent = t('tools');
+  // Loading
+  var lt = document.getElementById('loading-title');
+  if (lt) lt.textContent = t('loadingTitle');
+  var ls1 = document.getElementById('ls-1');
+  if (ls1) { var sp = ls1.querySelector('span'); if (sp) sp.textContent = t('loadingStep1'); }
+  var ls2 = document.getElementById('ls-2');
+  if (ls2) { var sp2 = ls2.querySelector('span'); if (sp2) sp2.textContent = t('loadingStep2'); }
+  var ls3 = document.getElementById('ls-3');
+  if (ls3) { var sp3 = ls3.querySelector('span'); if (sp3) sp3.textContent = t('loadingStep3'); }
+  // Nav buttons
+  var backBtn = document.getElementById('back-btn');
+  if (backBtn) backBtn.textContent = t('back');
+  var nextBtn = document.getElementById('next-btn');
+  if (nextBtn) {
+    var isLast = state.currentStep === QUESTIONS.length - 1;
+    nextBtn.textContent = isLast ? t('generate') : t('next');
+  }
+  // New project button
+  var npBtn = document.getElementById('new-project-btn');
+  if (npBtn) npBtn.textContent = t('newProject');
+  // Tabs
+  var tabMap = { 'charter': 'tabCharter', 'stakeholders': 'tabStakeholders', 'risks': 'tabRisks', 'wbs': 'tabWbs', 'pbs': 'tabPbs', 'sh-register': 'tabShRegister', 'cost': 'tabCost', 'gantt': 'tabGantt' };
+  document.querySelectorAll('.rtab').forEach(function(tab) {
+    var key = tabMap[tab.dataset.tab];
+    if (key) {
+      var icon = tab.querySelector('.rtab-icon');
+      tab.textContent = t(key);
+      if (icon) tab.insertBefore(icon, tab.firstChild);
+    }
+  });
+  // Retry button
+  var retryBtn = document.getElementById('retry-btn');
+  if (retryBtn) retryBtn.textContent = t('tryAgain');
+  // Error title
+  var et = document.querySelector('.error-title');
+  if (et) et.textContent = t('errorTitle');
+  // Coaching nudge
+  var nudge = document.getElementById('nudge-text');
+  if (nudge) nudge.textContent = t('nudgeText');
+}
+
 // ── State ────────────────────────────────────────────────────
 const state = {
   currentStep: 0,
@@ -130,12 +183,16 @@ function showView(viewId) {
 function updateProgress() {
   const pct = ((state.currentStep + 1) / QUESTIONS.length) * 100;
   dom.progressBar.style.width = pct + '%';
-  dom.progressLabel.textContent = `Step ${state.currentStep + 1} of ${QUESTIONS.length}`;
+  dom.progressLabel.textContent = t('stepOf')(state.currentStep + 1, QUESTIONS.length);
 }
 
 // ── Question Rendering ────────────────────────────────────────
 function renderQuestion(index) {
   const q = QUESTIONS[index];
+  const qLang = (t('questions') || [])[index] || {};
+  const label = qLang.label || q.label;
+  const hint = qLang.hint || q.hint;
+  const placeholder = qLang.placeholder || q.placeholder;
   const saved = state.answers[q.id] || '';
 
   let inputHtml = '';
@@ -143,7 +200,7 @@ function renderQuestion(index) {
     inputHtml = `<textarea
       id="q-input"
       class="field-textarea"
-      placeholder="${q.placeholder}"
+      placeholder="${placeholder}"
       rows="5"
       ${q.required ? 'required' : ''}
     >${saved}</textarea>`;
@@ -152,7 +209,7 @@ function renderQuestion(index) {
       type="text"
       id="q-input"
       class="field-input"
-      placeholder="${q.placeholder}"
+      placeholder="${placeholder}"
       value="${saved}"
       ${q.required ? 'required' : ''}
     />`;
@@ -161,8 +218,8 @@ function renderQuestion(index) {
   dom.questionArea.innerHTML = `
     <div class="question-slide">
       <p class="q-step">${String(index + 1).padStart(2, '0')} / ${String(QUESTIONS.length).padStart(2, '0')}</p>
-      <h2 class="q-label">${q.label}${!q.required ? '<span class="q-optional">optional</span>' : ''}</h2>
-      <p class="q-hint">${q.hint}</p>
+      <h2 class="q-label">${label}${!q.required ? '<span class="q-optional">optional</span>' : ''}</h2>
+      <p class="q-hint">${hint}</p>
       ${inputHtml}
     </div>
   `;
@@ -188,7 +245,8 @@ function renderQuestion(index) {
 
   // Update nav buttons
   dom.backBtn.style.visibility = index === 0 ? 'hidden' : 'visible';
-  dom.nextBtn.textContent = index === QUESTIONS.length - 1 ? 'Generate artefacts →' : 'Next →';
+  dom.backBtn.textContent = t('back');
+  dom.nextBtn.textContent = index === QUESTIONS.length - 1 ? t('generate') : t('next');
   updateProgress();
 }
 
@@ -240,6 +298,8 @@ dom.backBtn.addEventListener('click', () => {
 
 // ── Prompt Builder ────────────────────────────────────────────
 function buildPrompt(answers) {
+  const langName = getLanguageName();
+  const langInstruction = getLangCode() !== 'en' ? '\nIMPORTANT: Generate ALL content (text, labels, descriptions) in ' + langName + '. Only keep field names/keys in English.' : '';
   return `You are a senior PM² project management expert. Given the following project information, generate five PM²-compliant artefacts.
 
 PROJECT INFORMATION:
@@ -338,7 +398,7 @@ Critical rules — read carefully:
 - PBS = Product Breakdown Structure = WHAT PRODUCT will be built. Decompose the solution/product into its components (nouns). 3-5 top-level components, each with 2-4 sub-components. Do NOT use PM² phase names here — these are product traits, not project management activities.
 - Charter: milestones array must have at least 4 entries covering key project phases.
 - Generate at least 5 stakeholders across different PM² layers and at least 4 risks.
-- All content must be specific to this project — no generic placeholder text.`;
+- All content must be specific to this project — no generic placeholder text.` + langInstruction;
 }
 
 // ── API Call ──────────────────────────────────────────────────
@@ -372,9 +432,12 @@ async function callClaudeAPI(prompt) {
 async function startGeneration() {
   showView('loading-view');
 
+  // Apply translations to loading screen
+  applyTranslations();
+
   // Animate loading steps
   const loadingMessages = [
-    'Analysing your project details…',
+    t('loadingSub'),
     'Applying PM² methodology…',
     'Structuring your artefacts…',
   ];
@@ -725,16 +788,17 @@ function renderResults(artefacts) {
 
   // Copy buttons
   document.querySelectorAll('.copy-btn').forEach((btn) => {
+    btn.textContent = t('copyText');
     btn.addEventListener('click', () => {
       const targetId = btn.dataset.target;
       const el = $(targetId);
       if (!el) return;
       const text = el.innerText;
       navigator.clipboard.writeText(text).then(() => {
-        btn.textContent = '✓ Copied';
+        btn.textContent = t('copied');
         btn.classList.add('copied');
         setTimeout(() => {
-          btn.textContent = 'Copy text';
+          btn.textContent = t('copyText');
           btn.classList.remove('copied');
         }, 2000);
       });
