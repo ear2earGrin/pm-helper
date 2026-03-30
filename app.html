@@ -2,110 +2,44 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PM Helper — New Project</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
-  <style>
-    .tool-layout { display: grid; grid-template-columns: 1fr 240px; gap: 24px; align-items: start; }
-    .tool-main { background: var(--bg-2); border: 1px solid var(--border-default); border-radius: var(--r-lg); overflow: hidden; }
-    .tool-panel { background: var(--accent-dim); border: 1px solid var(--accent-border); border-radius: var(--r-lg); padding: 20px; position: sticky; top: 12px; }
-    .tool-panel-title { font-size: 11px; font-family: var(--font-mono); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent-text); margin-bottom: 10px; }
-    .tool-panel-body { font-size: 12px; color: var(--text-secondary); line-height: 1.7; }
-    .tool-panel-body p + p { margin-top: 6px; }
-    .tool-panel-body strong { color: var(--text-primary); }
-    .tool-panel-example { margin-top: 10px; padding: 10px; background: var(--bg-3); border-radius: var(--r-md); font-size: 11px; color: var(--text-muted); font-family: var(--font-mono); line-height: 1.8; }
-    .tool-header { padding: 10px 16px; border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-    .tool-title { font-size: 11px; font-family: var(--font-mono); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent-text); }
-    .tool-body { padding: 16px; }
-    /* Tree */
-    .tree-container { overflow-x: auto; padding: 8px 0; min-height: 100px; }
-    .tree-row { display: flex; flex-direction: column; align-items: center; }
-    .tree-children-row { display: flex; flex-direction: row; gap: 10px; position: relative; padding-top: 20px; flex-wrap: wrap; justify-content: center; }
-    .tree-children-row::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 2px; height: 20px; background: var(--border-default); }
-    .tree-node { display: flex; flex-direction: column; align-items: center; }
-    .tree-node-inner { display: flex; align-items: center; gap: 5px; padding: 6px 10px; background: var(--bg-3); border: 1px solid var(--border-default); border-radius: var(--r-md); min-width: 90px; max-width: 160px; transition: border-color 0.2s; }
-    .tree-node-inner:hover { border-color: var(--border-strong); }
-    .tree-node-inner.root-node { background: var(--accent-dim); border-color: var(--accent-border); }
-    .tree-node-label { flex: 1; font-size: 12px; color: var(--text-primary); background: transparent; border: none; outline: none; min-width: 40px; font-family: var(--font-body); }
-    .tree-node-label:focus { color: var(--accent); }
-    .tree-add-btn, .tree-del-btn { font-size: 13px; background: transparent; border: none; cursor: pointer; padding: 0 2px; line-height: 1; opacity: 0; transition: opacity 0.2s; }
-    .tree-add-btn { color: var(--accent-text); }
-    .tree-del-btn { color: var(--text-muted); }
-    .tree-node-inner:hover .tree-add-btn, .tree-node-inner:hover .tree-del-btn { opacity: 1; }
-    .tree-node-inner.ghost-node { border-style: dashed; border-color: var(--border-subtle); background: transparent; }
-    .tree-node-label.ghost-label { color: var(--text-muted); font-style: italic; }
-    .tree-connector { width: 2px; height: 16px; background: var(--border-default); margin: 0 auto; }
-    /* Cost */
-    .cost-hierarchy { display: flex; flex-direction: column; gap: 0; }
-    .cost-level { padding: 12px 16px; border-radius: var(--r-md); border: 1px solid var(--border-default); margin: 2px 0; }
-    .cost-level--input { background: var(--bg-3); }
-    .cost-level--calc { background: var(--bg-4); }
-    .cost-level--result { background: var(--accent-dim); border-color: var(--accent-border); }
-    .cost-level--final { background: var(--amber-dim); border-color: var(--amber-border); }
-    .cost-level-label { font-size: 10px; font-family: var(--font-mono); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 6px; }
-    .cost-level-value { font-size: 20px; font-family: var(--font-mono); font-weight: 700; color: var(--text-primary); }
-    .cost-level-value--accent { color: var(--accent); }
-    .cost-level-value--amber { color: var(--amber); }
-    .cost-arrow { text-align: center; font-size: 12px; font-family: var(--font-mono); color: var(--text-muted); padding: 1px 0; }
-    .cost-connector { text-align: center; font-size: 16px; font-family: var(--font-mono); font-weight: 700; padding: 1px 0; color: var(--text-secondary); }
-    .cost-activity-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-    .cost-activity-row input.field-input { margin: 0; }
-    .cost-pct-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-    .cost-pct-row label { font-size: 11px; color: var(--text-muted); font-family: var(--font-mono); }
-    .cost-pct-row input { width: 60px; background: var(--bg-3); border: 1px solid var(--border-default); border-radius: var(--r-sm); padding: 3px 6px; color: var(--text-primary); font-size: 12px; font-family: var(--font-mono); outline: none; }
-    .cost-pct-row input:focus { border-color: var(--accent-border); }
-    .cost-pct-result { font-size: 12px; font-family: var(--font-mono); color: var(--text-secondary); }
-    /* Gantt */
-    .gantt-wrap { border: 1px solid var(--border-default); border-radius: var(--r-md); overflow: hidden; margin-top: 14px; }
-    .gantt-header-row { display: flex; background: var(--bg-3); border-bottom: 1px solid var(--border-default); height: 30px; }
-    .gantt-label-col { width: 150px; flex-shrink: 0; border-right: 1px solid var(--border-subtle); }
-    .gantt-timeline-header { flex: 1; position: relative; overflow: hidden; }
-    .gantt-tick-label { position: absolute; bottom: 4px; font-size: 10px; font-family: var(--font-mono); color: var(--text-muted); white-space: nowrap; transform: translateX(-50%); }
-    .gantt-tick-line { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--border-subtle); }
-    .gantt-row { display: flex; align-items: center; min-height: 34px; border-bottom: 1px solid var(--border-subtle); }
-    .gantt-row:last-child { border-bottom: none; }
-    .gantt-row-label { width: 150px; flex-shrink: 0; padding: 5px 10px; font-size: 12px; color: var(--text-primary); border-right: 1px solid var(--border-subtle); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .gantt-track { flex: 1; position: relative; height: 34px; background: var(--bg-2); }
-    .gantt-bar { position: absolute; top: 50%; transform: translateY(-50%); height: 16px; background: var(--accent); border-radius: 4px; display: flex; align-items: center; padding: 0 5px; min-width: 4px; box-sizing: border-box; }
-    .gantt-bar-label { font-size: 10px; font-family: var(--font-mono); color: #05080F; white-space: nowrap; overflow: hidden; }
-    .gantt-empty { padding: 20px; text-align: center; font-size: 13px; color: var(--text-muted); }
-    .gantt-input-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 4px; }
-    .gantt-input-table th { text-align: left; padding: 7px 10px; background: var(--bg-3); border-bottom: 1px solid var(--border-default); font-size: 10px; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); font-weight: 400; }
-    .gantt-input-table td { padding: 7px 10px; border-bottom: 1px solid var(--border-subtle); vertical-align: middle; }
-    .gantt-input-table tr:last-child td { border-bottom: none; }
-    .gantt-input-table td input { background: transparent; border: none; outline: none; color: var(--text-primary); font-size: 13px; font-family: var(--font-body); width: 100%; }
-    .gantt-input-table td input[type="number"] { font-family: var(--font-mono); }
-    .gantt-input-table td input::placeholder { color: var(--text-muted); }
-    .gantt-input-table td input[type="date"] { color-scheme: dark; }
-    .gantt-input-table td select { background: transparent; border: none; outline: none; font-size: 12px; font-family: var(--font-mono); cursor: pointer; }
-    .gantt-input-table td select option { background: var(--bg-2); }
-    .drag-handle { cursor: grab; color: var(--text-muted); font-size: 14px; padding: 0 4px; user-select: none; }
-    .drag-handle:active { cursor: grabbing; }
-    .gantt-input-table tr.dragging { opacity: 0.4; }
-    .gantt-input-table tr.drag-over { border-top: 2px solid var(--accent); }
-    .priority-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; vertical-align: middle; }
-    .priority-must { color: #ef4444; }
-    .priority-crucial { color: var(--text-primary); }
-    .priority-nice { color: #10b981; }
-    /* Stakeholder table inline inputs */
-    .sh-table td input, .sh-table td select { background: transparent; border: none; outline: none; color: var(--text-primary); font-size: 13px; font-family: var(--font-body); width: 100%; padding: 0; }
-    .sh-table td input::placeholder { color: var(--text-muted); }
-    .sh-table td select option { background: var(--bg-2); }
-    /* Shared button styles for tools */
-    .btn-del-row { background: transparent; border: none; color: var(--text-muted); font-size: 16px; cursor: pointer; padding: 0 4px; line-height: 1; transition: color 0.2s; flex-shrink: 0; }
-    .btn-del-row:hover { color: var(--danger); }
-    @media (max-width: 768px) { .tool-layout { grid-template-columns: 1fr; } .tool-panel { position: static; } .gantt-label-col, .gantt-row-label { width: 90px; } }
-    .lang-selector select { background: var(--bg-3); border: 1px solid var(--border-default); border-radius: var(--r-sm); color: var(--text-primary); font-size: 12px; font-family: var(--font-mono); padding: 4px 8px; cursor: pointer; outline: none; }
-    .lang-selector select:hover { border-color: var(--border-strong); }
-    .lang-selector select option { background: var(--bg-2); }
-  </style>
 </head>
 <body class="app-body">
 
+  <!-- API Key Modal -->
+  <div id="api-key-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-icon">◈</div>
+      <h2 class="modal-title">Connect your AI</h2>
+      <p class="modal-body">
+        PM Helper uses Claude to generate your PM² artefacts. Enter your Anthropic API key below.
+        It's stored locally in your browser and never sent anywhere except directly to Anthropic.
+      </p>
+      <div class="modal-field">
+        <label class="field-label" for="api-key-input">Anthropic API Key</label>
+        <input
+          type="password"
+          id="api-key-input"
+          class="field-input"
+          placeholder="sk-ant-..."
+          autocomplete="off"
+        />
+        <p class="field-hint">
+          Get your key at
+          <a href="https://console.anthropic.com" target="_blank" class="link">console.anthropic.com</a>
+        </p>
+      </div>
+      <button id="save-api-key-btn" class="btn btn-primary btn-full">
+        Save & Continue →
+      </button>
+      <p class="modal-small">Your key is stored in <code>localStorage</code> and only used to call the Anthropic API.</p>
+    </div>
+  </div>
 
   <!-- App Shell -->
   <div id="app-shell" class="app-shell">
@@ -116,19 +50,9 @@
         <span class="brand-icon">◈</span>
         <span class="brand-name">PM Helper</span>
       </a>
-      <a href="https://yardlaw.eu" target="_blank" rel="noopener" class="nav-byline">Good projects deserve good lawyers · YARD Law Co.</a>
-      <div class="nav-links">
-        <a href="tools.html" class="nav-link" id="nav-tools-link">Tools</a>
-        <div class="lang-selector">
-          <select id="lang-select" onchange="handleLangChange(this.value)" title="Language">
-            <option value="en">🌐 EN</option>
-            <option value="de">DE</option>
-            <option value="fr">FR</option>
-            <option value="bg">BG</option>
-            <option value="es">ES</option>
-          </select>
-        </div>
-      </div>
+      <button id="change-key-btn" class="btn btn-ghost btn-sm" title="Change API key">
+        ⚙ API Key
+      </button>
     </nav>
 
     <!-- Wizard View -->
@@ -168,15 +92,15 @@
         <div class="loading-steps">
           <div class="ls-step" id="ls-1">
             <div class="ls-dot"></div>
-            <span>Drafting Project Charter, Stakeholder Matrix &amp; Risk Log</span>
+            <span>Drafting Project Charter</span>
           </div>
           <div class="ls-step" id="ls-2">
             <div class="ls-dot"></div>
-            <span>Building Work Breakdown Structure (WBS)</span>
+            <span>Building Stakeholder Matrix</span>
           </div>
           <div class="ls-step" id="ls-3">
             <div class="ls-dot"></div>
-            <span>Building Project Breakdown Structure (PBS)</span>
+            <span>Structuring Risk Log (C→R→E)</span>
           </div>
         </div>
       </div>
@@ -194,6 +118,9 @@
           </div>
           <div class="results-actions">
             <button id="new-project-btn" class="btn btn-ghost btn-sm">+ New project</button>
+            <button id="export-btn" class="btn btn-pro btn-sm" title="Upgrade to Pro to export">
+              ↓ Export (Pro)
+            </button>
           </div>
         </div>
 
@@ -205,23 +132,11 @@
           <button class="rtab" data-tab="stakeholders">
             <span class="rtab-icon">◈</span> Stakeholder Matrix
           </button>
+          <button class="rtab" data-tab="pbs">
+            <span class="rtab-icon">◫</span> PBS
+          </button>
           <button class="rtab" data-tab="risks">
             <span class="rtab-icon">◬</span> Risk Log
-          </button>
-          <button class="rtab" data-tab="wbs">
-            <span class="rtab-icon">⊞</span> WBS
-          </button>
-          <button class="rtab" data-tab="pbs">
-            <span class="rtab-icon">⊟</span> PBS
-          </button>
-          <button class="rtab" data-tab="sh-register">
-            <span class="rtab-icon">◎</span> Stakeholders
-          </button>
-          <button class="rtab" data-tab="cost">
-            <span class="rtab-icon">€</span> Cost
-          </button>
-          <button class="rtab" data-tab="gantt">
-            <span class="rtab-icon">▤</span> Gantt
           </button>
         </div>
 
@@ -240,6 +155,13 @@
           <div id="stakeholders-content" class="artefact-content"></div>
         </div>
 
+        <div id="tab-pbs" class="tab-panel hidden">
+          <div class="panel-actions">
+            <button class="copy-btn" data-target="pbs-content">Copy text</button>
+          </div>
+          <div id="pbs-content" class="artefact-content"></div>
+        </div>
+
         <div id="tab-risks" class="tab-panel hidden">
           <div class="panel-actions">
             <button class="copy-btn" data-target="risks-content">Copy text</button>
@@ -247,221 +169,14 @@
           <div id="risks-content" class="artefact-content"></div>
         </div>
 
-        <!-- WBS Tab -->
-        <div id="tab-wbs" class="tab-panel hidden">
-          <div class="tool-layout">
-            <div class="tool-main">
-              <div class="tool-header">
-                <span class="tool-title">Work Breakdown Structure</span>
-                <div style="display:flex;gap:8px;">
-                  <button class="btn btn-ghost btn-sm" onclick="resetWBS()">Reset</button>
-                  <button class="btn btn-primary btn-sm" onclick="printWBS()">↓ Save as PDF</button>
-                </div>
-              </div>
-              <div class="tool-body">
-                <div class="tree-container" id="wbs-tree"></div>
-              </div>
+        <!-- Pro gate banner -->
+        <div class="pro-gate">
+          <div class="pro-gate-inner">
+            <div class="pro-gate-text">
+              <strong>Export to PDF & DOCX</strong>
+              <span>Generate governance-ready documents formatted to PM² standards</span>
             </div>
-            <div class="tool-panel">
-              <div class="tool-panel-title">About WBS</div>
-              <div class="tool-panel-body">
-                <p>Decomposes the <strong>work</strong> using verbs — WHAT activities must be done.</p>
-                <p><strong>Level 0</strong> — The project</p>
-                <p><strong>Level 1</strong> — PM² phases (Initiating, Planning, Executing…)</p>
-                <p><strong>Level 2</strong> — Work packages (e.g. Draft Project Charter)</p>
-                <p><strong>Level 3</strong> — Tasks (e.g. Write charter section 1)</p>
-                <div class="tool-panel-example">Click + to add children<br>Click × to remove a node<br>Click any label to rename</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- PBS Tab -->
-        <div id="tab-pbs" class="tab-panel hidden">
-          <div class="tool-layout">
-            <div class="tool-main">
-              <div class="tool-header">
-                <span class="tool-title">Project Breakdown Structure</span>
-                <div style="display:flex;gap:8px;">
-                  <button class="btn btn-ghost btn-sm" onclick="resetPBS()">Reset</button>
-                  <button class="btn btn-primary btn-sm" onclick="printPBS()">↓ Save as PDF</button>
-                </div>
-              </div>
-              <div class="tool-body">
-                <div class="tree-container" id="pbs-tree"></div>
-              </div>
-            </div>
-            <div class="tool-panel">
-              <div class="tool-panel-title">About PBS</div>
-              <div class="tool-panel-body">
-                <p>Decomposes the <strong>product</strong> using nouns — WHAT will be built.</p>
-                <p><strong>Level 0</strong> — The product/solution</p>
-                <p><strong>Level 1</strong> — Major product components (e.g. Web App, Database)</p>
-                <p><strong>Level 2</strong> — Sub-components (e.g. Auth Module, Dashboard)</p>
-                <p>PBS describes product traits, not project management activities.</p>
-                <div class="tool-panel-example">PBS: "Web Application"<br>→ "User Authentication"<br>→ "Admin Dashboard"<br>→ "Reporting Module"</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Stakeholder Register Tab -->
-        <div id="tab-sh-register" class="tab-panel hidden">
-          <div class="tool-layout">
-            <div class="tool-main">
-              <div class="tool-header">
-                <span class="tool-title">Stakeholder Register</span>
-                <div style="display:flex;gap:8px;">
-                  <button class="btn btn-ghost btn-sm" onclick="addStakeholderRow()">+ Add row</button>
-                  <button class="btn btn-primary btn-sm" onclick="printStakeholders()">↓ Save as PDF</button>
-                </div>
-              </div>
-              <div class="tool-body" style="padding:0;">
-                <div class="sh-table-wrap" style="border:none;border-radius:0;">
-                  <table class="sh-table" id="sh-table">
-                    <thead>
-                      <tr>
-                        <th style="width:20%;">Name / Group</th>
-                        <th style="width:15%;">Role</th>
-                        <th style="width:8%;">Interest</th>
-                        <th style="width:8%;">Influence</th>
-                        <th>Engagement Strategy</th>
-                        <th style="width:32px;"></th>
-                      </tr>
-                    </thead>
-                    <tbody id="sh-tbody"></tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-            <div class="tool-panel">
-              <div class="tool-panel-title">About Stakeholders</div>
-              <div class="tool-panel-body">
-                <p>List <strong>every person or group</strong> who affects or is affected by the project.</p>
-                <p><strong>Interest</strong> = how much they care about the outcome.</p>
-                <p><strong>Influence</strong> = power to impact the project.</p>
-                <div class="tool-panel-example">High/High → Manage closely<br>High/Low &nbsp;→ Keep satisfied<br>Low/High &nbsp;→ Keep informed<br>Low/Low &nbsp;&nbsp;→ Monitor</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Cost Tab -->
-        <div id="tab-cost" class="tab-panel hidden">
-          <div class="tool-layout">
-            <div class="tool-main">
-              <div class="tool-header">
-                <span class="tool-title">Cost Estimation</span>
-                <div style="display:flex;gap:8px;">
-                  <button class="btn btn-ghost btn-sm" onclick="addCostRow()">+ Add activity</button>
-                  <button class="btn btn-primary btn-sm" onclick="printCost()">↓ Save as PDF</button>
-                </div>
-              </div>
-              <div class="tool-body">
-                <div class="cost-hierarchy">
-                  <div class="cost-level cost-level--input">
-                    <div class="cost-level-label">Activity Estimates</div>
-                    <div id="cost-activities"></div>
-                  </div>
-                  <div class="cost-arrow">↓ sum</div>
-                  <div class="cost-level cost-level--calc">
-                    <div class="cost-level-label">Work Package Estimate</div>
-                    <div class="cost-level-value" id="cost-wp">€ 0</div>
-                  </div>
-                  <div class="cost-arrow">↓</div>
-                  <div class="cost-level cost-level--calc">
-                    <div class="cost-level-label">Control Account Estimate</div>
-                    <div class="cost-level-value" id="cost-ca">€ 0</div>
-                  </div>
-                  <div class="cost-arrow">↓</div>
-                  <div class="cost-level cost-level--calc">
-                    <div class="cost-level-label">Project Estimate</div>
-                    <div class="cost-level-value" id="cost-pe">€ 0</div>
-                  </div>
-                  <div class="cost-connector">+</div>
-                  <div class="cost-level cost-level--input">
-                    <div class="cost-level-label">Contingency Reserve</div>
-                    <div class="cost-pct-row">
-                      <label>%</label>
-                      <input type="number" id="cost-cr-pct" value="10" min="0" max="100" oninput="recalcCosts()" />
-                      <span class="cost-pct-result">= <span id="cost-cr-val">€ 0</span></span>
-                    </div>
-                  </div>
-                  <div class="cost-connector">=</div>
-                  <div class="cost-level cost-level--result">
-                    <div class="cost-level-label">Cost Performance Baseline (BAC)</div>
-                    <div class="cost-level-value cost-level-value--accent" id="cost-bac">€ 0</div>
-                  </div>
-                  <div class="cost-connector">+</div>
-                  <div class="cost-level cost-level--input">
-                    <div class="cost-level-label">Management Reserve</div>
-                    <div class="cost-pct-row">
-                      <label>%</label>
-                      <input type="number" id="cost-mr-pct" value="5" min="0" max="100" oninput="recalcCosts()" />
-                      <span class="cost-pct-result">= <span id="cost-mr-val">€ 0</span></span>
-                    </div>
-                  </div>
-                  <div class="cost-connector">=</div>
-                  <div class="cost-level cost-level--final">
-                    <div class="cost-level-label">Project Budget</div>
-                    <div class="cost-level-value cost-level-value--amber" id="cost-budget">€ 0</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="tool-panel">
-              <div class="tool-panel-title">Cost Hierarchy</div>
-              <div class="tool-panel-body">
-                <p><strong>Activity</strong> — cost of one task [e.g. design sprint, workshop]</p>
-                <p><strong>Work Package</strong> — sum of related activities</p>
-                <p><strong>Control Account</strong> — groups WPs for EVM tracking</p>
-                <p><strong>Contingency</strong> — buffer for known risks (typically 10–15%)</p>
-                <p><strong>BAC</strong> — Budget at Completion, the approved baseline</p>
-                <p><strong>Management Reserve</strong> — buffer for unknown risks (typically 5%)</p>
-                <div class="tool-panel-example">Budget = BAC + Mgmt Reserve<br>BAC = Estimate + Contingency</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Gantt Tab -->
-        <div id="tab-gantt" class="tab-panel hidden">
-          <div class="tool-layout">
-            <div class="tool-main">
-              <div class="tool-header">
-                <span class="tool-title">Gantt Chart</span>
-                <div style="display:flex;gap:8px;">
-                  <button class="btn btn-ghost btn-sm" onclick="addGanttRow()">+ Add task</button>
-                  <button class="btn btn-primary btn-sm" onclick="printGantt()">↓ Save as PDF</button>
-                </div>
-              </div>
-              <div class="tool-body">
-                <table class="gantt-input-table">
-                  <thead>
-                    <tr>
-                      <th style="width:28px;"></th>
-                      <th style="width:28%;">Task Name</th>
-                      <th style="width:16%;">Start Date</th>
-                      <th style="width:10%;">Days</th>
-                      <th style="width:14%;">Priority</th>
-                      <th style="width:10%;">Importance</th>
-                      <th style="width:32px;"></th>
-                    </tr>
-                  </thead>
-                  <tbody id="gantt-tbody"></tbody>
-                </table>
-                <div id="gantt-chart"></div>
-              </div>
-            </div>
-            <div class="tool-panel">
-              <div class="tool-panel-title">About Gantt</div>
-              <div class="tool-panel-body">
-                <p>Each <strong>bar</strong> = one task. Position = start date, width = duration.</p>
-                <p>Use <strong>working days</strong> for duration (5 = one week).</p>
-                <p>The <strong>critical path</strong> is the longest chain of dependent tasks — it sets the minimum project duration.</p>
-                <p>In PM² the Gantt is part of the <strong>Project Work Plan</strong>.</p>
-              </div>
-            </div>
+            <button class="btn btn-pro">Upgrade to Pro →</button>
           </div>
         </div>
 
@@ -489,8 +204,6 @@
 
   </div>
 
-  <script src="js/i18n.js"></script>
-  <script src="js/tools.js"></script>
   <script src="js/wizard.js"></script>
 </body>
 </html>

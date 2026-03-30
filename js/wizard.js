@@ -7,8 +7,10 @@
 
 // ── Config ──────────────────────────────────────────────────
 const CONFIG = {
-  // Replace this with your deployed Cloudflare Worker URL after running: wrangler deploy
-  WORKER_ENDPOINT: 'https://pm-helper-api.mindarvokn.workers.dev',
+  API_ENDPOINT: 'https://api.anthropic.com/v1/messages',
+  MODEL: 'claude-haiku-4-5-20251001',   // Fast model for Sprint 0 — swap to sonnet for richer output
+  MAX_TOKENS: 4096,
+  API_KEY_STORAGE: 'pmhelper_api_key',
 };
 
 // ── Wizard Questions ─────────────────────────────────────────
@@ -70,6 +72,18 @@ const QUESTIONS = [
     required: true,
   },
   {
+    id: 'riskAttitude',
+    label: 'What is your organisation\'s risk attitude?',
+    hint: 'This shapes how the Risk Log is structured — how many risks are identified, how detailed mitigations are, and how large contingency buffers should be.',
+    type: 'select',
+    required: true,
+    options: [
+      { value: 'averse', label: '🛡 Risk Averse — We minimise risk at all costs. More risks identified, detailed mitigations, larger contingency buffers.' },
+      { value: 'neutral', label: '⚖ Risk Neutral — Balanced approach. Standard risk management, proportionate responses.' },
+      { value: 'seeker', label: '🚀 Risk Seeker — We accept risk for reward. Leaner log, opportunity-focused, smaller buffers.' },
+    ],
+  },
+  {
     id: 'successCriteria',
     label: 'What does success look like?',
     hint: 'Define measurable criteria. How will you know the project succeeded?',
@@ -78,59 +92,6 @@ const QUESTIONS = [
     required: true,
   },
 ];
-
-// ── Language Handling ─────────────────────────────────────────
-function handleLangChange(lang) {
-  setLanguage(lang);
-  applyTranslations();
-  // Re-render current question with new language
-  renderQuestion(state.currentStep);
-}
-
-function applyTranslations() {
-  // Nav
-  var toolsLink = document.getElementById('nav-tools-link');
-  if (toolsLink) toolsLink.textContent = t('tools');
-  // Loading
-  var lt = document.getElementById('loading-title');
-  if (lt) lt.textContent = t('loadingTitle');
-  var ls1 = document.getElementById('ls-1');
-  if (ls1) { var sp = ls1.querySelector('span'); if (sp) sp.textContent = t('loadingStep1'); }
-  var ls2 = document.getElementById('ls-2');
-  if (ls2) { var sp2 = ls2.querySelector('span'); if (sp2) sp2.textContent = t('loadingStep2'); }
-  var ls3 = document.getElementById('ls-3');
-  if (ls3) { var sp3 = ls3.querySelector('span'); if (sp3) sp3.textContent = t('loadingStep3'); }
-  // Nav buttons
-  var backBtn = document.getElementById('back-btn');
-  if (backBtn) backBtn.textContent = t('back');
-  var nextBtn = document.getElementById('next-btn');
-  if (nextBtn) {
-    var isLast = state.currentStep === QUESTIONS.length - 1;
-    nextBtn.textContent = isLast ? t('generate') : t('next');
-  }
-  // New project button
-  var npBtn = document.getElementById('new-project-btn');
-  if (npBtn) npBtn.textContent = t('newProject');
-  // Tabs
-  var tabMap = { 'charter': 'tabCharter', 'stakeholders': 'tabStakeholders', 'risks': 'tabRisks', 'wbs': 'tabWbs', 'pbs': 'tabPbs', 'sh-register': 'tabShRegister', 'cost': 'tabCost', 'gantt': 'tabGantt' };
-  document.querySelectorAll('.rtab').forEach(function(tab) {
-    var key = tabMap[tab.dataset.tab];
-    if (key) {
-      var icon = tab.querySelector('.rtab-icon');
-      tab.textContent = t(key);
-      if (icon) tab.insertBefore(icon, tab.firstChild);
-    }
-  });
-  // Retry button
-  var retryBtn = document.getElementById('retry-btn');
-  if (retryBtn) retryBtn.textContent = t('tryAgain');
-  // Error title
-  var et = document.querySelector('.error-title');
-  if (et) et.textContent = t('errorTitle');
-  // Coaching nudge
-  var nudge = document.getElementById('nudge-text');
-  if (nudge) nudge.textContent = t('nudgeText');
-}
 
 // ── State ────────────────────────────────────────────────────
 const state = {
@@ -142,6 +103,12 @@ const state = {
 // ── DOM References ────────────────────────────────────────────
 const $ = (id) => document.getElementById(id);
 const dom = {
+  // Modal
+  apiModal: $('api-key-modal'),
+  apiKeyInput: $('api-key-input'),
+  saveKeyBtn: $('save-api-key-btn'),
+  changeKeyBtn: $('change-key-btn'),
+
   // Views
   wizardView: $('wizard-view'),
   loadingView: $('loading-view'),
@@ -166,10 +133,46 @@ const dom = {
   retryBtn: $('retry-btn'),
   errorMessage: $('error-message'),
   newProjectBtn: $('new-project-btn'),
+  exportBtn: $('export-btn'),
   coachingNudge: $('coaching-nudge'),
 };
 
-// ── API Key Management (removed — key is server-side) ─────────
+// ── API Key Management ────────────────────────────────────────
+function getApiKey() {
+  return localStorage.getItem(CONFIG.API_KEY_STORAGE) || '';
+}
+
+function saveApiKey(key) {
+  localStorage.setItem(CONFIG.API_KEY_STORAGE, key.trim());
+}
+
+function showApiModal() {
+  dom.apiModal.classList.remove('hidden');
+  dom.apiKeyInput.value = getApiKey();
+  dom.apiKeyInput.focus();
+}
+
+function hideApiModal() {
+  dom.apiModal.classList.add('hidden');
+}
+
+dom.saveKeyBtn.addEventListener('click', () => {
+  const key = dom.apiKeyInput.value.trim();
+  if (!key.startsWith('sk-ant-')) {
+    dom.apiKeyInput.style.borderColor = 'var(--danger)';
+    dom.apiKeyInput.placeholder = 'Must start with sk-ant-...';
+    return;
+  }
+  dom.apiKeyInput.style.borderColor = '';
+  saveApiKey(key);
+  hideApiModal();
+});
+
+dom.apiKeyInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') dom.saveKeyBtn.click();
+});
+
+dom.changeKeyBtn.addEventListener('click', showApiModal);
 
 // ── View Switching ────────────────────────────────────────────
 function showView(viewId) {
@@ -183,16 +186,12 @@ function showView(viewId) {
 function updateProgress() {
   const pct = ((state.currentStep + 1) / QUESTIONS.length) * 100;
   dom.progressBar.style.width = pct + '%';
-  dom.progressLabel.textContent = t('stepOf')(state.currentStep + 1, QUESTIONS.length);
+  dom.progressLabel.textContent = `Step ${state.currentStep + 1} of ${QUESTIONS.length}`;
 }
 
 // ── Question Rendering ────────────────────────────────────────
 function renderQuestion(index) {
   const q = QUESTIONS[index];
-  const qLang = (t('questions') || [])[index] || {};
-  const label = qLang.label || q.label;
-  const hint = qLang.hint || q.hint;
-  const placeholder = qLang.placeholder || q.placeholder;
   const saved = state.answers[q.id] || '';
 
   let inputHtml = '';
@@ -200,16 +199,24 @@ function renderQuestion(index) {
     inputHtml = `<textarea
       id="q-input"
       class="field-textarea"
-      placeholder="${placeholder}"
+      placeholder="${q.placeholder}"
       rows="5"
       ${q.required ? 'required' : ''}
     >${saved}</textarea>`;
+  } else if (q.type === 'select') {
+    const opts = q.options.map(o =>
+      `<label class="select-option ${saved === o.value ? 'selected' : ''}" data-value="${o.value}">
+        <input type="radio" name="q-select" value="${o.value}" ${saved === o.value ? 'checked' : ''} />
+        <span class="select-option-text">${o.label}</span>
+      </label>`
+    ).join('');
+    inputHtml = `<div id="q-input" class="select-options">${opts}</div>`;
   } else {
     inputHtml = `<input
       type="text"
       id="q-input"
       class="field-input"
-      placeholder="${placeholder}"
+      placeholder="${q.placeholder}"
       value="${saved}"
       ${q.required ? 'required' : ''}
     />`;
@@ -218,8 +225,8 @@ function renderQuestion(index) {
   dom.questionArea.innerHTML = `
     <div class="question-slide">
       <p class="q-step">${String(index + 1).padStart(2, '0')} / ${String(QUESTIONS.length).padStart(2, '0')}</p>
-      <h2 class="q-label">${label}${!q.required ? '<span class="q-optional">optional</span>' : ''}</h2>
-      <p class="q-hint">${hint}</p>
+      <h2 class="q-label">${q.label}${!q.required ? '<span class="q-optional">optional</span>' : ''}</h2>
+      <p class="q-hint">${q.hint}</p>
       ${inputHtml}
     </div>
   `;
@@ -236,22 +243,37 @@ function renderQuestion(index) {
     }
   }, 50);
 
-  // Allow Enter to advance (not for textarea)
+  // Allow Enter to advance (not for textarea or select)
   if (q.type === 'text') {
     $('q-input').addEventListener('keydown', (e) => {
       if (e.key === 'Enter') advanceWizard();
     });
   }
 
+  // Select option click handlers
+  if (q.type === 'select') {
+    document.querySelectorAll('.select-option').forEach(opt => {
+      opt.addEventListener('click', () => {
+        document.querySelectorAll('.select-option').forEach(o => o.classList.remove('selected'));
+        opt.classList.add('selected');
+        opt.querySelector('input').checked = true;
+      });
+    });
+  }
+
   // Update nav buttons
   dom.backBtn.style.visibility = index === 0 ? 'hidden' : 'visible';
-  dom.backBtn.textContent = t('back');
-  dom.nextBtn.textContent = index === QUESTIONS.length - 1 ? t('generate') : t('next');
+  dom.nextBtn.textContent = index === QUESTIONS.length - 1 ? 'Generate artefacts →' : 'Next →';
   updateProgress();
 }
 
 // ── Wizard Navigation ─────────────────────────────────────────
 function getCurrentAnswer() {
+  const q = QUESTIONS[state.currentStep];
+  if (q.type === 'select') {
+    const checked = document.querySelector('input[name="q-select"]:checked');
+    return checked ? checked.value : '';
+  }
   const input = $('q-input');
   return input ? input.value.trim() : '';
 }
@@ -297,10 +319,20 @@ dom.backBtn.addEventListener('click', () => {
 });
 
 // ── Prompt Builder ────────────────────────────────────────────
+function getRiskAttitudeInstructions(attitude) {
+  switch (attitude) {
+    case 'averse':
+      return `RISK ATTITUDE: Risk Averse. Identify at least 6 risks. Include detailed mitigation actions. Use conservative language. Recommend larger contingency buffers (15-20%). Flag even low-probability risks if impact is high. Frame risks as threats to be minimised.`;
+    case 'seeker':
+      return `RISK ATTITUDE: Risk Seeker. Identify 3-4 primary risks only. Keep mitigations lean. Include at least 1-2 opportunities (positive risks) alongside threats. Recommend smaller contingency buffers (5-10%). Frame risks in terms of risk/reward balance.`;
+    default:
+      return `RISK ATTITUDE: Risk Neutral. Identify 4-5 balanced risks. Standard mitigation detail. Recommend standard contingency buffers (10-15%). Balance threat and opportunity framing.`;
+  }
+}
+
 function buildPrompt(answers) {
-  const langName = getLanguageName();
-  const langInstruction = getLangCode() !== 'en' ? '\nIMPORTANT: Generate ALL content (text, labels, descriptions) in ' + langName + '. Only keep field names/keys in English.' : '';
-  return `You are a senior PM² project management expert. Given the following project information, generate five PM²-compliant artefacts.
+  const riskInstructions = getRiskAttitudeInstructions(answers.riskAttitude);
+  return `You are a senior PM² project management expert. Given the following project information, generate four PM²-compliant artefacts.
 
 PROJECT INFORMATION:
 - Name: ${answers.projectName}
@@ -310,38 +342,62 @@ PROJECT INFORMATION:
 - Target Completion: ${answers.deadline}
 - Budget/Resources: ${answers.budget || 'Not specified'}
 - Key Risks identified by PM: ${answers.risks}
+- Risk Attitude: ${answers.riskAttitude}
 - Success Criteria: ${answers.successCriteria}
 
-Return ONLY valid JSON — no markdown, no preamble, no explanation. The JSON must exactly match this structure:
+${riskInstructions}
+
+Generate the following four PM² artefacts. Return ONLY valid JSON — no markdown, no preamble, no explanation. The JSON must exactly match this structure:
 
 {
   "charter": {
     "projectName": "string",
     "phase": "Initiating",
-    "background": "1-2 sentences: business context and why this project is needed now",
-    "objective": "string — 2-3 sentences, SMART, clear and measurable",
-    "deliverables": ["key output/deliverable 1", "key output/deliverable 2"],
+    "objective": "string — 2-3 sentences, clear and measurable",
     "scope": {
-      "inScope": ["in-scope item 1", "in-scope item 2"],
-      "outOfScope": ["explicitly excluded item 1", "explicitly excluded item 2"]
+      "inScope": ["array", "of", "in-scope", "items"],
+      "outOfScope": ["array", "of", "explicitly", "excluded", "items"]
     },
     "roles": {
       "projectOwner": "string",
       "businessManager": "string — infer from context or state TBD",
       "projectManager": "TBD",
-      "userRepresentatives": ["user group 1", "user group 2"],
+      "userRepresentatives": ["array", "of", "user", "rep", "groups"],
       "solutionProvider": "TBD"
     },
-    "milestones": [
-      {"milestone": "milestone name", "target": "date or period e.g. Week 2"}
-    ],
     "timeline": "string",
     "budget": "string",
-    "constraints": ["constraint 1", "constraint 2"],
-    "assumptions": ["assumption 1", "assumption 2"],
-    "successCriteria": ["measurable criterion 1", "measurable criterion 2"],
-    "governance": "Brief statement on steering committee, phase gates, and escalation path",
+    "constraints": ["array", "of", "project", "constraints"],
+    "assumptions": ["array", "of", "project", "assumptions"],
+    "successCriteria": ["array", "of", "measurable", "success", "criteria"],
+    "escalation": {
+      "level1": { "authority": "Project Manager", "threshold": "Decisions with cost impact up to €5,000 or schedule impact up to 3 days", "action": "PM decides independently and informs Business Manager" },
+      "level2": { "authority": "Project Steering Committee", "threshold": "Decisions with cost impact €5,001–€25,000 or schedule impact 4–14 days", "action": "PSC decides and informs the Appropriate Governance Body (AGB)" },
+      "level3": { "authority": "Appropriate Governance Body (AGB)", "threshold": "Decisions exceeding €25,000 cost impact or 14+ days schedule impact", "action": "AGB approval required before action is taken" }
+    },
     "approvalNote": "This Project Charter is to be reviewed and approved by the Project Steering Committee at the Initiating Phase Gate."
+  },
+  "pbs": {
+    "projectName": "string",
+    "description": "string — one sentence describing what the PBS represents",
+    "nodes": [
+      {
+        "id": "1.0",
+        "label": "Final Product / Top-Level Deliverable",
+        "description": "Brief description",
+        "children": [
+          {
+            "id": "1.1",
+            "label": "Sub-product or component name",
+            "description": "Brief description",
+            "children": [
+              { "id": "1.1.1", "label": "Leaf-level deliverable", "description": "Brief description", "children": [] },
+              { "id": "1.1.2", "label": "Leaf-level deliverable", "description": "Brief description", "children": [] }
+            ]
+          }
+        ]
+      }
+    ]
   },
   "stakeholders": [
     {
@@ -368,54 +424,40 @@ Return ONLY valid JSON — no markdown, no preamble, no explanation. The JSON mu
       "responseStrategy": "Avoid | Mitigate | Transfer | Accept",
       "responseAction": "Specific action to address this risk"
     }
-  ],
-  "wbs": {
-    "children": [
-      {
-        "label": "PM² Phase (Initiating | Planning | Executing | Monitoring & Control | Closing)",
-        "children": [
-          {"label": "Work package or activity — verb phrase specific to this project"},
-          {"label": "Another work package for this phase"}
-        ]
-      }
-    ]
-  },
-  "pbs": {
-    "children": [
-      {
-        "label": "Top-level product component (noun, e.g. Web Application, Database, Documentation)",
-        "children": [
-          {"label": "Sub-component or feature (noun, e.g. User Authentication Module)"},
-          {"label": "Another sub-component"}
-        ]
-      }
-    ]
-  }
+  ]
 }
 
-Critical rules — read carefully:
-- WBS = Work Breakdown Structure = WHAT WORK must be done. Organise by PM² phases (Initiating, Planning, Executing, Monitoring & Control, Closing). Each phase has 3-5 specific work packages/activities (verb phrases) for THIS project.
-- PBS = Product Breakdown Structure = WHAT PRODUCT will be built. Decompose the solution/product into its components (nouns). 3-5 top-level components, each with 2-4 sub-components. Do NOT use PM² phase names here — these are product traits, not project management activities.
-- Charter: milestones array must have at least 4 entries covering key project phases.
-- Generate at least 5 stakeholders across different PM² layers and at least 4 risks.
-- All content must be specific to this project — no generic placeholder text.` + langInstruction;
+Generate the PBS with at least 3 top-level sub-products and at least 2 children per sub-product. Generate at least 5 stakeholders across different PM² layers. Generate risks according to the risk attitude instructions above. Make all content specific to this project — no generic placeholder text.`;
 }
 
 // ── API Call ──────────────────────────────────────────────────
 async function callClaudeAPI(prompt) {
-  const response = await fetch(CONFIG.WORKER_ENDPOINT, {
+  const apiKey = getApiKey();
+  if (!apiKey) throw new Error('No API key set');
+
+  const response = await fetch(CONFIG.API_ENDPOINT, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ prompt }),
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true',
+    },
+    body: JSON.stringify({
+      model: CONFIG.MODEL,
+      max_tokens: CONFIG.MAX_TOKENS,
+      messages: [{ role: 'user', content: prompt }],
+    }),
   });
 
   if (!response.ok) {
     const err = await response.json().catch(() => ({}));
-    throw new Error(err?.error || `API error ${response.status}`);
+    const msg = err?.error?.message || `API error ${response.status}`;
+    throw new Error(msg);
   }
 
   const data = await response.json();
-  const text = data.text || '';
+  const text = data.content?.[0]?.text || '';
 
   // Strip any accidental markdown fences
   const clean = text.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
@@ -432,12 +474,9 @@ async function callClaudeAPI(prompt) {
 async function startGeneration() {
   showView('loading-view');
 
-  // Apply translations to loading screen
-  applyTranslations();
-
   // Animate loading steps
   const loadingMessages = [
-    t('loadingSub'),
+    'Analysing your project details…',
     'Applying PM² methodology…',
     'Structuring your artefacts…',
   ];
@@ -503,6 +542,9 @@ dom.newProjectBtn.addEventListener('click', () => {
   showView('wizard-view');
 });
 
+dom.exportBtn.addEventListener('click', () => {
+  alert('Export to PDF and DOCX is available in PM Helper Pro.\n\nUpgrade coming soon — contact us to join the waitlist.');
+});
 
 // ── Result Rendering ──────────────────────────────────────────
 function pill(value) {
@@ -515,57 +557,44 @@ function renderCharter(charter) {
   const el = $('charter-content');
   if (!el) return;
 
-  const inScope    = (charter.scope?.inScope || []).map((i) => `<li>◈ ${i}</li>`).join('');
-  const outScope   = (charter.scope?.outOfScope || []).map((i) => `<li>✕ ${i}</li>`).join('');
-  const deliverables = (charter.deliverables || []).map((i) => `<li>${i}</li>`).join('');
-  const criteria   = (charter.successCriteria || []).map((i) => `<li>${i}</li>`).join('');
+  const inScope = (charter.scope?.inScope || []).map((i) => `<li>${i}</li>`).join('');
+  const outScope = (charter.scope?.outOfScope || []).map((i) => `<li>${i}</li>`).join('');
+  const criteria = (charter.successCriteria || []).map((i) => `<li>${i}</li>`).join('');
   const constraints = (charter.constraints || []).map((i) => `<li>${i}</li>`).join('');
   const assumptions = (charter.assumptions || []).map((i) => `<li>${i}</li>`).join('');
-  const ureps      = (charter.roles?.userRepresentatives || []).join(', ');
-  const milestones = (charter.milestones || []).map((m) =>
-    `<tr><td style="padding:7px 12px;border-bottom:1px solid var(--border-subtle);font-size:13px;">${m.milestone}</td><td style="padding:7px 12px;border-bottom:1px solid var(--border-subtle);font-size:13px;font-family:var(--font-mono);color:var(--accent-text);">${m.target}</td></tr>`
-  ).join('');
+  const ureps = (charter.roles?.userRepresentatives || []).join(', ');
 
   el.innerHTML = `
     <div class="charter-section">
       <div class="cs-header">
         <span class="cs-title">Project Charter</span>
-        <span class="cs-badge">PM² · ${charter.phase || 'Initiating'} Phase</span>
+        <span class="cs-badge">Phase: ${charter.phase}</span>
       </div>
       <div class="cs-body">
-        <h2 style="font-family:var(--font-display);font-size:22px;margin-bottom:${charter.background ? '12px' : '0'};">${charter.projectName}</h2>
-        ${charter.background ? `<p style="font-size:14px;color:var(--text-secondary);line-height:1.7;">${charter.background}</p>` : ''}
+        <div class="cs-value">
+          <h2 style="font-family: var(--font-display); font-size: 22px; margin-bottom: 8px;">${charter.projectName}</h2>
+        </div>
       </div>
     </div>
 
     <div class="charter-section">
       <div class="cs-header"><span class="cs-title">Project Objective</span></div>
-      <div class="cs-body"><p style="font-size:14px;line-height:1.75;color:var(--text-primary);">${charter.objective}</p></div>
+      <div class="cs-body"><div class="cs-value">${charter.objective}</div></div>
     </div>
 
-    ${deliverables ? `
     <div class="charter-section">
-      <div class="cs-header"><span class="cs-title">Key Deliverables</span></div>
-      <div class="cs-body">
-        <ul style="list-style:none;display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--text-primary);">
-          ${deliverables}
-        </ul>
-      </div>
-    </div>` : ''}
-
-    <div class="charter-section">
-      <div class="cs-header"><span class="cs-title">Project Scope</span></div>
+      <div class="cs-header"><span class="cs-title">Scope</span></div>
       <div class="cs-body">
         <div class="cs-grid">
           <div>
-            <p style="font-size:11px;font-family:var(--font-mono);color:var(--accent-text);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">In Scope</p>
-            <ul style="list-style:none;display:flex;flex-direction:column;gap:7px;font-size:14px;color:var(--text-primary);">
+            <p style="font-size:12px;font-family:var(--font-mono);color:var(--accent-text);margin-bottom:8px;">IN SCOPE</p>
+            <ul style="list-style:none;display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--text-primary);">
               ${inScope || '<li style="color:var(--text-muted)">—</li>'}
             </ul>
           </div>
           <div>
-            <p style="font-size:11px;font-family:var(--font-mono);color:var(--danger);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">Out of Scope</p>
-            <ul style="list-style:none;display:flex;flex-direction:column;gap:7px;font-size:14px;color:var(--text-primary);">
+            <p style="font-size:12px;font-family:var(--font-mono);color:var(--danger);margin-bottom:8px;">OUT OF SCOPE</p>
+            <ul style="list-style:none;display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--text-primary);">
               ${outScope || '<li style="color:var(--text-muted)">—</li>'}
             </ul>
           </div>
@@ -577,64 +606,42 @@ function renderCharter(charter) {
       <div class="cs-header"><span class="cs-title">PM² Governance Roles</span></div>
       <div class="cs-body">
         <div class="cs-grid">
-          <div style="display:flex;flex-direction:column;gap:14px;">
-            ${roleRow('Project Owner (Sponsor)', charter.roles?.projectOwner)}
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            ${roleRow('Project Owner', charter.roles?.projectOwner)}
             ${roleRow('Business Manager', charter.roles?.businessManager)}
             ${roleRow('Project Manager', charter.roles?.projectManager)}
           </div>
-          <div style="display:flex;flex-direction:column;gap:14px;">
+          <div style="display:flex;flex-direction:column;gap:12px;">
             ${roleRow('User Representatives', ureps || 'TBD')}
             ${roleRow('Solution Provider', charter.roles?.solutionProvider)}
+            ${roleRow('Target Completion', charter.timeline)}
+            ${charter.budget ? roleRow('Budget / Resources', charter.budget) : ''}
           </div>
         </div>
-        ${charter.governance ? `<p style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border-subtle);font-size:13px;color:var(--text-secondary);line-height:1.7;"><strong style="color:var(--text-muted);font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:4px;">Governance</strong>${charter.governance}</p>` : ''}
       </div>
     </div>
-
-    ${milestones ? `
-    <div class="charter-section">
-      <div class="cs-header"><span class="cs-title">High-Level Milestone Plan</span></div>
-      <div class="cs-body" style="padding:0;">
-        <table style="width:100%;border-collapse:collapse;">
-          <thead><tr>
-            <th style="text-align:left;padding:7px 12px;background:var(--bg-3);font-size:10px;font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);border-bottom:1px solid var(--border-default);">Milestone</th>
-            <th style="text-align:left;padding:7px 12px;background:var(--bg-3);font-size:10px;font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);border-bottom:1px solid var(--border-default);">Target</th>
-          </tr></thead>
-          <tbody>${milestones}</tbody>
-        </table>
-      </div>
-    </div>` : `
-    <div class="charter-section">
-      <div class="cs-header"><span class="cs-title">Timeline &amp; Budget</span></div>
-      <div class="cs-body">
-        <div class="cs-grid">
-          ${roleRow('Target Completion', charter.timeline)}
-          ${charter.budget ? roleRow('Budget / Resources', charter.budget) : ''}
-        </div>
-      </div>
-    </div>`}
 
     <div class="charter-section">
       <div class="cs-header"><span class="cs-title">Success Criteria</span></div>
       <div class="cs-body">
-        <ul style="list-style:none;display:flex;flex-direction:column;gap:8px;font-size:14px;">
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:8px;">
           ${criteria || '<li style="color:var(--text-muted)">—</li>'}
         </ul>
       </div>
     </div>
 
     <div class="charter-section">
-      <div class="cs-header"><span class="cs-title">Constraints &amp; Assumptions</span></div>
+      <div class="cs-header"><span class="cs-title">Constraints & Assumptions</span></div>
       <div class="cs-body">
         <div class="cs-grid">
           <div>
-            <p style="font-size:11px;font-family:var(--font-mono);color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">Constraints</p>
+            <p style="font-size:12px;font-family:var(--font-mono);color:var(--text-muted);margin-bottom:8px;">CONSTRAINTS</p>
             <ul style="list-style:none;display:flex;flex-direction:column;gap:6px;font-size:14px;">
               ${constraints || '<li style="color:var(--text-muted)">—</li>'}
             </ul>
           </div>
           <div>
-            <p style="font-size:11px;font-family:var(--font-mono);color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">Assumptions</p>
+            <p style="font-size:12px;font-family:var(--font-mono);color:var(--text-muted);margin-bottom:8px;">ASSUMPTIONS</p>
             <ul style="list-style:none;display:flex;flex-direction:column;gap:6px;font-size:14px;">
               ${assumptions || '<li style="color:var(--text-muted)">—</li>'}
             </ul>
@@ -643,30 +650,41 @@ function renderCharter(charter) {
       </div>
     </div>
 
-    <div class="charter-section" style="border-color:var(--accent-border);background:var(--accent-dim);">
-      <div class="cs-header"><span class="cs-title">Approval</span></div>
+    <div class="charter-section" style="border-color: var(--accent-border); background: var(--accent-dim);">
       <div class="cs-body">
-        <p style="font-size:13px;color:var(--accent-text);font-family:var(--font-mono);margin-bottom:20px;">
+        <p style="font-size:13px;color:var(--accent-text);font-family:var(--font-mono);">
           ${charter.approvalNote || 'This Project Charter is to be reviewed and approved by the Project Steering Committee at the Initiating Phase Gate.'}
         </p>
-        <div class="cs-grid" style="gap:32px;">
-          ${approvalBlock('Project Owner', charter.roles?.projectOwner)}
-          ${approvalBlock('Business Manager', charter.roles?.businessManager)}
-          ${approvalBlock('Project Manager', charter.roles?.projectManager)}
-        </div>
       </div>
     </div>
-  `;
-}
 
-function approvalBlock(role, name) {
-  return `
-    <div style="border-top:1px solid var(--border-default);padding-top:12px;">
-      <p style="font-size:11px;font-family:var(--font-mono);color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">${role}</p>
-      <p style="font-size:13px;color:var(--text-primary);margin-bottom:16px;">${name || 'TBD'}</p>
-      <p style="font-size:11px;font-family:var(--font-mono);color:var(--text-muted);">Signature: ________________________</p>
-      <p style="font-size:11px;font-family:var(--font-mono);color:var(--text-muted);margin-top:8px;">Date: ____________________________</p>
-    </div>`;
+    ${charter.escalation ? `
+    <div class="charter-section">
+      <div class="cs-header">
+        <span class="cs-title">Escalation Matrix</span>
+        <span class="cs-badge">Decision Authority</span>
+      </div>
+      <div class="cs-body">
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          ${Object.entries(charter.escalation).map(([key, lvl], i) => `
+            <div style="display:grid;grid-template-columns:120px 1fr 1fr;gap:12px;padding:12px;background:var(--bg-3);border-radius:var(--r-md);border:1px solid var(--border-subtle);">
+              <div>
+                <p style="font-size:10px;font-family:var(--font-mono);color:var(--text-muted);margin-bottom:4px;">LEVEL ${i+1}</p>
+                <p style="font-size:13px;font-weight:500;color:var(--accent-text);">${lvl.authority}</p>
+              </div>
+              <div>
+                <p style="font-size:10px;font-family:var(--font-mono);color:var(--text-muted);margin-bottom:4px;">THRESHOLD</p>
+                <p style="font-size:13px;color:var(--text-primary);">${lvl.threshold}</p>
+              </div>
+              <div>
+                <p style="font-size:10px;font-family:var(--font-mono);color:var(--text-muted);margin-bottom:4px;">ACTION</p>
+                <p style="font-size:13px;color:var(--text-secondary);">${lvl.action}</p>
+              </div>
+            </div>`).join('')}
+        </div>
+      </div>
+    </div>` : ''}
+  `;
 }
 
 function roleRow(label, value) {
@@ -756,23 +774,55 @@ function renderRisks(risks) {
   el.innerHTML = cards;
 }
 
+function renderPBS(pbs) {
+  const el = $('pbs-content');
+  if (!el) return;
+
+  function renderNode(node, depth) {
+    const indent = depth * 20;
+    const hasChildren = node.children && node.children.length > 0;
+    const isLeaf = !hasChildren;
+    const color = depth === 0 ? 'var(--accent)' : depth === 1 ? 'var(--text-secondary)' : 'var(--text-muted)';
+    const fontWeight = depth === 0 ? '600' : depth === 1 ? '500' : '400';
+    const fontSize = depth === 0 ? '15px' : depth === 1 ? '14px' : '13px';
+
+    return `
+      <div class="pbs-node" style="margin-left:${indent}px; border-left: ${depth > 0 ? '1px solid var(--border-subtle)' : 'none'}; padding-left: ${depth > 0 ? '16px' : '0'};">
+        <div class="pbs-node-row">
+          <span class="pbs-node-id">${node.id}</span>
+          <div class="pbs-node-content">
+            <span class="pbs-node-label" style="font-size:${fontSize};font-weight:${fontWeight};color:${color};">${node.label}</span>
+            ${node.description ? `<span class="pbs-node-desc">${node.description}</span>` : ''}
+          </div>
+          ${isLeaf ? '<span class="pbs-leaf-badge">Deliverable</span>' : ''}
+        </div>
+        ${hasChildren ? node.children.map(child => renderNode(child, depth + 1)).join('') : ''}
+      </div>`;
+  }
+
+  el.innerHTML = `
+    <div class="pbs-intro">
+      <p>${pbs.description || 'The PBS defines what the project will produce — its deliverables and sub-deliverables. The PBS precedes the WBS: PBS defines where you want to go, WBS tells you how to get there.'}</p>
+    </div>
+    <div class="pbs-tree">
+      ${(pbs.nodes || []).map(node => renderNode(node, 0)).join('')}
+    </div>
+  `;
+}
+
 function renderResults(artefacts) {
   dom.resultsProjectName.textContent = artefacts.charter?.projectName || state.answers.projectName || 'Your Project';
 
   renderCharter(artefacts.charter);
+  renderPBS(artefacts.pbs);
   renderStakeholders(artefacts.stakeholders);
   renderRisks(artefacts.risks);
 
-  // Init planning tools with project context pre-filled
-  const projectName = artefacts.charter?.projectName || state.answers.projectName || 'My Project';
-  if (typeof initTools === 'function') {
-    initTools(projectName, artefacts, state.answers);
+  // Update coaching nudge with correct PM² sequence
+  const nudgeEl = $('nudge-text');
+  if (nudgeEl) {
+    nudgeEl.textContent = 'Charter approved? Next: hold your Planning Kick-off Meeting, then build your PBS → WBS → Schedule → Cost Estimate in that order. Each feeds the next.';
   }
-  if (typeof setPrintProjectName === 'function') {
-    setPrintProjectName(projectName);
-  }
-
-  // Show coaching nudge
   dom.coachingNudge.classList.remove('hidden');
 
   // Tab switching
@@ -788,17 +838,16 @@ function renderResults(artefacts) {
 
   // Copy buttons
   document.querySelectorAll('.copy-btn').forEach((btn) => {
-    btn.textContent = t('copyText');
     btn.addEventListener('click', () => {
       const targetId = btn.dataset.target;
       const el = $(targetId);
       if (!el) return;
       const text = el.innerText;
       navigator.clipboard.writeText(text).then(() => {
-        btn.textContent = t('copied');
+        btn.textContent = '✓ Copied';
         btn.classList.add('copied');
         setTimeout(() => {
-          btn.textContent = t('copyText');
+          btn.textContent = 'Copy text';
           btn.classList.remove('copied');
         }, 2000);
       });
@@ -808,6 +857,12 @@ function renderResults(artefacts) {
 
 // ── Init ──────────────────────────────────────────────────────
 function init() {
+  // Check for API key
+  if (!getApiKey()) {
+    showApiModal();
+  }
+
+  // Render first question
   renderQuestion(0);
 }
 
