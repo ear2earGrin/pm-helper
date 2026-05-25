@@ -1,5 +1,5 @@
-const GROQ_API = 'https://api.groq.com/openai/v1/chat/completions';
-const MODEL = 'llama-3.3-70b-versatile';
+const ANTHROPIC_API = 'https://api.anthropic.com/v1/messages';
+const MODEL = 'claude-sonnet-4-6';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -30,11 +30,12 @@ export default {
       return new Response('Missing prompt', { status: 400 });
     }
 
-    const groqRes = await fetch(GROQ_API, {
+    const anthropicRes = await fetch(ANTHROPIC_API, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${env.GROQ_API_KEY}`,
+        'x-api-key': env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
         model: MODEL,
@@ -43,16 +44,16 @@ export default {
       }),
     });
 
-    if (!groqRes.ok) {
-      const err = await groqRes.text();
+    if (!anthropicRes.ok) {
+      const err = await anthropicRes.text();
       return new Response(JSON.stringify({ error: err }), {
-        status: groqRes.status,
+        status: anthropicRes.status,
         headers: { ...CORS, 'Content-Type': 'application/json' },
       });
     }
 
-    const data = await groqRes.json();
-    const text = data.choices?.[0]?.message?.content || '';
+    const data = await anthropicRes.json();
+    const text = data.content?.[0]?.text || '';
 
     return new Response(JSON.stringify({ text }), {
       headers: { ...CORS, 'Content-Type': 'application/json' },
