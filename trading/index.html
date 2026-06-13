@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PM Helper — Trading</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="trading.css" />
+
+  <!-- Binance CORS proxy base. The data layer (trading/data/binance.js) defaults to the
+       same-origin "/binance-spot" prefix; pm-brief is a static host with no dev proxy,
+       so we point it at the deployed Worker in /worker-binance. Deploy that Worker
+       (`cd worker-binance && npx wrangler deploy`) for the Scanner/Backtest to fetch
+       data. If you instead put a same-origin Cloudflare route in front of pm-brief.com,
+       delete this line and binance.js falls back to "/binance-spot". -->
+  <script>
+    window.__BINANCE_PROXY_BASE__ = "https://pm-helper-binance.mindarvokn.workers.dev/binance-spot";
+  </script>
+
+  <!-- Charting (no bundler): vendored standalone UMD build exposes window.LightweightCharts.
+       Kept local (Apache-2.0, v4.2.0) instead of a CDN so the section has no runtime third-party
+       dependency. Re-vendor with:
+       npm i && cp node_modules/lightweight-charts/dist/lightweight-charts.standalone.production.js trading/vendor/
+       If the global is ever missing, the Backtest degrades gracefully (metrics + trades still render). -->
+  <script src="vendor/lightweight-charts.standalone.production.js" defer></script>
+  <script type="module" src="ui/app.js"></script>
+</head>
+<body class="trading-body">
+
+  <!-- pm-brief nav (existing component) -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="../index.html" class="brand">
+        <span class="brand-icon">◈</span>
+        <span class="brand-name">PM Helper</span>
+      </a>
+      <div class="nav-links">
+        <a href="../tools.html" class="nav-link">Tools</a>
+        <a href="index.html" class="nav-link" aria-current="page">Trading</a>
+        <a href="../app.html" class="btn btn-primary">Start a project →</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Section sub-nav -->
+  <div class="tr-subnav-bar">
+    <div class="tr-subnav-inner">
+      <span class="tr-subnav-brand">◧ TRADING</span>
+      <a href="#/scanner" class="tr-subnav" data-route="scanner">SCANNER</a>
+      <a href="#/backtest" class="tr-subnav" data-route="backtest">BACKTEST</a>
+      <a href="#/log" class="tr-subnav" data-route="log">TRADE LOG</a>
+    </div>
+  </div>
+
+  <main id="trading-root"></main>
+
+  <noscript>
+    <div class="tr-view"><div class="tr-empty">The trading section needs JavaScript enabled.</div></div>
+  </noscript>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="brand brand--small">
+        <span class="brand-icon">◈</span>
+        <span class="brand-name">PM Helper</span>
+      </div>
+      <p class="footer-note">Mechanical swing trading · Section ported from crypto-entry-checker</p>
+      <a href="../docs/STRATEGY-SPEC.md" class="footer-partner">Strategy spec →</a>
+    </div>
+  </footer>
+
+</body>
+</html>

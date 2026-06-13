@@ -1,0 +1,20 @@
+name = "pm-helper-binance"
+main = "index.js"
+compatibility_date = "2024-01-01"
+
+# Wiring options (pick one when the /trading pages land):
+#
+# A) Same-origin routes (preferred if pm-brief.com is proxied through Cloudflare).
+#    The frontend can then keep calling same-origin "/binance-spot/*" with no code
+#    change. Uncomment and deploy:
+#
+# routes = [
+#   { pattern = "pm-brief.com/binance-spot/*", zone_name = "pm-brief.com" },
+#   { pattern = "pm-brief.com/binance-fut/*",  zone_name = "pm-brief.com" },
+#   { pattern = "pm-brief.com/binance-dapi/*", zone_name = "pm-brief.com" },
+# ]
+#
+# B) Standalone workers.dev URL (if pm-brief.com is GitHub Pages, like the existing
+#    pm-helper-api Worker at *.workers.dev). Deploy as-is, then point the data
+#    layer's base URL at https://pm-helper-binance.<account>.workers.dev. This is a
+#    one-line config change in trading/data/binance.js (SPOT constant).
