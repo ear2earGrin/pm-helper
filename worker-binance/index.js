@@ -8,7 +8,11 @@
 // dev server, so the proxy must live at the edge instead.
 
 const ROUTES = {
-  '/binance-spot': 'https://api.binance.com',
+  // api.binance.com sits behind CloudFront and 403s requests from many datacenter/edge
+  // IPs (including Cloudflare's), so proxying through it returns "Request blocked".
+  // data-api.binance.vision is Binance's public market-data host: same /api/v3/klines,
+  // served to those IPs without the geo/IP block. Spot is all the Scanner/Backtest use.
+  '/binance-spot': 'https://data-api.binance.vision',
   '/binance-fut': 'https://fapi.binance.com',
   '/binance-dapi': 'https://dapi.binance.com',
 };
