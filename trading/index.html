@@ -11,14 +11,14 @@
   <link rel="stylesheet" href="../css/style.css" />
   <link rel="stylesheet" href="trading.css" />
 
-  <!-- Binance CORS proxy base. The data layer (trading/data/binance.js) defaults to the
-       same-origin "/binance-spot" prefix; pm-brief is a static host with no dev proxy,
-       so we point it at the deployed Worker in /worker-binance. Deploy that Worker
-       (`cd worker-binance && npx wrangler deploy`) for the Scanner/Backtest to fetch
-       data. If you instead put a same-origin Cloudflare route in front of pm-brief.com,
-       delete this line and binance.js falls back to "/binance-spot". -->
+  <!-- Binance data source. We fetch Binance's public market-data host directly from the
+       browser. Binance 403s requests from cloud/edge IPs (a Cloudflare Worker proxy gets
+       "Request blocked" from CloudFront), but a normal browser on a residential connection
+       is fine, and data-api.binance.vision returns permissive CORS headers for public GET
+       endpoints — so no proxy is needed for public klines. (worker-binance/ is left in the
+       repo as a fallback for hosts whose region IS allowed but where CORS is the blocker.) -->
   <script>
-    window.__BINANCE_PROXY_BASE__ = "https://pm-helper-binance.mindarvokn.workers.dev/binance-spot";
+    window.__BINANCE_PROXY_BASE__ = "https://data-api.binance.vision";
   </script>
 
   <!-- Charting (no bundler): vendored standalone UMD build exposes window.LightweightCharts.
