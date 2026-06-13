@@ -21,13 +21,14 @@
     window.__BINANCE_PROXY_BASE__ = "https://data-api.binance.vision";
   </script>
 
-  <!-- Charting (no bundler): vendored standalone UMD build exposes window.LightweightCharts.
-       Kept local (Apache-2.0, v4.2.0) instead of a CDN so the section has no runtime third-party
-       dependency. Re-vendor with:
-       npm i && cp node_modules/lightweight-charts/dist/lightweight-charts.standalone.production.js trading/vendor/
-       If the global is ever missing, the Backtest degrades gracefully (metrics + trades still render). -->
+  <!-- Charting: vendored standalone UMD build exposes window.LightweightCharts (Apache-2.0). -->
   <script src="vendor/lightweight-charts.standalone.production.js" defer></script>
-  <script type="module" src="ui/app.js"></script>
+
+  <!-- Trading UI, bundled to a single classic script with esbuild. GitHub Pages did not run the
+       multi-file <script type="module"> graph; a classic script loads exactly like the site's
+       other scripts (js/wizard.js, js/tools.js). Source of truth is trading/ui/*.js — regenerate
+       the bundle with:  npm run build:trading -->
+  <script src="trading.bundle.js" defer></script>
 </head>
 <body class="trading-body">
 
