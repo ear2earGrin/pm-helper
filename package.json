@@ -5,9 +5,11 @@
   "type": "module",
   "scripts": {
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "build:trading": "esbuild trading/ui/app.js --bundle --format=iife --outfile=trading/trading.bundle.js"
   },
   "devDependencies": {
+    "esbuild": "^0.21.5",
     "fast-check": "^3.23.2",
     "lightweight-charts": "^4.2.0",
     "vitest": "^2.1.9"
