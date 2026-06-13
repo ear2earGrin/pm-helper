@@ -9,6 +9,7 @@
   },
   "devDependencies": {
     "fast-check": "^3.23.2",
+    "lightweight-charts": "^4.2.0",
     "vitest": "^2.1.9"
   }
 }

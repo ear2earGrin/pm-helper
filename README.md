@@ -56,12 +56,46 @@ On first launch of the app, you'll be prompted for your **Anthropic API key**.
 pm-helper/
 ├── index.html          ← Landing page
 ├── app.html            ← Wizard app (main experience)
+├── tools.html          ← PM² planning tools
+├── trading/            ← Trading section (ported from crypto-entry-checker)
+│   ├── index.html      ← Section shell (nav + sub-nav + hash router)
+│   ├── indicators/ strategy/ backtest/ data/   ← pure engine (ESM: browser + Vitest)
+│   ├── ui/             ← vanilla views: scanner · backtest · tradelog · router
+│   └── vendor/         ← lightweight-charts (vendored, Apache-2.0)
+├── worker/             ← Cloudflare Worker: Anthropic API proxy
+├── worker-binance/     ← Cloudflare Worker: Binance CORS proxy
 ├── css/
 │   └── style.css       ← All styles (design system + components)
-├── js/
-│   └── wizard.js       ← Wizard logic, Claude API calls, artefact rendering
+├── js/                 ← wizard.js · tools.js · i18n.js
+├── docs/               ← STRATEGY-SPEC · AGENT-HANDOFF · ROUTINE · INTEGRATION
 └── README.md
 ```
+
+---
+
+## Trading section (`/trading`)
+
+A mechanical swing-trading system ported from [crypto-entry-checker](https://github.com/ear2earGrin/crypto-entry-checker), integrated as a native pm-brief section (vanilla, no build) and surfaced in the nav. Three tools:
+
+- **Scanner** — once-a-day mechanical verdict per asset (weekly regime → daily Donchian breakout)
+- **Backtest** — single-asset historical replay with equity curve + 12-metric grid
+- **Trade Log** — localStorage-persisted journal with Obsidian-flavored Markdown export
+
+The rules are documented — **read these before changing anything under `trading/`:**
+
+- **[docs/STRATEGY-SPEC.md](docs/STRATEGY-SPEC.md)** — the strategy rules (single source of truth)
+- **[docs/AGENT-HANDOFF.md](docs/AGENT-HANDOFF.md)** — design rationale + what not to change, and why
+- **[docs/ROUTINE.md](docs/ROUTINE.md)** — the owner's daily/weekly checklist
+- **[docs/INTEGRATION-INTO-PM-BRIEF.md](docs/INTEGRATION-INTO-PM-BRIEF.md)** — how this port was done
+
+The engine is pure ES modules (no build step). Tests (Vitest + fast-check, dev-only — not shipped):
+
+```bash
+npm install
+npm test        # 100 tests, all passing
+```
+
+> ⚠️ **Binance needs a CORS proxy — the #1 thing that breaks.** `trading/data/binance.js` calls same-origin `/binance-spot/*`; deploy `worker-binance/` (`cd worker-binance && npx wrangler deploy`) and the section targets it via `window.__BINANCE_PROXY_BASE__` in `trading/index.html`. Without it, Scanner/Backtest fail with CORS errors in the console. See [`trading/README.md`](trading/README.md).
 
 ---
 

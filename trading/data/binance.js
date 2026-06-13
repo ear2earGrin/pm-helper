@@ -1,4 +1,10 @@
-const SPOT = "/binance-spot";
+// Proxy base for Binance klines. Browsers block direct calls to api.binance.com by
+// CORS, so requests go through a server-side proxy. Default is the same-origin
+// "/binance-spot" prefix (works behind a Cloudflare route or a dev proxy); pm-brief is
+// a static site with no dev server, so it injects an absolute proxy URL via
+// window.__BINANCE_PROXY_BASE__ (set in /trading/index.html, served by /worker-binance).
+const SPOT =
+  (typeof window !== "undefined" && window.__BINANCE_PROXY_BASE__) || "/binance-spot";
 
 function tfToBinanceInterval(tf) {
   const map = {
