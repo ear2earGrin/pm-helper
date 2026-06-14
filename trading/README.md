@@ -12,25 +12,31 @@ trading/
   indicators/   pure functions: SMA EMA RMA MACD RSI ATR ADX Donchian Bollinger
   strategy/     pure rule logic: regime · signal · exit · sizing · portfolio · runOne
   backtest/     engine · portfolio · walkforward · montecarlo · metrics
-  data/         binance.js (kline fetch, via CORS proxy) · tradeLog.js (localStorage + Obsidian md)
+  data/         binance.js (kline fetch) · tradeLog.js (localStorage + Obsidian md)
+  options/      payoff math + presets (straddle, strangle, strip, strap, spreads, condor)
+  ui/           vanilla views: scanner · backtest · tradelog · options · hash router
+  trading.bundle.js   the views bundled to one classic script (built, served)
 ```
 
-All modules are pure ES modules with relative `.js` imports, so they run unmodified
-both under Vitest (Node) and natively in the browser via `<script type="module">`.
-No build step is required for the engine.
+The engine/options modules are pure ES modules with relative `.js` imports — they run
+unmodified under Vitest (Node). For the browser the UI is bundled into one classic script
+with `npm run build:trading` (esbuild): GitHub Pages did not execute the multi-file
+`<script type="module">` graph, and a classic bundle loads like the site's other scripts.
+**Rebuild the bundle whenever you change anything under `trading/`.**
 
 ## Tests
 
-100 tests (Vitest + fast-check), dev-only — not shipped to the static site:
+110 tests (Vitest + fast-check), dev-only — not shipped to the static site:
 
 ```bash
-npm install   # one-time: installs vitest + fast-check (devDependencies)
-npm test      # vitest run — expect 100 passing
+npm install   # one-time: installs devDependencies
+npm test      # vitest run — expect 110 passing
 ```
 
-## Binance CORS proxy
+## Binance data
 
-`data/binance.js` calls same-origin prefixes (`/binance-spot`, `/binance-fut`,
-`/binance-dapi`). Those must be rewritten to the real Binance hosts by an edge proxy
-— see [`../worker-binance/`](../worker-binance/). Without it, every Scanner/Backtest
-call fails with a CORS error in the browser console.
+`data/binance.js` reads its base URL from `window.__BINANCE_PROXY_BASE__` (set in
+`index.html`), currently `https://data-api.binance.vision` — Binance's public market-data
+host — so the browser fetches klines directly. The Cloudflare Worker proxy in
+[`../worker-binance/`](../worker-binance/) is kept as a fallback, but Binance 403s cloud/edge
+IPs (including Cloudflare), so direct-from-browser is the default.
