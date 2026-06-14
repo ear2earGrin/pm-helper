@@ -320,6 +320,9 @@
   font-size: 12px;
   line-height: 1.5;
 }
+.tr-opt-blurb-what { color: var(--text-primary); font-weight: 700; }
+.tr-opt-blurb-when { margin-top: 6px; }
+.tr-opt-blurb-when strong { color: var(--accent-text); }
 .tr-opt-legs-wrap { margin-top: var(--space-md); display: grid; gap: var(--space-sm); justify-items: start; }
 .tr-opt-legs { width: 100%; display: grid; gap: 6px; }
 .tr-opt-leg {

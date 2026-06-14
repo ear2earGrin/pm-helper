@@ -177,7 +177,10 @@ export function mount(root) {
     if (!strat) return;
     strategyId = id;
     legs = strat.build(num(spot) || DEFAULT_SPOT);
-    blurbEl.textContent = strat.blurb;
+    clear(blurbEl);
+    blurbEl.appendChild(el("div", { class: "tr-opt-blurb-what" }, strat.blurb));
+    blurbEl.appendChild(el("div", { class: "tr-opt-blurb-when" },
+      el("strong", null, "When to use: "), strat.when));
     renderLegs();
     renderDiagram();
   }
