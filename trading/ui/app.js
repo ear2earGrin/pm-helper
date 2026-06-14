@@ -5,11 +5,13 @@
 import { mount as mountScanner } from "./scanner.js";
 import { mount as mountBacktest } from "./backtest.js";
 import { mount as mountTradeLog } from "./tradelog.js";
+import { mount as mountOptions } from "./options.js";
 
 const ROUTES = {
   scanner: mountScanner,
   backtest: mountBacktest,
   log: mountTradeLog,
+  options: mountOptions,
 };
 const DEFAULT = "scanner";
 

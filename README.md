@@ -80,6 +80,7 @@ A mechanical swing-trading system ported from [crypto-entry-checker](https://git
 - **Scanner** — once-a-day mechanical verdict per asset (weekly regime → daily Donchian breakout)
 - **Backtest** — single-asset historical replay with equity curve + 12-metric grid
 - **Trade Log** — localStorage-persisted journal with Obsidian-flavored Markdown export
+- **Options Payoffs** — multi-leg option strategy payoff diagrams (straddle, strangle, strip, strap, spreads, condor)
 
 The rules are documented — **read these before changing anything under `trading/`:**
 
@@ -92,7 +93,7 @@ The engine is pure ES modules (no build step). Tests (Vitest + fast-check, dev-o
 
 ```bash
 npm install
-npm test        # 100 tests, all passing
+npm test        # 110 tests, all passing
 ```
 
 > ⚠️ **Binance needs a CORS proxy — the #1 thing that breaks.** `trading/data/binance.js` calls same-origin `/binance-spot/*`; deploy `worker-binance/` (`cd worker-binance && npx wrangler deploy`) and the section targets it via `window.__BINANCE_PROXY_BASE__` in `trading/index.html`. Without it, Scanner/Backtest fail with CORS errors in the console. See [`trading/README.md`](trading/README.md).

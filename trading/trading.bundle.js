@@ -164,8 +164,8 @@
       const l = avgL[i];
       if (g === null || l === null) continue;
       const rs = l === 0 ? Infinity : g / l;
-      const r = l === 0 ? 100 : 100 - 100 / (1 + rs);
-      out[i + 1] = r;
+      const r2 = l === 0 ? 100 : 100 - 100 / (1 + rs);
+      out[i + 1] = r2;
     }
     return out;
   }
@@ -500,6 +500,22 @@
   function clear(node) {
     while (node.firstChild) node.removeChild(node.firstChild);
   }
+  var SVG_NS = "http://www.w3.org/2000/svg";
+  function svgEl(tag, props, ...children) {
+    const node = document.createElementNS(SVG_NS, tag);
+    if (props) {
+      for (const [k, v] of Object.entries(props)) {
+        if (v == null || v === false) continue;
+        if (k === "text") node.textContent = String(v);
+        else node.setAttribute(k, String(v));
+      }
+    }
+    for (const c of children.flat()) {
+      if (c == null || c === false) continue;
+      node.appendChild(c instanceof Node ? c : document.createTextNode(String(c)));
+    }
+    return node;
+  }
 
   // trading/ui/format.js
   function fmt(n, d = 2) {
@@ -555,24 +571,24 @@
     if (sig.action === "SHORT") return `< ${fmt(sig.entryLower, 4)}`;
     return "-";
   }
-  function dataRow(r) {
-    if (!r.ok) {
+  function dataRow(r2) {
+    if (!r2.ok) {
       return el(
         "tr",
         null,
-        el("td", { class: "tr-td" }, r.asset),
-        el("td", { class: "tr-td tr-err", colspan: 13 }, `error: ${r.error}`)
+        el("td", { class: "tr-td" }, r2.asset),
+        el("td", { class: "tr-td tr-err", colspan: 13 }, `error: ${r2.error}`)
       );
     }
-    const sig = r.signal || {};
-    const rl = r.regimeLatest || {};
-    const sz = r.sizing;
+    const sig = r2.signal || {};
+    const rl = r2.regimeLatest || {};
+    const sz = r2.sizing;
     const histClass = rl.hist > 0 ? "tr-pos" : rl.hist < 0 ? "tr-neg" : "tr-mut";
     return el(
       "tr",
       null,
-      el("td", { class: "tr-td tr-strong" }, binanceSymbol(r.asset)),
-      el("td", { class: "tr-td" }, badge(r.regimeState, r.regimeState)),
+      el("td", { class: "tr-td tr-strong" }, binanceSymbol(r2.asset)),
+      el("td", { class: "tr-td" }, badge(r2.regimeState, r2.regimeState)),
       el("td", { class: "tr-td", title: sig.reason || "" }, badge(sig.action || "WAIT", sig.action || "WAIT")),
       el("td", { class: "tr-td" }, fmt(sig.close, 4)),
       el("td", { class: "tr-td" }, entryTrigger(sig)),
@@ -630,11 +646,11 @@
     }
     function renderSummary(message, kind) {
       clear(summary);
-      const longOk = rows.filter((r) => r.ok && r.regimeState === "LONG_OK").length;
-      const shortOk = rows.filter((r) => r.ok && r.regimeState === "SHORT_OK").length;
-      const flat = rows.filter((r) => r.ok && r.regimeState === "FLAT").length;
-      const entries = rows.filter((r) => r.ok && (r.signal?.action === "LONG" || r.signal?.action === "SHORT")).length;
-      const vetoes = rows.filter((r) => r.ok && r.signal?.action === "VETO").length;
+      const longOk = rows.filter((r2) => r2.ok && r2.regimeState === "LONG_OK").length;
+      const shortOk = rows.filter((r2) => r2.ok && r2.regimeState === "SHORT_OK").length;
+      const flat = rows.filter((r2) => r2.ok && r2.regimeState === "FLAT").length;
+      const entries = rows.filter((r2) => r2.ok && (r2.signal?.action === "LONG" || r2.signal?.action === "SHORT")).length;
+      const vetoes = rows.filter((r2) => r2.ok && r2.signal?.action === "VETO").length;
       append(summary, [
         el("span", { class: "tr-pill tr-pill--longok" }, `LONG-OK: ${longOk}`),
         el("span", { class: "tr-pill tr-pill--shortok" }, `SHORT-OK: ${shortOk}`),
@@ -674,7 +690,7 @@
       rows = results.map((res, i) => res.status === "fulfilled" ? { ok: true, ...res.value } : { ok: false, asset: UNIVERSE[i], error: res.reason?.message || "fetch failed" });
       lastScan = /* @__PURE__ */ new Date();
       lastEl.textContent = `Last: ${lastScan.toLocaleTimeString()}`;
-      const errs = rows.filter((r) => !r.ok).length;
+      const errs = rows.filter((r2) => !r2.ok).length;
       renderSummary(errs ? `Done with ${errs} error(s).` : "Scan complete.", errs ? "warn" : "ok");
       renderTable();
       loading = false;
@@ -1437,7 +1453,7 @@
     }
     function openModal(title, body, onSave) {
       closeModal();
-      const card = el(
+      const card2 = el(
         "div",
         { class: "tr-modal", onClick: (e) => e.stopPropagation() },
         el(
@@ -1454,7 +1470,7 @@
           el("button", { class: "btn btn-primary btn-sm", type: "button", onClick: onSave }, "SAVE")
         )
       );
-      modalEl = el("div", { class: "tr-overlay", onClick: closeModal }, card);
+      modalEl = el("div", { class: "tr-overlay", onClick: closeModal }, card2);
       root.appendChild(modalEl);
     }
     function field(label, control) {
@@ -1472,7 +1488,7 @@
       const head = ["Date", "Asset", "Dir", "Entry", "Stop", "Qty", "Risk $", "Exit", "PnL", "R", "Actions"];
       const body = el("tbody", null, ...trades.map((t) => {
         const pnl = tradePnl(t);
-        const r = pnl !== null && t.entry?.riskDollar ? pnl / t.entry.riskDollar : null;
+        const r2 = pnl !== null && t.entry?.riskDollar ? pnl / t.entry.riskDollar : null;
         const pnlTone = pnl > 0 ? "tr-pos" : pnl < 0 ? "tr-neg" : "tr-mut";
         return el(
           "tr",
@@ -1486,7 +1502,7 @@
           el("td", { class: "tr-td" }, fmt(t.entry?.riskDollar, 2)),
           el("td", { class: "tr-td" }, t.exit ? `${ymd(t.exit.time)} @ ${fmt(t.exit.price, 4)}` : "-"),
           el("td", { class: `tr-td ${pnlTone}` }, fmt(pnl, 2)),
-          el("td", { class: "tr-td" }, fmt(r, 2)),
+          el("td", { class: "tr-td" }, fmt(r2, 2)),
           el("td", { class: "tr-td" }, el(
             "div",
             { class: "tr-act-row" },
@@ -1754,11 +1770,476 @@ ${tradeToObsidianMarkdown(t)}`).join("\n");
     };
   }
 
+  // trading/options/payoff.js
+  function legIntrinsic(type, strike, spot) {
+    return type === "call" ? Math.max(spot - strike, 0) : Math.max(strike - spot, 0);
+  }
+  function legPayoff(leg, spot) {
+    const qty = leg.qty ?? 1;
+    const dir = leg.side === "short" ? -1 : 1;
+    return dir * qty * (legIntrinsic(leg.type, leg.strike, spot) - leg.premium);
+  }
+  function payoffAt(legs, spot) {
+    let sum = 0;
+    for (const leg of legs) sum += legPayoff(leg, spot);
+    return sum;
+  }
+  function netCost(legs) {
+    let cost = 0;
+    for (const leg of legs) {
+      const qty = leg.qty ?? 1;
+      cost += (leg.side === "short" ? -1 : 1) * qty * leg.premium;
+    }
+    return cost;
+  }
+  function payoffCurve(legs, smin, smax, steps = 240) {
+    const pts = [];
+    const span = smax - smin || 1;
+    for (let i = 0; i <= steps; i++) {
+      const s = smin + span * i / steps;
+      pts.push({ s, pnl: payoffAt(legs, s) });
+    }
+    return pts;
+  }
+  function tailSlopes(legs) {
+    let right = 0;
+    let left = 0;
+    for (const leg of legs) {
+      const qty = leg.qty ?? 1;
+      const dir = leg.side === "short" ? -1 : 1;
+      if (leg.type === "call") right += dir * qty;
+      else left += -dir * qty;
+    }
+    return { right, left };
+  }
+  function breakevens(legs, smin, smax, steps = 2e3) {
+    const span = smax - smin || 1;
+    const out = [];
+    let prevS = smin;
+    let prevP = payoffAt(legs, smin);
+    for (let i = 1; i <= steps; i++) {
+      const s = smin + span * i / steps;
+      const p = payoffAt(legs, s);
+      if (prevP < 0 && p >= 0 || prevP > 0 && p <= 0) {
+        out.push(p === prevP ? s : prevS + (0 - prevP) * (s - prevS) / (p - prevP));
+      }
+      prevS = s;
+      prevP = p;
+    }
+    return out.filter((v, i) => i === 0 || Math.abs(v - out[i - 1]) > span * 1e-4);
+  }
+  function analyze(legs, opts = {}) {
+    const strikes = legs.map((l) => l.strike).filter((x) => Number.isFinite(x));
+    const refHigh = Math.max(opts.spot || 0, ...strikes, 0);
+    const smax = (refHigh || opts.spot || 100) * 3 + 10;
+    let maxProfit = -Infinity;
+    let maxLoss = Infinity;
+    for (const s of [0, ...strikes]) {
+      const p = payoffAt(legs, s);
+      if (p > maxProfit) maxProfit = p;
+      if (p < maxLoss) maxLoss = p;
+    }
+    const { right } = tailSlopes(legs);
+    if (right > 0) maxProfit = Infinity;
+    if (right < 0) maxLoss = -Infinity;
+    return {
+      netCost: netCost(legs),
+      maxProfit,
+      maxLoss,
+      breakevens: breakevens(legs, 0, smax)
+    };
+  }
+
+  // trading/options/strategies.js
+  var r = (x) => Math.round(x * 100) / 100;
+  var DEFAULT_SPOT = 100;
+  var STRATEGIES = [
+    {
+      id: "long-call",
+      name: "Long Call",
+      blurb: "Buy a call. Bullish; loss capped at the premium, upside unlimited.",
+      build: (s) => [{ type: "call", side: "long", strike: r(s), premium: r(s * 0.05), qty: 1 }]
+    },
+    {
+      id: "long-put",
+      name: "Long Put",
+      blurb: "Buy a put. Bearish; loss capped at the premium, profit grows as price falls.",
+      build: (s) => [{ type: "put", side: "long", strike: r(s), premium: r(s * 0.05), qty: 1 }]
+    },
+    {
+      id: "short-call",
+      name: "Short Call",
+      blurb: "Sell a call. Collect premium; profit capped, loss unlimited if price rises.",
+      build: (s) => [{ type: "call", side: "short", strike: r(s), premium: r(s * 0.05), qty: 1 }]
+    },
+    {
+      id: "short-put",
+      name: "Short Put",
+      blurb: "Sell a put. Collect premium; profit capped, loss grows as price falls.",
+      build: (s) => [{ type: "put", side: "short", strike: r(s), premium: r(s * 0.05), qty: 1 }]
+    },
+    {
+      id: "long-straddle",
+      name: "Long Straddle",
+      blurb: "Buy a call and a put at the same strike. Profits from a large move either way.",
+      build: (s) => [
+        { type: "call", side: "long", strike: r(s), premium: r(s * 0.05), qty: 1 },
+        { type: "put", side: "long", strike: r(s), premium: r(s * 0.05), qty: 1 }
+      ]
+    },
+    {
+      id: "short-straddle",
+      name: "Short Straddle",
+      blurb: "Sell a call and a put at the same strike. Profits if price stays put; big tails risk.",
+      build: (s) => [
+        { type: "call", side: "short", strike: r(s), premium: r(s * 0.05), qty: 1 },
+        { type: "put", side: "short", strike: r(s), premium: r(s * 0.05), qty: 1 }
+      ]
+    },
+    {
+      id: "long-strangle",
+      name: "Long Strangle",
+      blurb: "Buy an OTM call and an OTM put. Cheaper than a straddle; needs a bigger move.",
+      build: (s) => [
+        { type: "put", side: "long", strike: r(s * 0.9), premium: r(s * 0.03), qty: 1 },
+        { type: "call", side: "long", strike: r(s * 1.1), premium: r(s * 0.03), qty: 1 }
+      ]
+    },
+    {
+      id: "strip",
+      name: "Strip",
+      blurb: "Long 1 call + 2 puts at the same strike. A straddle tilted bearish.",
+      build: (s) => [
+        { type: "call", side: "long", strike: r(s), premium: r(s * 0.05), qty: 1 },
+        { type: "put", side: "long", strike: r(s), premium: r(s * 0.05), qty: 2 }
+      ]
+    },
+    {
+      id: "strap",
+      name: "Strap",
+      blurb: "Long 2 calls + 1 put at the same strike. A straddle tilted bullish.",
+      build: (s) => [
+        { type: "call", side: "long", strike: r(s), premium: r(s * 0.05), qty: 2 },
+        { type: "put", side: "long", strike: r(s), premium: r(s * 0.05), qty: 1 }
+      ]
+    },
+    {
+      id: "bull-call-spread",
+      name: "Bull Call Spread",
+      blurb: "Buy a call, sell a higher-strike call. Capped profit, capped loss, net debit.",
+      build: (s) => [
+        { type: "call", side: "long", strike: r(s), premium: r(s * 0.05), qty: 1 },
+        { type: "call", side: "short", strike: r(s * 1.1), premium: r(s * 0.02), qty: 1 }
+      ]
+    },
+    {
+      id: "bear-put-spread",
+      name: "Bear Put Spread",
+      blurb: "Buy a put, sell a lower-strike put. Capped profit, capped loss, net debit.",
+      build: (s) => [
+        { type: "put", side: "long", strike: r(s), premium: r(s * 0.05), qty: 1 },
+        { type: "put", side: "short", strike: r(s * 0.9), premium: r(s * 0.02), qty: 1 }
+      ]
+    },
+    {
+      id: "long-butterfly",
+      name: "Long Call Butterfly",
+      blurb: "Long 1 low + 1 high call, short 2 middle calls. Profits if price pins the middle.",
+      build: (s) => [
+        { type: "call", side: "long", strike: r(s * 0.9), premium: r(s * 0.12), qty: 1 },
+        { type: "call", side: "short", strike: r(s), premium: r(s * 0.05), qty: 2 },
+        { type: "call", side: "long", strike: r(s * 1.1), premium: r(s * 0.015), qty: 1 }
+      ]
+    },
+    {
+      id: "iron-condor",
+      name: "Iron Condor",
+      blurb: "Sell a put spread and a call spread. Net credit; profits in a quiet range.",
+      build: (s) => [
+        { type: "put", side: "long", strike: r(s * 0.8), premium: r(s * 0.01), qty: 1 },
+        { type: "put", side: "short", strike: r(s * 0.9), premium: r(s * 0.025), qty: 1 },
+        { type: "call", side: "short", strike: r(s * 1.1), premium: r(s * 0.025), qty: 1 },
+        { type: "call", side: "long", strike: r(s * 1.2), premium: r(s * 0.01), qty: 1 }
+      ]
+    }
+  ];
+  function strategyById(id) {
+    return STRATEGIES.find((s) => s.id === id) || null;
+  }
+
+  // trading/ui/options.js
+  var num2 = (v) => {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : 0;
+  };
+  var round2 = (x) => Math.round(x * 100) / 100;
+  function niceTicks(min, max, count) {
+    if (!(max > min)) return [min];
+    const step0 = (max - min) / count;
+    const mag = Math.pow(10, Math.floor(Math.log10(step0)));
+    const norm = step0 / mag;
+    const step = (norm < 1.5 ? 1 : norm < 3 ? 2 : norm < 7 ? 5 : 10) * mag;
+    const ticks = [];
+    for (let v = Math.ceil(min / step) * step; v <= max + step * 0.5; v += step) {
+      ticks.push(Number(v.toFixed(10)));
+    }
+    return ticks;
+  }
+  var chartSeq = 0;
+  function buildChart(legs, spot) {
+    const W = 900;
+    const H = 440;
+    const m = { left: 62, right: 20, top: 22, bottom: 34 };
+    const plotW = W - m.left - m.right;
+    const plotH = H - m.top - m.bottom;
+    const strikes = legs.map((l) => num2(l.strike));
+    const refLo = Math.min(spot, ...strikes);
+    const refHi = Math.max(spot, ...strikes);
+    const pad = Math.max((refHi - refLo) * 0.6, spot * 0.25, 1);
+    const smin = Math.max(0, refLo - pad);
+    const smax = refHi + pad || refHi + 1;
+    const pts = payoffCurve(legs, smin, smax, 240);
+    let ymin = 0;
+    let ymax = 0;
+    for (const p of pts) {
+      if (p.pnl < ymin) ymin = p.pnl;
+      if (p.pnl > ymax) ymax = p.pnl;
+    }
+    if (ymin === ymax) {
+      ymin -= 1;
+      ymax += 1;
+    }
+    const yp = (ymax - ymin) * 0.12;
+    ymin -= yp;
+    ymax += yp;
+    const X = (s) => m.left + (s - smin) / (smax - smin) * plotW;
+    const Y = (v) => m.top + (ymax - v) / (ymax - ymin) * plotH;
+    const zeroY = Y(0);
+    const id = `oc${++chartSeq}`;
+    const curve = pts.map((p) => `${X(p.s).toFixed(1)},${Y(p.pnl).toFixed(1)}`).join(" ");
+    const area = `M ${X(pts[0].s).toFixed(1)} ${zeroY.toFixed(1)} ` + pts.map((p) => `L ${X(p.s).toFixed(1)} ${Y(p.pnl).toFixed(1)}`).join(" ") + ` L ${X(pts[pts.length - 1].s).toFixed(1)} ${zeroY.toFixed(1)} Z`;
+    const kids = [];
+    kids.push(svgEl(
+      "defs",
+      null,
+      svgEl("clipPath", { id: `${id}-p` }, svgEl("rect", { x: m.left, y: m.top, width: plotW, height: Math.max(0, zeroY - m.top) })),
+      svgEl("clipPath", { id: `${id}-l` }, svgEl("rect", { x: m.left, y: zeroY, width: plotW, height: Math.max(0, m.top + plotH - zeroY) }))
+    ));
+    kids.push(svgEl("path", { d: area, fill: "rgba(15,217,160,0.16)", "clip-path": `url(#${id}-p)` }));
+    kids.push(svgEl("path", { d: area, fill: "rgba(248,113,113,0.16)", "clip-path": `url(#${id}-l)` }));
+    for (const t of niceTicks(ymin, ymax, 5)) {
+      const y = Y(t);
+      kids.push(svgEl("line", { x1: m.left, y1: y, x2: m.left + plotW, y2: y, stroke: "rgba(255,255,255,0.06)" }));
+      kids.push(svgEl("text", { x: m.left - 8, y: y + 3, "text-anchor": "end", fill: "#4A5268", "font-size": 10, "font-family": "monospace", text: fmt(t, 0) }));
+    }
+    for (const t of niceTicks(smin, smax, 6)) {
+      const x = X(t);
+      kids.push(svgEl("line", { x1: x, y1: m.top, x2: x, y2: m.top + plotH, stroke: "rgba(255,255,255,0.05)" }));
+      kids.push(svgEl("text", { x, y: m.top + plotH + 16, "text-anchor": "middle", fill: "#4A5268", "font-size": 10, "font-family": "monospace", text: fmt(t, t < 10 ? 1 : 0) }));
+    }
+    kids.push(svgEl("line", { x1: m.left, y1: zeroY, x2: m.left + plotW, y2: zeroY, stroke: "#8B93A8", "stroke-dasharray": "4 3" }));
+    if (spot >= smin && spot <= smax) {
+      const xs = X(spot);
+      kids.push(svgEl("line", { x1: xs, y1: m.top, x2: xs, y2: m.top + plotH, stroke: "#F5A623", "stroke-dasharray": "2 3" }));
+      kids.push(svgEl("text", { x: xs, y: m.top - 7, "text-anchor": "middle", fill: "#F5A623", "font-size": 10, "font-family": "monospace", text: "SPOT" }));
+    }
+    for (const b of breakevens(legs, smin, smax)) {
+      const xb = X(b);
+      kids.push(svgEl("circle", { cx: xb, cy: zeroY, r: 3.5, fill: "#EDF0F7" }));
+      kids.push(svgEl("text", { x: xb, y: zeroY - 8, "text-anchor": "middle", fill: "#EDF0F7", "font-size": 10, "font-family": "monospace", text: fmt(b, b < 10 ? 2 : 0) }));
+    }
+    kids.push(svgEl("polyline", { points: curve, fill: "none", stroke: "#0FD9A0", "stroke-width": 2 }));
+    kids.push(svgEl("rect", { x: m.left, y: m.top, width: plotW, height: plotH, fill: "none", stroke: "rgba(255,255,255,0.12)" }));
+    return svgEl("svg", {
+      viewBox: `0 0 ${W} ${H}`,
+      width: "100%",
+      height: "auto",
+      preserveAspectRatio: "xMidYMid meet",
+      role: "img",
+      "aria-label": "Option payoff diagram"
+    }, ...kids);
+  }
+  function card(label, value, tone, sub) {
+    return el(
+      "div",
+      { class: "tr-metric" },
+      el("div", { class: "tr-metric-label" }, label.toUpperCase()),
+      el("div", { class: `tr-metric-value ${tone ? "tr-" + tone : ""}` }, value),
+      sub ? el("div", { class: "tr-metric-sub" }, sub) : null
+    );
+  }
+  function summaryCards(legs, spot) {
+    const a = analyze(legs, { spot });
+    const cost = a.netCost;
+    const costSub = cost > 0 ? "you pay (debit)" : cost < 0 ? "you receive (credit)" : "even";
+    return [
+      card("Net cost", fmt(Math.abs(cost), 2), cost > 0 ? "neg" : cost < 0 ? "pos" : null, costSub),
+      card("Max profit", a.maxProfit === Infinity ? "Unlimited" : fmt(a.maxProfit, 2), "pos"),
+      card("Max loss", a.maxLoss === -Infinity ? "Unlimited" : fmt(a.maxLoss, 2), "neg"),
+      card("Breakeven", a.breakevens.length ? a.breakevens.map((b) => fmt(b, b < 10 ? 2 : 0)).join("  \xB7  ") : "\u2014")
+    ];
+  }
+  function mount4(root) {
+    let spot = DEFAULT_SPOT;
+    let strategyId = "long-straddle";
+    let legs = strategyById(strategyId).build(spot);
+    const blurbEl = el("div", { class: "tr-opt-blurb" });
+    const legsHost = el("div", { class: "tr-opt-legs" });
+    const diagramHost = el("div", { class: "tr-opt-diagram" });
+    const summaryHost = el("div", { class: "tr-opt-summary" });
+    function selectEl(options, value, onChange) {
+      return el(
+        "select",
+        { class: "tr-input", onChange: (e) => onChange(e.target.value) },
+        ...options.map((o) => el("option", { value: o, selected: o === value }, o.toUpperCase()))
+      );
+    }
+    function numInput(value, onInput) {
+      return el("input", { class: "tr-input", value, inputmode: "decimal", onInput: (e) => onInput(num2(e.target.value)) });
+    }
+    function renderLegs() {
+      clear(legsHost);
+      legsHost.appendChild(el(
+        "div",
+        { class: "tr-opt-leg tr-opt-leg--head" },
+        el("span", null, "SIDE"),
+        el("span", null, "TYPE"),
+        el("span", null, "STRIKE"),
+        el("span", null, "PREMIUM"),
+        el("span", null, "QTY"),
+        el("span", null, "")
+      ));
+      legs.forEach((leg, i) => {
+        legsHost.appendChild(el(
+          "div",
+          { class: "tr-opt-leg" },
+          selectEl(["long", "short"], leg.side, (v) => {
+            leg.side = v;
+            renderDiagram();
+          }),
+          selectEl(["call", "put"], leg.type, (v) => {
+            leg.type = v;
+            renderDiagram();
+          }),
+          numInput(leg.strike, (v) => {
+            leg.strike = v;
+            renderDiagram();
+          }),
+          numInput(leg.premium, (v) => {
+            leg.premium = v;
+            renderDiagram();
+          }),
+          numInput(leg.qty ?? 1, (v) => {
+            leg.qty = v;
+            renderDiagram();
+          }),
+          el("button", {
+            class: "tr-act tr-act--danger",
+            type: "button",
+            title: "Remove leg",
+            onClick: () => {
+              legs.splice(i, 1);
+              renderLegs();
+              renderDiagram();
+            }
+          }, "\xD7")
+        ));
+      });
+    }
+    function renderDiagram() {
+      clear(diagramHost);
+      clear(summaryHost);
+      if (!legs.length) {
+        diagramHost.appendChild(el("div", { class: "tr-empty" }, "Add at least one leg to see a payoff."));
+        return;
+      }
+      diagramHost.appendChild(buildChart(legs, num2(spot)));
+      append(summaryHost, summaryCards(legs, num2(spot)));
+    }
+    function setStrategy(id) {
+      const strat = strategyById(id);
+      if (!strat) return;
+      strategyId = id;
+      legs = strat.build(num2(spot) || DEFAULT_SPOT);
+      blurbEl.textContent = strat.blurb;
+      renderLegs();
+      renderDiagram();
+    }
+    const stratSelect = el(
+      "select",
+      { class: "tr-input", onChange: (e) => setStrategy(e.target.value) },
+      ...STRATEGIES.map((s) => el("option", { value: s.id, selected: s.id === strategyId }, s.name))
+    );
+    const spotInput = el("input", {
+      class: "tr-input",
+      value: spot,
+      inputmode: "decimal",
+      onInput: (e) => {
+        spot = num2(e.target.value);
+        renderDiagram();
+      }
+    });
+    clear(root);
+    root.appendChild(el(
+      "div",
+      { class: "tr-view" },
+      el(
+        "div",
+        { class: "tr-header" },
+        el(
+          "div",
+          null,
+          el("h1", { class: "tr-title" }, "OPTIONS PAYOFFS"),
+          el(
+            "div",
+            { class: "tr-subtitle" },
+            "Build a multi-leg options position and see its profit/loss at expiration. Pick a preset \u2014 straddle, strangle, strip, strap, spreads \u2014 or edit the legs directly."
+          )
+        )
+      ),
+      el(
+        "div",
+        { class: "tr-controls tr-controls--opt" },
+        el("div", { class: "tr-field" }, el("label", { class: "tr-label" }, "STRATEGY"), stratSelect),
+        el("div", { class: "tr-field" }, el("label", { class: "tr-label" }, "SPOT / UNDERLYING"), spotInput)
+      ),
+      blurbEl,
+      el(
+        "div",
+        { class: "tr-opt-legs-wrap" },
+        legsHost,
+        el("button", {
+          class: "btn btn-ghost btn-sm",
+          type: "button",
+          onClick: () => {
+            legs.push({ type: "call", side: "long", strike: num2(spot), premium: round2(num2(spot) * 0.05), qty: 1 });
+            renderLegs();
+            renderDiagram();
+          }
+        }, "+ ADD LEG")
+      ),
+      el(
+        "div",
+        { class: "tr-card" },
+        el("div", { class: "tr-section-title" }, "PAYOFF AT EXPIRATION"),
+        diagramHost
+      ),
+      summaryHost,
+      el(
+        "div",
+        { class: "tr-foot" },
+        "Payoff is per 1 unit of the underlying at expiration. Premiums are editable illustrative defaults, not live option prices. Green = profit, red = loss; the amber line marks spot."
+      )
+    ));
+    setStrategy(strategyId);
+  }
+
   // trading/ui/app.js
   var ROUTES = {
     scanner: mount,
     backtest: mount2,
-    log: mount3
+    log: mount3,
+    options: mount4
   };
   var DEFAULT = "scanner";
   function currentRoute() {
