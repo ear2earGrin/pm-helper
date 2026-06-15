@@ -54,10 +54,12 @@ On first launch of the app, you'll be prompted for your **Anthropic API key**.
 
 ```
 pm-helper/
-├── index.html          ← Landing page
-├── app.html            ← Wizard app (main experience)
+├── index.html          ← Hub / launcher (cards: PM Management · Trading Desk · Lattice)
+├── pm.html             ← PM Management landing (how it works · artefacts)
+├── app.html            ← Wizard app (main PM experience)
 ├── tools.html          ← PM² planning tools
-├── trading/            ← Trading section (ported from crypto-entry-checker)
+├── lattice.html        ← Lattice (placeholder — being ported from yardlaw.eu)
+├── trading/            ← Trading Desk (ported from crypto-entry-checker)
 │   ├── index.html      ← Section shell (nav + sub-nav + hash router)
 │   ├── indicators/ strategy/ backtest/ data/   ← pure engine (ESM: browser + Vitest)
 │   ├── ui/             ← vanilla views: scanner · backtest · tradelog · router
