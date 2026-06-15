@@ -9,6 +9,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css?v=2" />
+  <link rel="stylesheet" href="css/i18n.css" />
+  <script>try{var _l=localStorage.getItem('yf-lang');if(_l==='bg'||_l==='en')document.documentElement.lang=_l;}catch(e){}</script>
+  <script src="js/i18n-site.js" defer></script>
   <style>
     /* Cursor-reactive grid background (hub) */
     .fx { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
@@ -56,10 +59,10 @@
         <span class="brand-name">YARD Financial</span>
       </a>
       <div class="nav-links">
-        <a href="pm.html" class="nav-link">PM Management</a>
-        <a href="trading/index.html" class="nav-link">Trading Desk</a>
+        <a href="pm.html" class="nav-link"><span data-lang="en">Project Management</span><span data-lang="bg">Управление на проекти</span></a>
+        <a href="trading/index.html" class="nav-link"><span data-lang="en">Trading Desk</span><span data-lang="bg">Търговско бюро</span></a>
         <a href="lattice.html" class="nav-link">Lattice</a>
-        <a href="calc/index.html" class="nav-link">Calculators</a>
+        <a href="calc/index.html" class="nav-link"><span data-lang="en">Calculators</span><span data-lang="bg">Калкулатори</span></a>
       </div>
     </div>
   </nav>
@@ -69,10 +72,10 @@
     <div class="hub-hero-inner">
       <div class="hero-eyebrow">
         <span class="eyebrow-dot"></span>
-        Toolkit
+        <span data-lang="en">Toolkit</span><span data-lang="bg">Инструменти</span>
       </div>
-      <h1 class="hub-title">Your toolkit,<br /><em>all in one place.</em></h1>
-      <p class="hub-sub">A small suite of focused tools — project management, market analysis, and Lattice. Pick one to get started.</p>
+      <h1 class="hub-title"><span data-lang="en">Your toolkit,<br /><em>all in one place.</em></span><span data-lang="bg">Вашите инструменти,<br /><em>на едно място.</em></span></h1>
+      <p class="hub-sub"><span data-lang="en">A small suite of focused tools — project management, market analysis, and Lattice. Pick one to get started.</span><span data-lang="bg">Малък набор от фокусирани инструменти — управление на проекти, пазарен анализ и Lattice. Изберете един, за да започнете.</span></p>
     </div>
   </section>
 
@@ -83,31 +86,31 @@
       <div class="hub-card-head">
         <span class="hub-card-icon">◈</span>
       </div>
-      <h2 class="hub-card-name">PM Management</h2>
-      <p class="hub-card-desc">Answer 8 questions and get PM²-compliant artefacts — Project Charter, Stakeholder Matrix, and Risk Log — then plan with interactive WBS, PBS, cost, and Gantt tools.</p>
+      <h2 class="hub-card-name"><span data-lang="en">Project Management</span><span data-lang="bg">Управление на проекти</span></h2>
+      <p class="hub-card-desc"><span data-lang="en">Answer 8 questions and get PM²-compliant artefacts — Project Charter, Stakeholder Matrix, and Risk Log — then plan with interactive WBS, PBS, cost, and Gantt tools.</span><span data-lang="bg">Отговорете на 8 въпроса и получете PM²-съвместими артефакти — Проектна харта, Матрица на заинтересованите страни и Регистър на рисковете — след което планирайте с интерактивни инструменти за WBS, PBS, разходи и Гант.</span></p>
       <div class="hub-card-tags">
-        <span class="hub-card-tag">Charter</span>
-        <span class="hub-card-tag">Stakeholders</span>
-        <span class="hub-card-tag">Risk Log</span>
+        <span class="hub-card-tag"><span data-lang="en">Charter</span><span data-lang="bg">Харта</span></span>
+        <span class="hub-card-tag"><span data-lang="en">Stakeholders</span><span data-lang="bg">Заинт. страни</span></span>
+        <span class="hub-card-tag"><span data-lang="en">Risk Log</span><span data-lang="bg">Регистър на риска</span></span>
         <span class="hub-card-tag">WBS · PBS</span>
-        <span class="hub-card-tag">Gantt</span>
+        <span class="hub-card-tag"><span data-lang="en">Gantt</span><span data-lang="bg">Гант</span></span>
       </div>
-      <span class="hub-card-cta">Open PM Management <span class="btn-arrow">→</span></span>
+      <span class="hub-card-cta"><span data-lang="en">Open Project Management</span><span data-lang="bg">Отвори</span> <span class="btn-arrow">→</span></span>
     </a>
 
     <a class="hub-card" href="trading/index.html">
       <div class="hub-card-head">
         <span class="hub-card-icon">◧</span>
       </div>
-      <h2 class="hub-card-name">Trading Desk</h2>
-      <p class="hub-card-desc">A mechanical swing-trading toolkit: a once-a-day entry scanner, single-asset backtests with a metrics grid, a trade journal, and multi-leg options payoff diagrams.</p>
+      <h2 class="hub-card-name"><span data-lang="en">Trading Desk</span><span data-lang="bg">Търговско бюро</span></h2>
+      <p class="hub-card-desc"><span data-lang="en">A mechanical swing-trading toolkit: a once-a-day entry scanner, single-asset backtests with a metrics grid, a trade journal, and multi-leg options payoff diagrams.</span><span data-lang="bg">Инструментариум за механична суинг търговия: дневен скенер за входове, бектестове за един актив с таблица от показатели, дневник на сделките и диаграми на изплащане за многокраки опции.</span></p>
       <div class="hub-card-tags">
-        <span class="hub-card-tag">Scanner</span>
-        <span class="hub-card-tag">Backtest</span>
-        <span class="hub-card-tag">Trade Log</span>
-        <span class="hub-card-tag">Options</span>
+        <span class="hub-card-tag"><span data-lang="en">Scanner</span><span data-lang="bg">Скенер</span></span>
+        <span class="hub-card-tag"><span data-lang="en">Backtest</span><span data-lang="bg">Бектест</span></span>
+        <span class="hub-card-tag"><span data-lang="en">Trade Log</span><span data-lang="bg">Дневник</span></span>
+        <span class="hub-card-tag"><span data-lang="en">Options</span><span data-lang="bg">Опции</span></span>
       </div>
-      <span class="hub-card-cta">Open Trading Desk <span class="btn-arrow">→</span></span>
+      <span class="hub-card-cta"><span data-lang="en">Open Trading Desk</span><span data-lang="bg">Отвори</span> <span class="btn-arrow">→</span></span>
     </a>
 
     <a class="hub-card" href="lattice.html">
@@ -115,29 +118,29 @@
         <span class="hub-card-icon">▦</span>
       </div>
       <h2 class="hub-card-name">Lattice</h2>
-      <p class="hub-card-desc">An interactive binomial (Cox-Ross-Rubinstein) options pricer — European &amp; American calls and puts, with a Black-Scholes-Merton reference, live Greeks, an implied-volatility solver, a convergence chart, and a delta-hedging view.</p>
+      <p class="hub-card-desc"><span data-lang="en">An interactive binomial (Cox-Ross-Rubinstein) options pricer — European &amp; American calls and puts, with a Black-Scholes-Merton reference, live Greeks, an implied-volatility solver, a convergence chart, and a delta-hedging view.</span><span data-lang="bg">Интерактивен биномиален (Cox-Ross-Rubinstein) калкулатор за опции — европейски и американски кол и пут, с референция Black-Scholes-Merton, живи „гърци“, solver за имплицитна волатилност, графика на сходимост и изглед за делта хеджиране.</span></p>
       <div class="hub-card-tags">
-        <span class="hub-card-tag">Binomial · CRR</span>
+        <span class="hub-card-tag"><span data-lang="en">Binomial · CRR</span><span data-lang="bg">Биномиален · CRR</span></span>
         <span class="hub-card-tag">Black-Scholes</span>
-        <span class="hub-card-tag">Greeks</span>
-        <span class="hub-card-tag">Implied Vol</span>
+        <span class="hub-card-tag"><span data-lang="en">Greeks</span><span data-lang="bg">Гърци</span></span>
+        <span class="hub-card-tag"><span data-lang="en">Implied Vol</span><span data-lang="bg">Имплицитна вол.</span></span>
       </div>
-      <span class="hub-card-cta">Open Lattice <span class="btn-arrow">→</span></span>
+      <span class="hub-card-cta"><span data-lang="en">Open Lattice</span><span data-lang="bg">Отвори</span> <span class="btn-arrow">→</span></span>
     </a>
 
     <a class="hub-card" href="calc/index.html">
       <div class="hub-card-head">
         <span class="hub-card-icon">∑</span>
       </div>
-      <h2 class="hub-card-name">Calculators</h2>
-      <p class="hub-card-desc">Practical Bulgaria/EU calculators for clients — crypto capital-gains tax, property transaction costs, statutory interest &amp; legal deadlines, and a BGN⇄EUR converter.</p>
+      <h2 class="hub-card-name"><span data-lang="en">Calculators</span><span data-lang="bg">Калкулатори</span></h2>
+      <p class="hub-card-desc"><span data-lang="en">Practical Bulgaria/EU calculators for clients — crypto capital-gains tax, property transaction costs, statutory interest &amp; legal deadlines, and a BGN⇄EUR converter.</span><span data-lang="bg">Практични калкулатори за клиенти (България/ЕС) — данък върху печалбите от крипто, разходи по сделки с имоти, законна лихва и правни срокове, и конвертор BGN⇄EUR.</span></p>
       <div class="hub-card-tags">
-        <span class="hub-card-tag">Crypto tax</span>
-        <span class="hub-card-tag">Property costs</span>
-        <span class="hub-card-tag">Interest</span>
+        <span class="hub-card-tag"><span data-lang="en">Crypto tax</span><span data-lang="bg">Крипто данък</span></span>
+        <span class="hub-card-tag"><span data-lang="en">Property costs</span><span data-lang="bg">Имотни разходи</span></span>
+        <span class="hub-card-tag"><span data-lang="en">Interest</span><span data-lang="bg">Лихва</span></span>
         <span class="hub-card-tag">BGN⇄EUR</span>
       </div>
-      <span class="hub-card-cta">Open Calculators <span class="btn-arrow">→</span></span>
+      <span class="hub-card-cta"><span data-lang="en">Open Calculators</span><span data-lang="bg">Отвори</span> <span class="btn-arrow">→</span></span>
     </a>
 
   </section>
@@ -149,9 +152,9 @@
         <span class="brand-icon">◈</span>
         <span class="brand-name">YARD Financial</span>
       </div>
-      <p class="footer-note">A small suite of focused tools · Powered by AI · <a href="disclaimer.html" style="color: var(--accent-text);">Disclaimer</a></p>
+      <p class="footer-note"><span data-lang="en">A small suite of focused tools · Powered by AI</span><span data-lang="bg">Малък набор от фокусирани инструменти · Задвижвано от AI</span> · <a href="disclaimer.html" style="color: var(--accent-text);"><span data-lang="en">Disclaimer</span><span data-lang="bg">Условия</span></a></p>
       <a href="https://yardlaw.eu" target="_blank" rel="noopener" class="footer-partner">
-        A project by <strong>YARD Law Co.</strong>
+        <span data-lang="en">A project by </span><span data-lang="bg">Проект на </span><strong>YARD Law Co.</strong>
       </a>
     </div>
   </footer>
@@ -160,12 +163,12 @@
     (function () {
       var mq = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
       if (mq && mq.matches) return;
-      var b = document.body, x = 0, y = 0, ticking = false, on = false;
+      var b = document.body, x = 0, y = 0, ticking = false;
       function paint() { ticking = false; b.style.setProperty('--mx', x + 'px'); b.style.setProperty('--my', y + 'px'); }
       window.addEventListener('pointermove', function (e) {
         if (e.pointerType === 'touch') return;
         x = e.clientX; y = e.clientY;
-        if (!on) { on = true; b.classList.add('fx-on'); }
+        b.classList.add('fx-on');
         if (!ticking) { ticking = true; requestAnimationFrame(paint); }
       }, { passive: true });
       document.addEventListener('mouseleave', function () { b.classList.remove('fx-on'); });

@@ -1,8 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <!-- Dark background -->
-  <rect width="32" height="32" rx="6" fill="#05080F"/>
-  <!-- Outer diamond -->
-  <polygon points="16,3 29,16 16,29 3,16" fill="none" stroke="#0FD9A0" stroke-width="2"/>
-  <!-- Inner diamond (filled) -->
-  <polygon points="16,10 22,16 16,22 10,16" fill="#0FD9A0"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Dark tile -->
+  <rect width="64" height="64" rx="14" fill="#05080F"/>
+  <!-- Inverted "Y": stem up, fork down -->
+  <g fill="none" stroke="#0FD9A0" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M32 13 V33"/>
+    <path d="M32 33 L16 51"/>
+    <path d="M32 33 L48 51"/>
+  </g>
 </svg>

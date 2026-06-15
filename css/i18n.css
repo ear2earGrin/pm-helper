@@ -1,0 +1,22 @@
+/* ============================================================
+   Bilingual (EN/BG) dual-text visibility + language toggle
+   Loaded on every page. Uses var() with fallbacks so it also
+   works on the self-contained Lattice page.
+   ============================================================ */
+html[lang="en"] [data-lang="bg"],
+html[lang="bg"] [data-lang="en"] { display: none !important; }
+
+.yf-langtoggle {
+  display: inline-flex; align-items: center;
+  border: 1px solid var(--border-default, rgba(255,255,255,0.12));
+  border-radius: 100px; overflow: hidden; flex-shrink: 0;
+}
+.yf-lang-btn {
+  font-family: var(--font-mono, 'Space Mono', monospace);
+  font-size: 11px; letter-spacing: 0.04em; line-height: 1;
+  color: var(--text-secondary, #8B93A8);
+  background: transparent; border: none; padding: 6px 11px; cursor: pointer;
+  transition: color 0.2s ease, background 0.2s ease;
+}
+.yf-lang-btn:hover { color: var(--text-primary, #EDF0F7); }
+.yf-lang-btn.active { background: var(--accent, #0FD9A0); color: var(--text-inverse, #05080F); font-weight: 700; }
