@@ -10,6 +10,11 @@
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../css/style.css?v=2" />
   <link rel="stylesheet" href="calc.css" />
+  <link rel="stylesheet" href="../css/fx.css" />
+  <link rel="stylesheet" href="../css/i18n.css" />
+  <script>try{var _l=localStorage.getItem('yf-lang');if(_l==='bg'||_l==='en')document.documentElement.lang=_l;}catch(e){}</script>
+  <script src="../js/i18n-site.js" defer></script>
+  <script src="../js/fx.js" defer></script>
 </head>
 <body class="landing-body">
 
@@ -20,58 +25,58 @@
         <span class="brand-name">YARD Financial</span>
       </a>
       <div class="nav-links">
-        <a href="../pm.html" class="nav-link">PM Management</a>
-        <a href="../trading/index.html" class="nav-link">Trading Desk</a>
+        <a href="../pm.html" class="nav-link"><span data-lang="en">Project Management</span><span data-lang="bg">Управление на проекти</span></a>
+        <a href="../trading/index.html" class="nav-link"><span data-lang="en">Trading Desk</span><span data-lang="bg">Търговско бюро</span></a>
         <a href="../lattice.html" class="nav-link">Lattice</a>
-        <a href="index.html" class="nav-link" style="color: var(--accent-text);">Calculators</a>
+        <a href="index.html" class="nav-link" style="color: var(--accent-text);"><span data-lang="en">Calculators</span><span data-lang="bg">Калкулатори</span></a>
       </div>
     </div>
   </nav>
 
   <div class="calc-wrap">
     <div class="calc-head">
-      <p class="calc-eyebrow">Calculator</p>
-      <h1 class="calc-title">Property transaction costs</h1>
-      <p class="calc-sub">Estimate the one-off costs of buying real estate in Bulgaria on top of the price: notary fee, local transfer tax, and the Registry Agency entry fee.</p>
+      <p class="calc-eyebrow"><span data-lang="en">Calculator</span><span data-lang="bg">Калкулатор</span></p>
+      <h1 class="calc-title"><span data-lang="en">Property transaction costs</span><span data-lang="bg">Разходи по сделка с имот</span></h1>
+      <p class="calc-sub"><span data-lang="en">Estimate the one-off costs of buying real estate in Bulgaria on top of the price: notary fee, local transfer tax, and the Registry Agency entry fee.</span><span data-lang="bg">Изчислете еднократните разходи при покупка на имот в България над цената: нотариална такса, местен данък при придобиване и такса за вписване в Агенцията по вписванията.</span></p>
       <div class="calc-note">
-        Notary fee uses the official proportional tariff (Art. 8, <em>Тарифа за нотариалните такси</em>) computed in BGN and converted at 1.95583, capped at 6000 BGN (≈ €3,067.75). Transfer tax is municipal (0.1–3%; e.g. ~3% in Sofia). Costs are usually charged on the higher of price or tax assessment. Indicative only — verify the current tariff, your municipality's rate, and any VAT on new builds.
+        <span data-lang="en">Notary fee uses the official proportional tariff (Art. 8, <em>Тарифа за нотариалните такси</em>) computed in BGN and converted at 1.95583, capped at 6000 BGN (≈ €3,067.75). Transfer tax is municipal (0.1–3%; e.g. ~3% in Sofia). Costs are usually charged on the higher of price or tax assessment. Indicative only — verify the current tariff, your municipality's rate, and any VAT on new builds.</span><span data-lang="bg">Нотариалната такса използва официалната пропорционална тарифа (чл. 8, <em>Тарифа за нотариалните такси</em>), изчислена в лева и конвертирана по 1.95583, с таван 6000 лв. (≈ €3 067,75). Данъкът при придобиване е общински (0,1–3%; напр. ~3% в София). Разходите обикновено се начисляват върху по-високото от цената или данъчната оценка. Само ориентировъчно — проверете актуалната тарифа, ставката на Вашата община и евентуално ДДС за ново строителство.</span>
       </div>
     </div>
 
     <div class="calc-card">
-      <div class="calc-card-title">Inputs</div>
+      <div class="calc-card-title"><span data-lang="en">Inputs</span><span data-lang="bg">Входни данни</span></div>
       <div class="calc-grid">
         <div class="calc-field">
-          <label class="calc-label" for="price">Property price <span class="hint">EUR</span></label>
+          <label class="calc-label" for="price"><span data-lang="en">Property price</span><span data-lang="bg">Цена на имота</span> <span class="hint">EUR</span></label>
           <input class="calc-input" id="price" type="number" inputmode="decimal" value="150000" step="1000" min="0" />
         </div>
         <div class="calc-field">
-          <label class="calc-label" for="tt">Local transfer tax <span class="hint">% (municipal)</span></label>
+          <label class="calc-label" for="tt"><span data-lang="en">Local transfer tax</span><span data-lang="bg">Местен данък при придобиване</span> <span class="hint" data-lang="en">% (municipal)</span><span class="hint" data-lang="bg">% (общински)</span></label>
           <input class="calc-input" id="tt" type="number" inputmode="decimal" value="3" step="0.1" min="0" max="5" />
         </div>
         <div class="calc-field full">
-          <label class="calc-check"><input type="checkbox" id="vat" checked /> Add 20% VAT on the notary fee</label>
+          <label class="calc-check"><input type="checkbox" id="vat" checked /> <span data-lang="en">Add 20% VAT on the notary fee</span><span data-lang="bg">Добави 20% ДДС върху нотариалната такса</span></label>
         </div>
       </div>
 
       <div class="calc-results" style="margin-top:18px;">
         <div class="calc-result">
-          <div class="calc-result-label">Acquisition costs (on top of price)</div>
+          <div class="calc-result-label"><span data-lang="en">Acquisition costs (on top of price)</span><span data-lang="bg">Разходи по придобиване (над цената)</span></div>
           <div class="calc-result-value" id="o-costs">—</div>
           <div class="calc-result-sub" id="o-pct"></div>
         </div>
         <div class="calc-result primary">
-          <div class="calc-result-label">Total outlay (price + costs)</div>
+          <div class="calc-result-label"><span data-lang="en">Total outlay (price + costs)</span><span data-lang="bg">Общо (цена + разходи)</span></div>
           <div class="calc-result-value" id="o-total">—</div>
         </div>
       </div>
 
       <div class="calc-breakdown">
-        <div class="calc-row"><span class="k">Notary fee</span><span class="v" id="o-notary">—</span></div>
-        <div class="calc-row"><span class="k">VAT on notary fee (20%)</span><span class="v" id="o-vat">—</span></div>
-        <div class="calc-row"><span class="k">Local transfer tax</span><span class="v" id="o-transfer">—</span></div>
-        <div class="calc-row"><span class="k">Registry Agency entry fee (0.1%)</span><span class="v" id="o-registry">—</span></div>
-        <div class="calc-row total"><span class="k">Total acquisition costs</span><span class="v" id="o-costs2">—</span></div>
+        <div class="calc-row"><span class="k"><span data-lang="en">Notary fee</span><span data-lang="bg">Нотариална такса</span></span><span class="v" id="o-notary">—</span></div>
+        <div class="calc-row"><span class="k"><span data-lang="en">VAT on notary fee (20%)</span><span data-lang="bg">ДДС върху нотариалната такса (20%)</span></span><span class="v" id="o-vat">—</span></div>
+        <div class="calc-row"><span class="k"><span data-lang="en">Local transfer tax</span><span data-lang="bg">Местен данък при придобиване</span></span><span class="v" id="o-transfer">—</span></div>
+        <div class="calc-row"><span class="k"><span data-lang="en">Registry Agency entry fee (0.1%)</span><span data-lang="bg">Такса за вписване (0,1%)</span></span><span class="v" id="o-registry">—</span></div>
+        <div class="calc-row total"><span class="k"><span data-lang="en">Total acquisition costs</span><span data-lang="bg">Общо разходи по придобиване</span></span><span class="v" id="o-costs2">—</span></div>
       </div>
     </div>
   </div>
@@ -82,8 +87,8 @@
         <span class="brand-icon">◈</span>
         <span class="brand-name">YARD Financial</span>
       </div>
-      <p class="footer-note">Indicative estimate · not advice · <a href="../disclaimer.html" style="color: var(--accent-text);">Disclaimer</a></p>
-      <a href="https://yardlaw.eu" target="_blank" rel="noopener" class="footer-partner">A project by <strong>YARD Law Co.</strong></a>
+      <p class="footer-note"><span data-lang="en">Indicative estimate · not advice</span><span data-lang="bg">Ориентировъчна оценка · не е съвет</span> · <a href="../disclaimer.html" style="color: var(--accent-text);"><span data-lang="en">Disclaimer</span><span data-lang="bg">Условия</span></a></p>
+      <a href="https://yardlaw.eu" target="_blank" rel="noopener" class="footer-partner"><span data-lang="en">A project by </span><span data-lang="bg">Проект на </span><strong>YARD Law Co.</strong></a>
     </div>
   </footer>
 
@@ -91,6 +96,7 @@
     (function () {
       var EUR = new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR' });
       var RATE = 1.95583;
+      function curLang() { return document.documentElement.getAttribute('lang') === 'bg' ? 'bg' : 'en'; }
       // Official proportional notary tariff (Art. 8), amounts in BGN, capped at 6000 BGN.
       function notaryFeeBGN(v) {
         if (v <= 0) return 0;
@@ -114,9 +120,10 @@
         function f(id, x) { document.getElementById(id).textContent = EUR.format(x); }
         f('o-notary', notary); f('o-vat', vat); f('o-transfer', transfer); f('o-registry', registry);
         f('o-costs', costs); f('o-costs2', costs); f('o-total', price + costs);
-        document.getElementById('o-pct').textContent = price > 0 ? (costs / price * 100).toFixed(2) + '% of price' : '';
+        document.getElementById('o-pct').textContent = price > 0 ? (costs / price * 100).toFixed(2) + (curLang() === 'bg' ? '% от цената' : '% of price') : '';
       }
       ['price', 'tt', 'vat'].forEach(function (id) { document.getElementById(id).addEventListener('input', calc); });
+      document.addEventListener('yf:langchange', calc);
       calc();
     })();
   </script>

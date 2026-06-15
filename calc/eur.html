@@ -10,6 +10,11 @@
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../css/style.css?v=2" />
   <link rel="stylesheet" href="calc.css" />
+  <link rel="stylesheet" href="../css/fx.css" />
+  <link rel="stylesheet" href="../css/i18n.css" />
+  <script>try{var _l=localStorage.getItem('yf-lang');if(_l==='bg'||_l==='en')document.documentElement.lang=_l;}catch(e){}</script>
+  <script src="../js/i18n-site.js" defer></script>
+  <script src="../js/fx.js" defer></script>
 </head>
 <body class="landing-body">
 
@@ -20,33 +25,33 @@
         <span class="brand-name">YARD Financial</span>
       </a>
       <div class="nav-links">
-        <a href="../pm.html" class="nav-link">PM Management</a>
-        <a href="../trading/index.html" class="nav-link">Trading Desk</a>
+        <a href="../pm.html" class="nav-link"><span data-lang="en">Project Management</span><span data-lang="bg">Управление на проекти</span></a>
+        <a href="../trading/index.html" class="nav-link"><span data-lang="en">Trading Desk</span><span data-lang="bg">Търговско бюро</span></a>
         <a href="../lattice.html" class="nav-link">Lattice</a>
-        <a href="index.html" class="nav-link" style="color: var(--accent-text);">Calculators</a>
+        <a href="index.html" class="nav-link" style="color: var(--accent-text);"><span data-lang="en">Calculators</span><span data-lang="bg">Калкулатори</span></a>
       </div>
     </div>
   </nav>
 
   <div class="calc-wrap">
     <div class="calc-head">
-      <p class="calc-eyebrow">Calculator</p>
-      <h1 class="calc-title">BGN ⇄ EUR converter</h1>
-      <p class="calc-sub">Convert between Bulgarian lev and euro at the fixed, irrevocable rate adopted for Bulgaria's entry to the euro area — a handy aid during the dual-display transition.</p>
+      <p class="calc-eyebrow"><span data-lang="en">Calculator</span><span data-lang="bg">Калкулатор</span></p>
+      <h1 class="calc-title"><span data-lang="en">BGN ⇄ EUR converter</span><span data-lang="bg">Конвертор BGN ⇄ EUR</span></h1>
+      <p class="calc-sub"><span data-lang="en">Convert between Bulgarian lev and euro at the fixed, irrevocable rate adopted for Bulgaria's entry to the euro area — a handy aid during the dual-display transition.</span><span data-lang="bg">Конвертирайте между български лев и евро по фиксирания, неотменим курс при влизането на България в еврозоната — удобство по време на прехода с двойно изписване.</span></p>
       <div class="calc-note calc-note--neutral">
-        Fixed rate: <strong>1 EUR = 1.95583 BGN</strong>. Results are rounded to the nearest cent. For legal or accounting use, apply the official conversion-and-rounding rules.
+        <span data-lang="en">Fixed rate: <strong>1 EUR = 1.95583 BGN</strong>. Results are rounded to the nearest cent. For legal or accounting use, apply the official conversion-and-rounding rules.</span><span data-lang="bg">Фиксиран курс: <strong>1 EUR = 1.95583 BGN</strong>. Резултатите се закръгляват до стотинка. За правни или счетоводни цели приложете официалните правила за конвертиране и закръгляне.</span>
       </div>
     </div>
 
     <div class="calc-card">
-      <div class="calc-card-title">Convert</div>
+      <div class="calc-card-title"><span data-lang="en">Convert</span><span data-lang="bg">Конвертиране</span></div>
       <div class="calc-grid">
         <div class="calc-field">
-          <label class="calc-label" for="eur">Euro <span class="hint">EUR</span></label>
+          <label class="calc-label" for="eur"><span data-lang="en">Euro</span><span data-lang="bg">Евро</span> <span class="hint">EUR</span></label>
           <input class="calc-input" id="eur" type="number" inputmode="decimal" value="100" step="0.01" min="0" />
         </div>
         <div class="calc-field">
-          <label class="calc-label" for="bgn">Lev <span class="hint">BGN</span></label>
+          <label class="calc-label" for="bgn"><span data-lang="en">Lev</span><span data-lang="bg">Лев</span> <span class="hint">BGN</span></label>
           <input class="calc-input" id="bgn" type="number" inputmode="decimal" value="195.58" step="0.01" min="0" />
         </div>
       </div>
@@ -57,7 +62,7 @@
         </div>
         <div class="calc-result">
           <div class="calc-result-label">BGN</div>
-          <div class="calc-result-value"><span id="o-bgn">195.58</span> лв</div>
+          <div class="calc-result-value"><span id="o-bgn">195.58</span> <span data-lang="en">лв</span><span data-lang="bg">лв</span></div>
         </div>
       </div>
     </div>
@@ -69,8 +74,8 @@
         <span class="brand-icon">◈</span>
         <span class="brand-name">YARD Financial</span>
       </div>
-      <p class="footer-note">Fixed legal rate · <a href="../disclaimer.html" style="color: var(--accent-text);">Disclaimer</a></p>
-      <a href="https://yardlaw.eu" target="_blank" rel="noopener" class="footer-partner">A project by <strong>YARD Law Co.</strong></a>
+      <p class="footer-note"><span data-lang="en">Fixed legal rate</span><span data-lang="bg">Фиксиран законов курс</span> · <a href="../disclaimer.html" style="color: var(--accent-text);"><span data-lang="en">Disclaimer</span><span data-lang="bg">Условия</span></a></p>
+      <a href="https://yardlaw.eu" target="_blank" rel="noopener" class="footer-partner"><span data-lang="en">A project by </span><span data-lang="bg">Проект на </span><strong>YARD Law Co.</strong></a>
     </div>
   </footer>
 

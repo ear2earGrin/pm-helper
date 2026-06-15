@@ -10,6 +10,11 @@
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../css/style.css?v=2" />
   <link rel="stylesheet" href="calc.css" />
+  <link rel="stylesheet" href="../css/fx.css" />
+  <link rel="stylesheet" href="../css/i18n.css" />
+  <script>try{var _l=localStorage.getItem('yf-lang');if(_l==='bg'||_l==='en')document.documentElement.lang=_l;}catch(e){}</script>
+  <script src="../js/i18n-site.js" defer></script>
+  <script src="../js/fx.js" defer></script>
 </head>
 <body class="landing-body">
 
@@ -20,54 +25,54 @@
         <span class="brand-name">YARD Financial</span>
       </a>
       <div class="nav-links">
-        <a href="../pm.html" class="nav-link">PM Management</a>
-        <a href="../trading/index.html" class="nav-link">Trading Desk</a>
+        <a href="../pm.html" class="nav-link"><span data-lang="en">Project Management</span><span data-lang="bg">Управление на проекти</span></a>
+        <a href="../trading/index.html" class="nav-link"><span data-lang="en">Trading Desk</span><span data-lang="bg">Търговско бюро</span></a>
         <a href="../lattice.html" class="nav-link">Lattice</a>
-        <a href="index.html" class="nav-link" style="color: var(--accent-text);">Calculators</a>
+        <a href="index.html" class="nav-link" style="color: var(--accent-text);"><span data-lang="en">Calculators</span><span data-lang="bg">Калкулатори</span></a>
       </div>
     </div>
   </nav>
 
   <div class="calc-wrap">
     <div class="calc-head">
-      <p class="calc-eyebrow">Calculator</p>
-      <h1 class="calc-title">Crypto capital-gains tax</h1>
-      <p class="calc-sub">Estimate Bulgarian personal income tax on annual gains from disposing of crypto-assets. Enter each disposal as proceeds minus acquisition cost; losses within the year offset gains.</p>
+      <p class="calc-eyebrow"><span data-lang="en">Calculator</span><span data-lang="bg">Калкулатор</span></p>
+      <h1 class="calc-title"><span data-lang="en">Crypto capital-gains tax</span><span data-lang="bg">Данък върху печалбите от крипто</span></h1>
+      <p class="calc-sub"><span data-lang="en">Estimate Bulgarian personal income tax on annual gains from disposing of crypto-assets. Enter each disposal as proceeds minus acquisition cost; losses within the year offset gains.</span><span data-lang="bg">Изчислете българския данък върху доходите на физически лица за годишните печалби от разпореждане с крипто-активи. Въведете всяко разпореждане като постъпления минус цена на придобиване; загубите през годината намаляват печалбите.</span></p>
       <div class="calc-note">
-        Bulgaria taxes individuals' annual gains broadly at a <strong>flat 10%</strong>. Treatment, exemptions, and cost-basis method (e.g. FIFO) have nuances and can change — this is a simplified estimate, not tax advice. Confirm the current rules and rate before relying.
+        <span data-lang="en">Bulgaria taxes individuals' annual gains broadly at a <strong>flat 10%</strong>. Treatment, exemptions, and cost-basis method (e.g. FIFO) have nuances and can change — this is a simplified estimate, not tax advice. Confirm the current rules and rate before relying.</span><span data-lang="bg">България облага годишните печалби на физически лица основно с <strong>плосък данък 10%</strong>. Третирането, освобождаванията и методът за цена на придобиване (напр. FIFO) имат нюанси и могат да се променят — това е опростена оценка, не данъчен съвет. Потвърдете актуалните правила и ставка, преди да разчитате на нея.</span>
       </div>
     </div>
 
     <div class="calc-card">
-      <div class="calc-card-title">Disposals during the tax year</div>
+      <div class="calc-card-title"><span data-lang="en">Disposals during the tax year</span><span data-lang="bg">Разпореждания през данъчната година</span></div>
       <div class="lot lot-head">
-        <span>Proceeds (EUR)</span><span>Acquisition cost (EUR)</span><span></span>
+        <span><span data-lang="en">Proceeds (EUR)</span><span data-lang="bg">Постъпления (EUR)</span></span><span><span data-lang="en">Acquisition cost (EUR)</span><span data-lang="bg">Цена на придобиване (EUR)</span></span><span></span>
       </div>
       <div class="calc-rows" id="lots"></div>
-      <button class="calc-add" id="add" type="button">+ Add disposal</button>
+      <button class="calc-add" id="add" type="button"><span data-lang="en">+ Add disposal</span><span data-lang="bg">+ Добави разпореждане</span></button>
 
       <div class="calc-grid" style="margin-top:20px;">
         <div class="calc-field">
-          <label class="calc-label" for="rate">Tax rate <span class="hint">%</span></label>
+          <label class="calc-label" for="rate"><span data-lang="en">Tax rate</span><span data-lang="bg">Данъчна ставка</span> <span class="hint">%</span></label>
           <input class="calc-input" id="rate" type="number" inputmode="decimal" value="10" step="0.5" min="0" />
         </div>
       </div>
 
       <div class="calc-results" style="margin-top:18px;">
         <div class="calc-result">
-          <div class="calc-result-label">Net annual gain</div>
+          <div class="calc-result-label"><span data-lang="en">Net annual gain</span><span data-lang="bg">Нетна годишна печалба</span></div>
           <div class="calc-result-value" id="o-gain">—</div>
         </div>
         <div class="calc-result primary">
-          <div class="calc-result-label">Estimated tax</div>
+          <div class="calc-result-label"><span data-lang="en">Estimated tax</span><span data-lang="bg">Очакван данък</span></div>
           <div class="calc-result-value" id="o-tax">—</div>
         </div>
       </div>
       <div class="calc-breakdown">
-        <div class="calc-row"><span class="k">Total proceeds</span><span class="v" id="o-proceeds">—</span></div>
-        <div class="calc-row"><span class="k">Total acquisition cost</span><span class="v" id="o-cost">—</span></div>
-        <div class="calc-row"><span class="k">Taxable gain (losses can't create a refund here)</span><span class="v" id="o-taxable">—</span></div>
-        <div class="calc-row total"><span class="k">After-tax proceeds</span><span class="v" id="o-net">—</span></div>
+        <div class="calc-row"><span class="k"><span data-lang="en">Total proceeds</span><span data-lang="bg">Общо постъпления</span></span><span class="v" id="o-proceeds">—</span></div>
+        <div class="calc-row"><span class="k"><span data-lang="en">Total acquisition cost</span><span data-lang="bg">Обща цена на придобиване</span></span><span class="v" id="o-cost">—</span></div>
+        <div class="calc-row"><span class="k"><span data-lang="en">Taxable gain (losses can't create a refund here)</span><span data-lang="bg">Облагаема печалба (загубите не водят до възстановяване тук)</span></span><span class="v" id="o-taxable">—</span></div>
+        <div class="calc-row total"><span class="k"><span data-lang="en">After-tax proceeds</span><span data-lang="bg">Постъпления след данък</span></span><span class="v" id="o-net">—</span></div>
       </div>
     </div>
   </div>
@@ -78,8 +83,8 @@
         <span class="brand-icon">◈</span>
         <span class="brand-name">YARD Financial</span>
       </div>
-      <p class="footer-note">Indicative estimate · not advice · <a href="../disclaimer.html" style="color: var(--accent-text);">Disclaimer</a></p>
-      <a href="https://yardlaw.eu" target="_blank" rel="noopener" class="footer-partner">A project by <strong>YARD Law Co.</strong></a>
+      <p class="footer-note"><span data-lang="en">Indicative estimate · not advice</span><span data-lang="bg">Ориентировъчна оценка · не е съвет</span> · <a href="../disclaimer.html" style="color: var(--accent-text);"><span data-lang="en">Disclaimer</span><span data-lang="bg">Условия</span></a></p>
+      <a href="https://yardlaw.eu" target="_blank" rel="noopener" class="footer-partner"><span data-lang="en">A project by </span><span data-lang="bg">Проект на </span><strong>YARD Law Co.</strong></a>
     </div>
   </footer>
 

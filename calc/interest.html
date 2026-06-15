@@ -10,6 +10,11 @@
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../css/style.css?v=2" />
   <link rel="stylesheet" href="calc.css" />
+  <link rel="stylesheet" href="../css/fx.css" />
+  <link rel="stylesheet" href="../css/i18n.css" />
+  <script>try{var _l=localStorage.getItem('yf-lang');if(_l==='bg'||_l==='en')document.documentElement.lang=_l;}catch(e){}</script>
+  <script src="../js/i18n-site.js" defer></script>
+  <script src="../js/fx.js" defer></script>
 </head>
 <body class="landing-body">
 
@@ -20,108 +25,105 @@
         <span class="brand-name">YARD Financial</span>
       </a>
       <div class="nav-links">
-        <a href="../pm.html" class="nav-link">PM Management</a>
-        <a href="../trading/index.html" class="nav-link">Trading Desk</a>
+        <a href="../pm.html" class="nav-link"><span data-lang="en">Project Management</span><span data-lang="bg">Управление на проекти</span></a>
+        <a href="../trading/index.html" class="nav-link"><span data-lang="en">Trading Desk</span><span data-lang="bg">Търговско бюро</span></a>
         <a href="../lattice.html" class="nav-link">Lattice</a>
-        <a href="index.html" class="nav-link" style="color: var(--accent-text);">Calculators</a>
+        <a href="index.html" class="nav-link" style="color: var(--accent-text);"><span data-lang="en">Calculators</span><span data-lang="bg">Калкулатори</span></a>
       </div>
     </div>
   </nav>
 
   <div class="calc-wrap">
     <div class="calc-head">
-      <p class="calc-eyebrow">Calculator</p>
-      <h1 class="calc-title">Statutory interest &amp; deadlines</h1>
-      <p class="calc-sub">Estimate statutory default interest on an overdue sum, and compute legal deadlines from a starting date.</p>
+      <p class="calc-eyebrow"><span data-lang="en">Calculator</span><span data-lang="bg">Калкулатор</span></p>
+      <h1 class="calc-title"><span data-lang="en">Statutory interest &amp; deadlines</span><span data-lang="bg">Законна лихва и срокове</span></h1>
+      <p class="calc-sub"><span data-lang="en">Estimate statutory default interest on an overdue sum, and compute legal deadlines from a starting date.</span><span data-lang="bg">Изчислете законната лихва за забава върху просрочена сума и определете правни срокове от начална дата.</span></p>
       <div class="calc-note">
-        Since <strong>1 Jan 2026</strong>, Bulgarian statutory default interest = <strong>ECB main refinancing rate + 8 pp</strong> (before 2026 it was the BNB base rate + 10 pp). The ECB rate below is a default — confirm the current figure at
-        <a href="https://www.ecb.europa.eu/stats/policy_and_exchange_rates/key_ecb_interest_rates/html/index.en.html" target="_blank" rel="noopener">ecb.europa.eu</a>. Indicative only — verify before relying.
+        <span data-lang="en">Since <strong>1 Jan 2026</strong>, Bulgarian statutory default interest = <strong>ECB main refinancing rate + 8 pp</strong> (before 2026 it was the BNB base rate + 10 pp). The ECB rate below is a default — confirm the current figure at <a href="https://www.ecb.europa.eu/stats/policy_and_exchange_rates/key_ecb_interest_rates/html/index.en.html" target="_blank" rel="noopener">ecb.europa.eu</a>. Indicative only — verify before relying.</span><span data-lang="bg">От <strong>1 януари 2026 г.</strong> българската законна лихва за забава = <strong>основен лихвен процент на ЕЦБ + 8 пр.п.</strong> (преди 2026 г. беше основният лихвен процент на БНБ + 10 пр.п.). Процентът на ЕЦБ по-долу е примерен — проверете актуалната стойност на <a href="https://www.ecb.europa.eu/stats/policy_and_exchange_rates/key_ecb_interest_rates/html/index.en.html" target="_blank" rel="noopener">ecb.europa.eu</a>. Само ориентировъчно — проверете, преди да разчитате.</span>
       </div>
     </div>
 
-    <!-- Statutory interest -->
     <div class="calc-card">
-      <div class="calc-card-title">Default interest on an overdue amount</div>
+      <div class="calc-card-title"><span data-lang="en">Default interest on an overdue amount</span><span data-lang="bg">Лихва за забава върху просрочена сума</span></div>
       <div class="calc-grid">
         <div class="calc-field">
-          <label class="calc-label" for="principal">Principal <span class="hint">EUR</span></label>
+          <label class="calc-label" for="principal"><span data-lang="en">Principal</span><span data-lang="bg">Главница</span> <span class="hint">EUR</span></label>
           <input class="calc-input" id="principal" type="number" inputmode="decimal" value="10000" step="100" min="0" />
         </div>
         <div class="calc-field">
-          <label class="calc-label" for="ecb">ECB main refinancing rate <span class="hint">% p.a.</span></label>
+          <label class="calc-label" for="ecb"><span data-lang="en">ECB main refinancing rate</span><span data-lang="bg">Основен лихвен процент на ЕЦБ</span> <span class="hint">% p.a.</span></label>
           <input class="calc-input" id="ecb" type="number" inputmode="decimal" value="2.15" step="0.05" />
         </div>
         <div class="calc-field">
-          <label class="calc-label" for="margin">Statutory margin <span class="hint">pp</span></label>
+          <label class="calc-label" for="margin"><span data-lang="en">Statutory margin</span><span data-lang="bg">Законова надбавка</span> <span class="hint">pp</span></label>
           <input class="calc-input" id="margin" type="number" inputmode="decimal" value="8" step="0.5" />
         </div>
         <div class="calc-field">
-          <label class="calc-label" for="due">Due date <span class="hint">from</span></label>
+          <label class="calc-label" for="due"><span data-lang="en">Due date</span><span data-lang="bg">Падеж</span> <span class="hint" data-lang="en">from</span><span class="hint" data-lang="bg">от</span></label>
           <input class="calc-input" id="due" type="date" />
         </div>
         <div class="calc-field">
-          <label class="calc-label" for="paid">Payment date <span class="hint">to</span></label>
+          <label class="calc-label" for="paid"><span data-lang="en">Payment date</span><span data-lang="bg">Дата на плащане</span> <span class="hint" data-lang="en">to</span><span class="hint" data-lang="bg">до</span></label>
           <input class="calc-input" id="paid" type="date" />
         </div>
         <div class="calc-field">
-          <label class="calc-label">Effective rate</label>
+          <label class="calc-label"><span data-lang="en">Effective rate</span><span data-lang="bg">Ефективна ставка</span></label>
           <input class="calc-input" id="eff" value="10.15 % p.a." readonly />
         </div>
       </div>
       <div class="calc-results" style="margin-top:18px;">
         <div class="calc-result">
-          <div class="calc-result-label">Days overdue</div>
+          <div class="calc-result-label"><span data-lang="en">Days overdue</span><span data-lang="bg">Дни забава</span></div>
           <div class="calc-result-value" id="o-days">—</div>
         </div>
         <div class="calc-result">
-          <div class="calc-result-label">Interest</div>
+          <div class="calc-result-label"><span data-lang="en">Interest</span><span data-lang="bg">Лихва</span></div>
           <div class="calc-result-value" id="o-interest">—</div>
         </div>
       </div>
       <div class="calc-breakdown">
-        <div class="calc-row total"><span class="k">Total due (principal + interest)</span><span class="v" id="o-total">—</span></div>
+        <div class="calc-row total"><span class="k"><span data-lang="en">Total due (principal + interest)</span><span data-lang="bg">Общо дължимо (главница + лихва)</span></span><span class="v" id="o-total">—</span></div>
       </div>
-      <div class="calc-note" style="margin-top:14px;">Simple interest, actual days ÷ 365. For a period spanning the 2026 formula change, calculate each sub-period separately. Day-count convention may vary — verify.</div>
+      <div class="calc-note" style="margin-top:14px;"><span data-lang="en">Simple interest, actual days ÷ 365. For a period spanning the 2026 formula change, calculate each sub-period separately. Day-count convention may vary — verify.</span><span data-lang="bg">Проста лихва, реални дни ÷ 365. За период, обхващащ промяната на формулата от 2026 г., изчислете всеки подпериод поотделно. Конвенцията за броене на дни може да се различава — проверете.</span></div>
     </div>
 
-    <!-- Deadline -->
     <div class="calc-card">
-      <div class="calc-card-title">Deadline / term calculator</div>
+      <div class="calc-card-title"><span data-lang="en">Deadline / term calculator</span><span data-lang="bg">Калкулатор за срокове</span></div>
       <div class="calc-grid">
         <div class="calc-field">
-          <label class="calc-label" for="d-start">Start date</label>
+          <label class="calc-label" for="d-start"><span data-lang="en">Start date</span><span data-lang="bg">Начална дата</span></label>
           <input class="calc-input" id="d-start" type="date" />
         </div>
         <div class="calc-field">
-          <label class="calc-label" for="d-amount">Length</label>
+          <label class="calc-label" for="d-amount"><span data-lang="en">Length</span><span data-lang="bg">Продължителност</span></label>
           <input class="calc-input" id="d-amount" type="number" value="14" step="1" min="0" />
         </div>
         <div class="calc-field">
-          <label class="calc-label" for="d-unit">Unit</label>
+          <label class="calc-label" for="d-unit"><span data-lang="en">Unit</span><span data-lang="bg">Единица</span></label>
           <select class="calc-select" id="d-unit">
-            <option value="days" selected>Days</option>
-            <option value="weeks">Weeks</option>
-            <option value="months">Months</option>
-            <option value="years">Years</option>
+            <option value="days" selected data-lang-text>Days</option>
+            <option value="weeks" data-lang-text>Weeks</option>
+            <option value="months" data-lang-text>Months</option>
+            <option value="years" data-lang-text>Years</option>
           </select>
         </div>
         <div class="calc-field full">
-          <label class="calc-label">Quick presets</label>
+          <label class="calc-label"><span data-lang="en">Quick presets</span><span data-lang="bg">Бързи настройки</span></label>
           <div class="preset-row" id="presets"></div>
         </div>
       </div>
       <div class="calc-results" style="margin-top:18px;">
         <div class="calc-result primary">
-          <div class="calc-result-label">Deadline</div>
+          <div class="calc-result-label"><span data-lang="en">Deadline</span><span data-lang="bg">Краен срок</span></div>
           <div class="calc-result-value" id="o-deadline">—</div>
           <div class="calc-result-sub" id="o-dow"></div>
         </div>
         <div class="calc-result">
-          <div class="calc-result-label">Calendar days from start</div>
+          <div class="calc-result-label"><span data-lang="en">Calendar days from start</span><span data-lang="bg">Календарни дни от началото</span></div>
           <div class="calc-result-value" id="o-spandays">—</div>
         </div>
       </div>
-      <div class="calc-note" style="margin-top:14px;">Calendar dates only. Bulgarian procedure generally rolls a deadline that ends on a non-working day to the next working day — not applied here. Verify against the applicable procedural rules.</div>
+      <div class="calc-note" style="margin-top:14px;"><span data-lang="en">Calendar dates only. Bulgarian procedure generally rolls a deadline that ends on a non-working day to the next working day — not applied here. Verify against the applicable procedural rules.</span><span data-lang="bg">Само календарни дати. Българското процесуално право обикновено пренася срок, изтичащ в неработен ден, към следващия работен ден — не е приложено тук. Проверете спрямо приложимите процесуални правила.</span></div>
     </div>
   </div>
 
@@ -131,23 +133,28 @@
         <span class="brand-icon">◈</span>
         <span class="brand-name">YARD Financial</span>
       </div>
-      <p class="footer-note">Indicative estimate · not advice · <a href="../disclaimer.html" style="color: var(--accent-text);">Disclaimer</a></p>
-      <a href="https://yardlaw.eu" target="_blank" rel="noopener" class="footer-partner">A project by <strong>YARD Law Co.</strong></a>
+      <p class="footer-note"><span data-lang="en">Indicative estimate · not advice</span><span data-lang="bg">Ориентировъчна оценка · не е съвет</span> · <a href="../disclaimer.html" style="color: var(--accent-text);"><span data-lang="en">Disclaimer</span><span data-lang="bg">Условия</span></a></p>
+      <a href="https://yardlaw.eu" target="_blank" rel="noopener" class="footer-partner"><span data-lang="en">A project by </span><span data-lang="bg">Проект на </span><strong>YARD Law Co.</strong></a>
     </div>
   </footer>
 
   <script>
     (function () {
       var EUR = new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR' });
+      function curLang() { return document.documentElement.getAttribute('lang') === 'bg' ? 'bg' : 'en'; }
+      function L(en, bg) { return curLang() === 'bg' ? bg : en; }
       function n(id) { var v = parseFloat(document.getElementById(id).value); return isFinite(v) ? v : 0; }
       function val(id) { return document.getElementById(id).value; }
       function set(id, t) { document.getElementById(id).textContent = t; }
       var MS = 86400000;
+      var MONTHS_EN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      var MONTHS_BG = ['яну','фев','мар','апр','май','юни','юли','авг','сеп','окт','ное','дек'];
+      var DOW_EN = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+      var DOW_BG = ['неделя','понеделник','вторник','сряда','четвъртък','петък','събота'];
 
-      // ---- statutory interest ----
       function calcInterest() {
         var p = n('principal'), rate = n('ecb') + n('margin');
-        document.getElementById('eff').value = rate.toFixed(2) + ' % p.a.';
+        document.getElementById('eff').value = rate.toFixed(2) + L(' % p.a.', ' % год.');
         var d1 = new Date(val('due')), d2 = new Date(val('paid'));
         if (isNaN(d1) || isNaN(d2)) { set('o-days', '—'); set('o-interest', '—'); set('o-total', EUR.format(p)); return; }
         var days = Math.max(0, Math.round((d2 - d1) / MS));
@@ -158,10 +165,7 @@
         document.getElementById(id).addEventListener('input', calcInterest);
       });
 
-      // ---- deadlines ----
-      var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-      var DOW = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-      function fmt(d) { return d.getDate() + ' ' + MONTHS[d.getMonth()] + ' ' + d.getFullYear(); }
+      function fmt(d) { var M = curLang() === 'bg' ? MONTHS_BG : MONTHS_EN; return d.getDate() + ' ' + M[d.getMonth()] + ' ' + d.getFullYear(); }
       function calcDeadline() {
         var s = new Date(val('d-start')); if (isNaN(s)) { set('o-deadline', '—'); set('o-dow', ''); set('o-spandays', '—'); return; }
         var k = parseInt(val('d-amount'), 10) || 0, unit = val('d-unit'), e = new Date(s.getTime());
@@ -169,19 +173,24 @@
         else if (unit === 'weeks') e.setDate(e.getDate() + k * 7);
         else if (unit === 'months') e.setMonth(e.getMonth() + k);
         else if (unit === 'years') e.setFullYear(e.getFullYear() + k);
-        set('o-deadline', fmt(e)); set('o-dow', DOW[e.getDay()]);
-        set('o-spandays', Math.round((e - s) / MS) + ' days');
+        set('o-deadline', fmt(e));
+        set('o-dow', (curLang() === 'bg' ? DOW_BG : DOW_EN)[e.getDay()]);
+        set('o-spandays', Math.round((e - s) / MS) + L(' days', ' дни'));
       }
-      var presets = [['14 days', 14, 'days'], ['1 month', 1, 'months'], ['3 months', 3, 'months'], ['6 months', 6, 'months'], ['3 years', 3, 'years'], ['5 years', 5, 'years']];
+      var presets = [['14 days', '14 дни', 14, 'days'], ['1 month', '1 месец', 1, 'months'], ['3 months', '3 месеца', 3, 'months'], ['6 months', '6 месеца', 6, 'months'], ['3 years', '3 години', 3, 'years'], ['5 years', '5 години', 5, 'years']];
       var host = document.getElementById('presets');
       presets.forEach(function (p) {
-        var b = document.createElement('button'); b.type = 'button'; b.className = 'preset'; b.textContent = p[0];
-        b.addEventListener('click', function () { document.getElementById('d-amount').value = p[1]; document.getElementById('d-unit').value = p[2]; calcDeadline(); });
+        var b = document.createElement('button'); b.type = 'button'; b.className = 'preset';
+        b.innerHTML = '<span data-lang="en">' + p[0] + '</span><span data-lang="bg">' + p[1] + '</span>';
+        b.addEventListener('click', function () { document.getElementById('d-amount').value = p[2]; document.getElementById('d-unit').value = p[3]; calcDeadline(); });
         host.appendChild(b);
       });
       ['d-start', 'd-amount', 'd-unit'].forEach(function (id) { document.getElementById(id).addEventListener('input', calcDeadline); });
+      var UNIT_LABELS = { en: { days: 'Days', weeks: 'Weeks', months: 'Months', years: 'Years' }, bg: { days: 'Дни', weeks: 'Седмици', months: 'Месеци', years: 'Години' } };
+      function applyUnitLabels() { var lbl = UNIT_LABELS[curLang()]; document.querySelectorAll('#d-unit option').forEach(function (o) { o.textContent = lbl[o.value]; }); }
+      document.addEventListener('yf:langchange', function () { applyUnitLabels(); calcInterest(); calcDeadline(); });
+      applyUnitLabels();
 
-      // init dates to today
       var today = new Date().toISOString().slice(0, 10);
       document.getElementById('due').value = today;
       document.getElementById('paid').value = today;
