@@ -2255,11 +2255,21 @@ ${tradeToObsidianMarkdown(t)}`).join("\n");
   }
 
   // trading/ui/app.js
+  function mountLattice(root) {
+    root.innerHTML = "";
+    var f = document.createElement("iframe");
+    f.src = "../lattice.html?embed=1";
+    f.title = "Lattice — options pricer";
+    f.style.cssText = "width:100%;border:0;display:block;min-height:calc(100vh - 120px);background:#05080F;";
+    root.appendChild(f);
+    return function() { root.innerHTML = ""; };
+  }
   var ROUTES = {
     scanner: mount,
     backtest: mount2,
     log: mount3,
-    options: mount4
+    options: mount4,
+    lattice: mountLattice
   };
   var DEFAULT = "scanner";
   function currentRoute() {

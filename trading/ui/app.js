@@ -7,11 +7,24 @@ import { mount as mountBacktest } from "./backtest.js";
 import { mount as mountTradeLog } from "./tradelog.js";
 import { mount as mountOptions } from "./options.js";
 
+// Lattice is a standalone, self-contained page; embed it in-place via an iframe
+// so it behaves like the other Trading Desk tabs (deep-linkable at #/lattice).
+function mountLattice(root) {
+  root.innerHTML = "";
+  const f = document.createElement("iframe");
+  f.src = "../lattice.html?embed=1";
+  f.title = "Lattice — options pricer";
+  f.style.cssText = "width:100%;border:0;display:block;min-height:calc(100vh - 120px);background:#05080F;";
+  root.appendChild(f);
+  return () => { root.innerHTML = ""; };
+}
+
 const ROUTES = {
   scanner: mountScanner,
   backtest: mountBacktest,
   log: mountTradeLog,
   options: mountOptions,
+  lattice: mountLattice,
 };
 const DEFAULT = "scanner";
 

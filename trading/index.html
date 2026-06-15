@@ -30,7 +30,7 @@
        multi-file <script type="module"> graph; a classic script loads exactly like the site's
        other scripts (js/wizard.js, js/tools.js). Source of truth is trading/ui/*.js — regenerate
        the bundle with:  npm run build:trading -->
-  <script src="trading.bundle.js" defer></script>
+  <script src="trading.bundle.js?v=2" defer></script>
 </head>
 <body class="trading-body">
 
@@ -55,7 +55,7 @@
       <a href="#/scanner" class="tr-subnav" data-route="scanner">SCANNER</a>
       <a href="#/backtest" class="tr-subnav" data-route="backtest">BACKTEST</a>
       <a href="#/log" class="tr-subnav" data-route="log">TRADE LOG</a>
-      <a href="../lattice.html" class="tr-subnav">LATTICE</a>
+      <a href="#/lattice" class="tr-subnav" data-route="lattice">LATTICE</a>
       <a href="#/options" class="tr-subnav" data-route="options">OPTIONS</a>
     </div>
   </div>
