@@ -484,7 +484,7 @@ dom.newProjectBtn.addEventListener('click', () => {
 });
 
 dom.exportBtn.addEventListener('click', () => {
-  alert('Export to PDF and DOCX is available in PM Helper Pro.\n\nUpgrade coming soon — contact us to join the waitlist.');
+  alert('Export to PDF and DOCX is available in YARD Financial Pro.\n\nUpgrade coming soon — contact us to join the waitlist.');
 });
 
 // ── Result Rendering ──────────────────────────────────────────
