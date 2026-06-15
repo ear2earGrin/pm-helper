@@ -9,8 +9,43 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css?v=2" />
+  <style>
+    /* Cursor-reactive grid background (hub) */
+    .fx { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
+    .fx-grid {
+      position: absolute; inset: -2px;
+      background-image:
+        linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+      background-size: 46px 46px;
+    }
+    .fx-glowgrid {
+      position: absolute; inset: -2px;
+      background-image:
+        linear-gradient(to right, rgba(15, 217, 160, 0.65) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(15, 217, 160, 0.65) 1px, transparent 1px);
+      background-size: 46px 46px;
+      -webkit-mask-image: radial-gradient(200px circle at var(--mx, -200px) var(--my, -200px), #000 0%, rgba(0,0,0,0.4) 40%, transparent 72%);
+              mask-image: radial-gradient(200px circle at var(--mx, -200px) var(--my, -200px), #000 0%, rgba(0,0,0,0.4) 40%, transparent 72%);
+      opacity: 0; transition: opacity 0.45s ease;
+    }
+    .fx-spot {
+      position: absolute; inset: 0;
+      background: radial-gradient(420px circle at var(--mx, -200px) var(--my, -200px), rgba(15, 217, 160, 0.12), rgba(15, 217, 160, 0.04) 35%, transparent 68%);
+      opacity: 0; transition: opacity 0.45s ease;
+    }
+    body.fx-on .fx-glowgrid, body.fx-on .fx-spot { opacity: 1; }
+    @media (prefers-reduced-motion: reduce) { .fx-glowgrid, .fx-spot { display: none; } }
+  </style>
 </head>
 <body class="landing-body">
+
+  <!-- Cursor-reactive grid background -->
+  <div class="fx" aria-hidden="true">
+    <div class="fx-grid"></div>
+    <div class="fx-glowgrid"></div>
+    <div class="fx-spot"></div>
+  </div>
 
   <!-- Nav -->
   <nav class="nav">
@@ -103,6 +138,22 @@
       </a>
     </div>
   </footer>
+
+  <script>
+    (function () {
+      var mq = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
+      if (mq && mq.matches) return;
+      var b = document.body, x = 0, y = 0, ticking = false, on = false;
+      function paint() { ticking = false; b.style.setProperty('--mx', x + 'px'); b.style.setProperty('--my', y + 'px'); }
+      window.addEventListener('pointermove', function (e) {
+        if (e.pointerType === 'touch') return;
+        x = e.clientX; y = e.clientY;
+        if (!on) { on = true; b.classList.add('fx-on'); }
+        if (!ticking) { ticking = true; requestAnimationFrame(paint); }
+      }, { passive: true });
+      document.addEventListener('mouseleave', function () { b.classList.remove('fx-on'); });
+    })();
+  </script>
 
 </body>
 </html>
