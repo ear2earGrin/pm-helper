@@ -58,7 +58,7 @@ pm-helper/
 ├── pm.html             ← PM Management landing (how it works · artefacts)
 ├── app.html            ← Wizard app (main PM experience)
 ├── tools.html          ← PM² planning tools
-├── lattice.html        ← Lattice (placeholder — being ported from yardlaw.eu)
+├── lattice.html        ← Lattice — binomial options pricer (CRR), ported from yardlaw.eu
 ├── trading/            ← Trading Desk (ported from crypto-entry-checker)
 │   ├── index.html      ← Section shell (nav + sub-nav + hash router)
 │   ├── indicators/ strategy/ backtest/ data/   ← pure engine (ESM: browser + Vitest)

@@ -1,61 +1,2282 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PM Helper — Lattice</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lattice — Options Pricer | PM Helper</title>
+<meta name="description" content="Lattice — an interactive binomial (Cox-Ross-Rubinstein) options pricer for European and American calls and puts. Built by the YARD Law team.">
+<link rel="canonical" href="https://pm-brief.com/lattice.html">
+<meta name="robots" content="index, follow">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta property="og:title" content="Lattice — Options Pricer">
+<meta property="og:description" content="Interactive binomial options pricer (CRR) for European & American calls and puts. Built by the YARD Law team.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://pm-brief.com/lattice.html">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=JetBrains+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --bg-card: #131312;
+    --bg-elevated: #1a1917;
+    --border: #2a2825;
+    --border-strong: #3a3733;
+    --text: #ebe3d0;
+    --text-muted: #8c8479;
+    --text-dim: #5a5550;
+    --accent: #d4a574;
+    --accent-dim: #8a6a4a;
+    --bull: #6fbf8a;
+    --bear: #d47362;
+    --exercise: #e8a14a;
+    --serif: 'Fraunces', Georgia, serif;
+    --sans: 'Manrope', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+    background-image:
+      radial-gradient(at 20% 0%, rgba(212, 165, 116, 0.04), transparent 50%),
+      radial-gradient(at 80% 100%, rgba(212, 165, 116, 0.03), transparent 50%);
+  }
+
+  header {
+    padding: 32px 40px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  header h1 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: 32px;
+    margin: 0;
+    letter-spacing: -0.02em;
+    font-variation-settings: "opsz" 144;
+  }
+
+  header h1 em {
+    font-style: italic;
+    color: var(--accent);
+    font-weight: 300;
+  }
+
+  header .subtitle {
+    color: var(--text-muted);
+    font-size: 13px;
+    font-family: var(--mono);
+    letter-spacing: 0.05em;
+  }
+
+  main {
+    padding: 24px 40px 60px;
+    max-width: 1400px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: minmax(280px, 360px) 1fr;
+    gap: 24px;
+  }
+
+  .panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 24px;
+  }
+
+  .panel-title {
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 400;
+    font-size: 16px;
+    color: var(--accent);
+    margin: 0 0 18px;
+    letter-spacing: 0.01em;
+  }
+
+  .panel-section {
+    margin-bottom: 22px;
+  }
+
+  .panel-section:last-child { margin-bottom: 0; }
+
+  .panel-section-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+  }
+
+  /* Input grid */
+  .input-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .input-grid.full { grid-template-columns: 1fr; }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .field label {
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+    display: block;
+  }
+
+  .field label .hint {
+    display: block;
+    color: var(--text-dim);
+    text-transform: none;
+    letter-spacing: 0.02em;
+    font-size: 10px;
+    font-weight: 400;
+    margin-top: 2px;
+  }
+
+  .field input[type="number"] {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 10px;
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 0;
+    transition: border-color 0.15s ease;
+  }
+
+  .field input[type="number"]:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .field input[type="number"]::-webkit-inner-spin-button,
+  .field input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  /* Role context: explains what an input represents across asset types */
+  .field .role-note {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text-dim);
+    margin-top: 4px;
+    line-height: 1.45;
+    letter-spacing: 0.02em;
+  }
+
+  /* Toggle button groups */
+  .toggle-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    border: 1px solid var(--border);
+  }
+
+  .toggle-group button {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    padding: 9px 12px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-weight: 500;
+  }
+
+  .toggle-group button + button {
+    border-left: 1px solid var(--border);
+  }
+
+  .toggle-group button:hover { color: var(--text); }
+
+  .toggle-group button.active {
+    background: var(--accent);
+    color: var(--bg);
+  }
+
+  .toggle-group.call-put button.active[data-type="call"] {
+    background: var(--bull);
+    color: var(--bg);
+  }
+
+  .toggle-group.call-put button.active[data-type="put"] {
+    background: var(--bear);
+    color: var(--bg);
+  }
+
+  /* Results panel */
+  .results-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  .price-display {
+    border-left: 2px solid var(--accent);
+    padding-left: 18px;
+  }
+
+  .price-display .label {
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+  }
+
+  .price-display .value {
+    font-family: var(--mono);
+    font-size: 36px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+
+  .price-display .currency {
+    color: var(--text-muted);
+    font-size: 22px;
+    margin-right: 4px;
+  }
+
+  .price-display .meta {
+    margin-top: 10px;
+    color: var(--text-muted);
+    font-family: var(--mono);
+    font-size: 11px;
+  }
+
+  .greek-row {
+    display: grid;
+    grid-template-columns: 60px 1fr auto;
+    align-items: baseline;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--border);
+    gap: 12px;
+  }
+
+  .greek-row:last-child { border-bottom: none; }
+
+  .greek-symbol {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 18px;
+    color: var(--accent);
+  }
+
+  .greek-name {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .greek-value {
+    font-family: var(--mono);
+    font-size: 14px;
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  /* Comparison / verification table */
+  .comparison {
+    margin-top: 18px;
+    padding: 14px;
+    background: var(--bg-elevated);
+    border-left: 2px solid var(--accent-dim);
+  }
+
+  .comparison .label {
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+
+  .comparison-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 3px 0;
+  }
+
+  .comparison-row .name { color: var(--text-muted); }
+  .comparison-row .val { color: var(--text); }
+
+  .tree-params {
+    margin-top: 18px;
+    padding: 14px;
+    background: var(--bg-elevated);
+  }
+
+  .tree-params .label {
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+
+  .tree-params-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+
+  .tree-param .symbol {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 14px;
+    color: var(--accent);
+    margin-right: 4px;
+  }
+
+  .tree-param .val {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text);
+  }
+
+  /* Right column */
+  .right-col {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  /* Convergence chart */
+  #convergence-chart {
+    width: 100%;
+    height: 280px;
+    display: block;
+    margin-top: 8px;
+  }
+
+  /* Tree visualization */
+  .tree-container {
+    overflow-x: auto;
+    margin-top: 8px;
+  }
+
+  #tree-svg {
+    display: block;
+  }
+
+  .tree-empty {
+    color: var(--text-muted);
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 40px;
+    text-align: center;
+    border: 1px dashed var(--border);
+    background: var(--bg-elevated);
+  }
+
+  .legend {
+    display: flex;
+    gap: 18px;
+    margin-top: 14px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    flex-wrap: wrap;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+
+  /* Hedge composition box */
+  .hedge-box {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    padding: 14px 16px;
+  }
+
+  .hedge-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 6px 0;
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+
+  .hedge-row.total {
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .hedge-row .hedge-label { color: var(--text-muted); }
+  .hedge-row .hedge-val { color: var(--text); font-weight: 500; }
+  .hedge-row.total .hedge-label { color: var(--accent); }
+
+  .hedge-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 4px 0;
+  }
+
+  /* BSM panel components */
+  .bsm-intermediate {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 18px;
+    padding: 14px;
+    background: var(--bg-elevated);
+    border-left: 2px solid var(--accent-dim);
+    margin-top: 14px;
+  }
+
+  .bsm-int-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 3px 0;
+  }
+
+  .bsm-int-row .name {
+    color: var(--text-muted);
+  }
+
+  .bsm-int-row .name em {
+    font-family: var(--serif);
+    font-style: italic;
+    color: var(--accent);
+    margin-right: 4px;
+  }
+
+  .bsm-int-row .val {
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  /* Discrete dividend rows */
+  .div-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 28px;
+    gap: 6px;
+    margin-bottom: 6px;
+    align-items: center;
+  }
+
+  .div-row input[type="number"] {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 8px;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .div-row input[type="number"]:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .div-row button.div-remove {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    cursor: pointer;
+    font-family: var(--mono);
+    font-size: 14px;
+    padding: 4px 0;
+    transition: all 0.15s ease;
+  }
+
+  .div-row button.div-remove:hover {
+    color: var(--bear);
+    border-color: var(--bear);
+  }
+
+  .div-add-btn {
+    background: transparent;
+    border: 1px dashed var(--border-strong);
+    color: var(--text-muted);
+    cursor: pointer;
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 8px;
+    width: 100%;
+    transition: all 0.15s ease;
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .div-add-btn:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .div-summary {
+    margin-top: 12px;
+    padding: 10px 12px;
+    background: var(--bg-elevated);
+    font-family: var(--mono);
+    font-size: 11px;
+  }
+
+  .div-summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 3px 0;
+    color: var(--text-muted);
+  }
+
+  .div-summary-row .val { color: var(--text); font-weight: 500; }
+  .div-summary-row.highlight .val { color: var(--accent); }
+
+  .div-header {
+    display: grid;
+    grid-template-columns: 1fr 1fr 28px;
+    gap: 6px;
+    margin-bottom: 6px;
+    font-family: var(--mono);
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+  }
+
+  /* Learn mode — inline pedagogical explanations shown when toggle is on */
+  .learn-note {
+    display: none;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--text-muted);
+    line-height: 1.7;
+    margin-top: 8px;
+    padding: 9px 12px;
+    background: rgba(212, 165, 116, 0.04);
+    border-left: 2px solid var(--accent-dim);
+  }
+
+  body.learn-on .learn-note { display: block; }
+
+  .learn-note strong {
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  .learn-note em {
+    font-family: var(--serif);
+    font-style: italic;
+    color: var(--accent);
+    font-size: 12px;
+  }
+
+  .learn-note code {
+    background: var(--bg);
+    color: var(--accent);
+    padding: 1px 5px;
+    font-family: var(--mono);
+    font-size: 10px;
+  }
+
+  .learn-toggle {
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    color: var(--text-muted);
+    padding: 7px 14px;
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    align-self: center;
+  }
+
+  .learn-toggle:hover {
+    color: var(--text);
+    border-color: var(--text-muted);
+  }
+
+  .learn-toggle.active {
+    background: var(--accent);
+    color: var(--bg);
+    border-color: var(--accent);
+  }
+
+  /* Footer */
+  footer {
+    padding: 20px 40px;
+    color: var(--text-dim);
+    font-family: var(--mono);
+    font-size: 11px;
+    border-top: 1px solid var(--border);
+    text-align: center;
+  }
+
+  footer em {
+    font-family: var(--serif);
+    color: var(--accent);
+    font-style: italic;
+  }
+
+  @media (max-width: 900px) {
+    main { grid-template-columns: 1fr; padding: 16px; }
+    header { padding: 20px 16px 16px; }
+    .results-grid { grid-template-columns: 1fr; }
+    .tree-params-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  /* Hover tooltip for tree nodes */
+  .tooltip {
+    position: absolute;
+    background: var(--bg-elevated);
+    border: 1px solid var(--accent);
+    padding: 8px 12px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    z-index: 100;
+    white-space: nowrap;
+  }
+
+  .tooltip.show { opacity: 1; }
+
+  .tooltip .row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .tooltip .key { color: var(--text-muted); }
+</style>
 </head>
-<body class="landing-body">
+<body>
 
-  <!-- Nav -->
-  <nav class="nav">
-    <div class="nav-inner">
-      <a href="index.html" class="brand">
-        <span class="brand-icon">◈</span>
-        <span class="brand-name">PM Helper</span>
-      </a>
-      <div class="nav-links">
-        <a href="pm.html" class="nav-link">PM Management</a>
-        <a href="trading/index.html" class="nav-link">Trading Desk</a>
-        <a href="lattice.html" class="nav-link" style="color: var(--accent-text);">Lattice</a>
+<header>
+  <div>
+    <a href="index.html" style="display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-dim);text-decoration:none;margin-bottom:10px;transition:color 0.2s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-dim)'">← Toolkit</a>
+    <h1><em>Lattice</em></h1>
+    <div class="subtitle">BINOMIAL OPTIONS PRICER · CRR · EUROPEAN &amp; AMERICAN · CALL &amp; PUT</div>
+  </div>
+  <div style="display: flex; align-items: center; gap: 20px;">
+    <button class="learn-toggle" id="learn-toggle" onclick="toggleLearnMode()">
+      ◐ Learn Mode
+    </button>
+    <div class="subtitle" style="text-align: right;">
+      No-arbitrage · Risk-neutral valuation<br>
+      <span style="color: var(--text-dim);">Cox-Ross-Rubinstein (1979)</span>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- INPUTS PANEL -->
+  <aside class="panel">
+    <h2 class="panel-title">Parameters</h2>
+
+    <div class="panel-section">
+      <div class="panel-section-label">Contract Type</div>
+      <div class="toggle-group call-put" id="type-toggle">
+        <button class="active" data-type="call">Call</button>
+        <button data-type="put">Put</button>
       </div>
     </div>
-  </nav>
 
-  <!-- Placeholder hero — replaced by the real tool once its code is pasted in -->
-  <section class="hero">
-    <div class="hero-inner">
-      <div class="hero-eyebrow">
-        <span class="eyebrow-dot"></span>
-        Lattice
-      </div>
-      <h1 class="hero-title">Lattice is <em>moving in.</em></h1>
-      <p class="hero-sub">This tool is being brought over from yardlaw.eu into its own home here. The code is being wired into the toolkit — check back shortly.</p>
-      <div class="hero-cta">
-        <a href="index.html" class="btn btn-primary btn-lg">← Back to the toolkit</a>
-        <span class="cta-note">PM Management and Trading Desk are ready now</span>
+    <div class="panel-section">
+      <div class="panel-section-label">Exercise Style</div>
+      <div class="toggle-group" id="style-toggle">
+        <button class="active" data-style="european">European</button>
+        <button data-style="american">American</button>
       </div>
     </div>
-  </section>
 
-  <!-- Footer -->
-  <footer class="footer">
-    <div class="footer-inner">
-      <div class="brand brand--small">
-        <span class="brand-icon">◈</span>
-        <span class="brand-name">PM Helper</span>
+    <div class="panel-section">
+      <div class="panel-section-label">Underlying Asset</div>
+      <div class="toggle-group" id="asset-toggle" style="grid-template-columns: 1fr 1fr;">
+        <button class="active" data-asset="stock">Stock (q=0)</button>
+        <button data-asset="index">Index / Div</button>
       </div>
-      <p class="footer-note">Lattice · Coming soon</p>
-      <a href="https://yardlaw.eu" target="_blank" rel="noopener" class="footer-partner">
-        A project by <strong>YARD Law Co.</strong>
-      </a>
+      <div class="toggle-group" style="grid-template-columns: 1fr 1fr; margin-top: 6px;">
+        <button data-asset="currency">FX (q=r_f)</button>
+        <button data-asset="futures">Futures (q=r)</button>
+      </div>
+      <div id="asset-note" style="margin-top: 8px; color: var(--text-dim); font-family: var(--mono); font-size: 10px; line-height: 1.5;">
+        Sets α = e<sup>rΔt</sup>. No income on underlying.
+      </div>
     </div>
-  </footer>
+
+    <div class="panel-section">
+      <div class="panel-section-label">Market Inputs</div>
+      <div class="input-grid" style="grid-template-columns: 1fr;">
+        <div class="field">
+          <label>S<sub>0</sub> <span class="hint" id="s0-hint">spot</span></label>
+          <input type="number" id="S0" value="40" step="0.5" min="0.01">
+          <div class="role-note">[stock price / index level / FX rate / futures price]</div>
+        </div>
+        <div class="field">
+          <label>K <span class="hint">strike</span></label>
+          <input type="number" id="K" value="42" step="0.5" min="0.01">
+          <div class="role-note">[exercise price · same units as S₀]</div>
+        </div>
+        <div class="field">
+          <label>T <span class="hint">years</span></label>
+          <input type="number" id="T" value="0.5" step="0.0833" min="0.001">
+          <div class="role-note">[years to expiry · 0.25 = 3 months]</div>
+        </div>
+        <div class="field">
+          <label><span id="r-label">r</span> <span class="hint" id="r-hint">cont. %</span></label>
+          <input type="number" id="r" value="8" step="0.1">
+          <div class="role-note">[risk-free rate · FX: domestic currency rate]</div>
+        </div>
+        <div class="field">
+          <label><span id="q-label">q</span> <span class="hint" id="q-hint">div yld %</span></label>
+          <input type="number" id="q" value="0" step="0.1">
+          <div class="role-note">[stock: 0 · index: div yld · FX: r<sub>f</sub> · futures: =r]</div>
+        </div>
+        <div class="field">
+          <label>N <span class="hint">steps</span></label>
+          <input type="number" id="N" value="50" step="1" min="1" max="500">
+          <div class="role-note">[tree granularity · N→∞ converges to Black-Scholes]</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-section-label">Up/Down Parameterization</div>
+      <div class="toggle-group" id="param-toggle">
+        <button class="active" data-param="crr">CRR (σ)</button>
+        <button data-param="custom">Custom u/d</button>
+      </div>
+
+      <div id="crr-inputs" style="margin-top: 12px;">
+        <div class="field">
+          <label>σ <span class="hint">volatility %</span></label>
+          <input type="number" id="sigma" value="30" step="1" min="0.1">
+          <div class="role-note">[annualized vol · drives u, d via u = e<sup>σ√Δt</sup>]</div>
+        </div>
+      </div>
+
+      <div id="custom-inputs" style="margin-top: 12px; display: none;">
+        <div class="input-grid">
+          <div class="field">
+            <label>u <span class="hint">up factor</span></label>
+            <input type="number" id="u" value="1.20" step="0.01" min="1.001">
+            <div class="role-note">[S × u after one up move]</div>
+          </div>
+          <div class="field">
+            <label>d <span class="hint">down factor</span></label>
+            <input type="number" id="d" value="0.85" step="0.01" min="0.001">
+            <div class="role-note">[S × d after one down move]</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-section" id="dividends-section">
+      <div class="panel-section-label">Discrete Dividends (optional)</div>
+      <div style="color: var(--text-dim); font-family: var(--mono); font-size: 9px; line-height: 1.5; margin-bottom: 10px;">
+        [Hull method: subtract PV of divs from S₀, then price European option on the adjusted spot]
+      </div>
+      <div class="div-header" id="div-header" style="display: none;">
+        <div>amount $</div>
+        <div>time (yr)</div>
+        <div></div>
+      </div>
+      <div id="dividend-list"></div>
+      <button class="div-add-btn" onclick="addDividend()">+ Add dividend</button>
+      <div class="div-summary" id="div-summary" style="display: none;">
+        <div class="div-summary-row">
+          <span>PV of dividends</span>
+          <span class="val" id="pv-divs">$0.00</span>
+        </div>
+        <div class="div-summary-row highlight">
+          <span>Adjusted S₀ used in pricing</span>
+          <span class="val" id="adj-s0">$0.00</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- RESULTS COLUMN -->
+  <div class="right-col">
+
+    <!-- Price + Greeks -->
+    <section class="panel">
+      <h2 class="panel-title">Valuation</h2>
+
+      <div class="results-grid">
+        <div>
+          <div class="price-display">
+            <div class="label">Option Premium</div>
+            <div class="value"><span class="currency">$</span><span id="price">—</span></div>
+            <div class="meta" id="price-meta">—</div>
+          </div>
+
+          <div class="learn-note" id="learn-premium">—</div>
+
+          <div class="comparison">
+            <div class="label">Reference (European, Black-Scholes)</div>
+            <div class="comparison-row">
+              <span class="name">BS price</span>
+              <span class="val" id="bs-price">—</span>
+            </div>
+            <div class="comparison-row">
+              <span class="name">Δ vs binomial</span>
+              <span class="val" id="bs-diff">—</span>
+            </div>
+            <div class="comparison-row" id="early-ex-row" style="display: none;">
+              <span class="name" style="color: var(--exercise);">Early ex. premium</span>
+              <span class="val" id="early-ex-val">—</span>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="panel-section-label" style="margin-bottom: 14px;">Greeks (from tree)</div>
+          <div class="greek-row">
+            <span class="greek-symbol">Δ</span>
+            <span class="greek-name">Delta</span>
+            <span class="greek-value" id="delta">—</span>
+          </div>
+          <div class="greek-row">
+            <span class="greek-symbol">Γ</span>
+            <span class="greek-name">Gamma</span>
+            <span class="greek-value" id="gamma">—</span>
+          </div>
+          <div class="greek-row">
+            <span class="greek-symbol">Θ</span>
+            <span class="greek-name">Theta (per yr)</span>
+            <span class="greek-value" id="theta">—</span>
+          </div>
+          <div class="greek-row">
+            <span class="greek-symbol">ν</span>
+            <span class="greek-name">Vega (bumped)</span>
+            <span class="greek-value" id="vega">—</span>
+          </div>
+          <div class="greek-row">
+            <span class="greek-symbol">ρ</span>
+            <span class="greek-name">Rho (bumped)</span>
+            <span class="greek-value" id="rho">—</span>
+          </div>
+
+          <div class="learn-note" id="learn-greeks">—</div>
+
+          <div class="tree-params">
+            <div class="label">Tree parameters · α = e<sup>(r−q)Δt</sup></div>
+            <div class="tree-params-grid" style="grid-template-columns: repeat(6, 1fr);">
+              <div class="tree-param"><span class="symbol">σ</span><span class="val" id="param-sigma">—</span></div>
+              <div class="tree-param"><span class="symbol">u</span><span class="val" id="param-u">—</span></div>
+              <div class="tree-param"><span class="symbol">d</span><span class="val" id="param-d">—</span></div>
+              <div class="tree-param"><span class="symbol">α</span><span class="val" id="param-alpha">—</span></div>
+              <div class="tree-param"><span class="symbol">p</span><span class="val" id="param-p">—</span></div>
+              <div class="tree-param"><span class="symbol">Δt</span><span class="val" id="param-dt">—</span></div>
+            </div>
+            <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); font-family: var(--mono); font-size: 11px; color: var(--text-muted); display: flex; justify-content: space-between;">
+              <span>E<sub>Q</sub>[S<sub>T</sub>] · martingale check</span>
+              <span id="param-est" style="color: var(--text);">—</span>
+            </div>
+          </div>
+
+          <div class="learn-note">
+            <em>Tree parameters.</em> <strong>u</strong> and <strong>d</strong> are the multiplicative factors for an up/down move at each step. <strong>p</strong> is the <strong>risk-neutral</strong> probability of an up move — not the real-world probability; it's whatever value makes the tree consistent with no-arbitrage pricing. <strong>α</strong> is the per-step forward growth factor (<code>e^((r−q)Δt)</code>). <strong>Δt</strong> is the time per step. The whole tree is a discrete-time analog of geometric Brownian motion.<br><br>
+            <em>Martingale check.</em> Under the Q measure, expected terminal stock price must equal <code>S₀ · e^((r−q)T)</code>. The two numbers should always match exactly — if they ever didn't, the pricing engine would be broken.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Black-Scholes-Merton -->
+    <section class="panel">
+      <h2 class="panel-title">Black-Scholes-Merton</h2>
+      <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 14px;">
+        Closed-form European-option price under continuous trading and lognormal returns. For American options the binomial price above is correct; BSM is shown as the European reference.
+      </div>
+
+      <div class="results-grid">
+        <div>
+          <div class="price-display">
+            <div class="label">BSM Price (European)</div>
+            <div class="value"><span class="currency">$</span><span id="bsm-price">—</span></div>
+            <div class="meta" id="bsm-meta">—</div>
+          </div>
+
+          <div class="learn-note" id="learn-bsm-price">—</div>
+
+          <div class="bsm-intermediate">
+            <div class="bsm-int-row">
+              <span class="name"><em>d</em>₁</span>
+              <span class="val" id="bsm-d1">—</span>
+            </div>
+            <div class="bsm-int-row">
+              <span class="name"><em>N</em>(d₁)</span>
+              <span class="val" id="bsm-Nd1">—</span>
+            </div>
+            <div class="bsm-int-row">
+              <span class="name"><em>d</em>₂</span>
+              <span class="val" id="bsm-d2">—</span>
+            </div>
+            <div class="bsm-int-row">
+              <span class="name"><em>N</em>(d₂)</span>
+              <span class="val" id="bsm-Nd2">—</span>
+            </div>
+          </div>
+
+          <div class="learn-note" id="learn-d1d2">—</div>
+
+          <div style="margin-top: 14px; padding: 12px 14px; background: var(--bg-elevated); border-left: 2px solid var(--accent-dim); font-family: var(--mono); font-size: 11px; color: var(--text-muted); line-height: 1.7;">
+            <div style="color: var(--accent); margin-bottom: 6px; font-family: var(--serif); font-style: italic; font-size: 13px;">Interpretation</div>
+            <div style="margin-bottom: 4px;">
+              <span style="color: var(--text);">N(d₁)</span> ≈ option delta (also: present-value-adjusted exercise weight)
+            </div>
+            <div id="bsm-prob-interp">
+              <span style="color: var(--text);">N(d₂)</span> = risk-neutral probability the option finishes ITM
+            </div>
+          </div>
+
+          <div style="margin-top: 14px; padding: 12px; background: var(--bg-elevated); font-family: var(--mono); font-size: 11px; color: var(--text-muted); line-height: 1.7;">
+            <div style="color: var(--accent); margin-bottom: 4px;">For a call:</div>
+            <div>C = S·e<sup>−qT</sup>·N(d₁) − K·e<sup>−rT</sup>·N(d₂)</div>
+            <div style="color: var(--accent); margin: 8px 0 4px;">For a put:</div>
+            <div>P = K·e<sup>−rT</sup>·N(−d₂) − S·e<sup>−qT</sup>·N(−d₁)</div>
+          </div>
+        </div>
+
+        <div>
+          <div class="panel-section-label" style="margin-bottom: 14px;">Greeks (closed-form)</div>
+          <div class="greek-row">
+            <span class="greek-symbol">Δ</span>
+            <span class="greek-name">Delta</span>
+            <span class="greek-value" id="bsm-delta">—</span>
+          </div>
+          <div class="greek-row">
+            <span class="greek-symbol">Γ</span>
+            <span class="greek-name">Gamma</span>
+            <span class="greek-value" id="bsm-gamma">—</span>
+          </div>
+          <div class="greek-row">
+            <span class="greek-symbol">Θ</span>
+            <span class="greek-name">Theta (per yr)</span>
+            <span class="greek-value" id="bsm-theta">—</span>
+          </div>
+          <div class="greek-row">
+            <span class="greek-symbol">ν</span>
+            <span class="greek-name">Vega (per 1.0 σ)</span>
+            <span class="greek-value" id="bsm-vega">—</span>
+          </div>
+          <div class="greek-row">
+            <span class="greek-symbol">ρ</span>
+            <span class="greek-name">Rho (per 1.0 r)</span>
+            <span class="greek-value" id="bsm-rho">—</span>
+          </div>
+
+          <div class="learn-note" id="learn-bsm-greeks">—</div>
+
+          <!-- Implied volatility solver -->
+          <div style="margin-top: 22px; padding: 14px; background: var(--bg-elevated); border-left: 2px solid var(--accent);">
+            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px;">
+              <span style="font-family: var(--serif); font-style: italic; color: var(--accent); font-size: 14px;">Implied Volatility</span>
+              <span style="font-family: var(--mono); font-size: 9px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em;">Newton-Raphson</span>
+            </div>
+            <div style="color: var(--text-muted); font-family: var(--mono); font-size: 10px; line-height: 1.5; margin-bottom: 12px;">
+              The σ that makes BSM price equal the observed market price. What traders quote instead of price itself.
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: end;">
+              <div class="field" style="margin: 0;">
+                <label>Market Price <span class="hint">observed</span></label>
+                <input type="number" id="market-price" value="" step="0.01" placeholder="enter price">
+              </div>
+              <button onclick="solveIV()" style="padding: 9px 14px; background: var(--accent); color: var(--bg); border: none; font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; cursor: pointer; font-weight: 600;">Solve</button>
+            </div>
+            <div id="iv-result" style="margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); font-family: var(--mono); font-size: 11px; color: var(--text-muted); display: none;">
+            </div>
+          </div>
+
+          <div class="learn-note">
+            <em>Reading the IV.</em> The implied σ is the volatility that would make the BSM formula output exactly the market price you entered. If <strong>implied &gt; current σ</strong>, the market is pricing more volatility than you assumed — options look "expensive" relative to your view (consider selling vol). If <strong>implied &lt; current σ</strong>, options look "cheap" (consider buying vol). Traders quote options in IV rather than dollars because IV is comparable across strikes and expiries — a $5 option on stock A and a $50 option on stock B both quoted at "20 vol" tells you something meaningful.
+          </div>
+
+          <div style="margin-top: 18px; padding: 12px; background: var(--bg-elevated); border-left: 2px solid var(--accent-dim); font-family: var(--mono); font-size: 10px; color: var(--text-muted); line-height: 1.6;">
+            <span style="color: var(--accent);">Binomial vs BSM:</span> binomial Greeks come from finite differences on the tree (path-dependent, exact for American). BSM Greeks are closed-form derivatives of the price formula (European only). They should match as N→∞ for European cases.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Convergence chart -->
+    <section class="panel">
+      <h2 class="panel-title">Convergence with N</h2>
+      <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 4px;">
+        Binomial price as the tree is refined. European case converges to Black-Scholes; American adds early-exercise premium.
+      </div>
+      <svg id="convergence-chart" viewBox="0 0 800 280" preserveAspectRatio="none"></svg>
+      <div class="legend" id="convergence-legend"></div>
+      <div class="learn-note">
+        <em>Why the oscillation?</em> The red line zig-zags because of the famous <strong>CRR even/odd-N parity effect</strong>: at even N, a path can return precisely to the strike K; at odd N it can't. This creates two interleaved convergence patterns. The average of consecutive N's is much smoother and is sometimes used as a quick smoothing trick. <strong>N = 30</strong> is the lecture's "practice standard" — enough to be within a few cents of BSM for vanilla options. As N → ∞, the binomial price converges to the dashed BSM line.
+      </div>
+    </section>
+
+    <!-- Tree viz -->
+    <section class="panel">
+      <h2 class="panel-title">Lattice Visualization</h2>
+      <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 4px;">
+        Stock price (top) and option value (bottom) at each node. Red dot = early exercise optimal.
+      </div>
+      <div class="tree-container" id="tree-container"></div>
+      <div class="legend">
+        <div class="legend-item"><span class="legend-dot" style="background: var(--accent);"></span>Node</div>
+        <div class="legend-item"><span class="legend-dot" style="background: var(--exercise);"></span>Early exercise (American)</div>
+        <div class="legend-item"><span class="legend-dot" style="background: var(--bull);"></span>In the money</div>
+      </div>
+      <div class="learn-note">
+        <em>How to read each node.</em> Each box shows three numbers stacked: <strong>stock price</strong> at top, <strong>option value</strong> in the middle, <strong>local delta</strong> at the bottom (only for non-terminal nodes when N ≤ 4). Time flows left to right; each node branches into two prices on the next step. <strong>Red-outlined nodes</strong> are where early exercise is optimal for an American option — at those nodes, the intrinsic value (K−S for puts, S−K for calls) beats the value of waiting. Hover any node to see the intrinsic-vs-continuation breakdown.
+      </div>
+    </section>
+
+    <!-- Delta Hedging -->
+    <section class="panel">
+      <h2 class="panel-title">Delta Hedging</h2>
+      <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 4px;">
+        Δ is the number of shares to hold against one option to create a (locally) riskless portfolio. Because Δ changes as S and t evolve, the hedge must be rebalanced periodically — and σ is what determines Δ.
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1.4fr; gap: 24px; margin-top: 18px;">
+        <!-- Hedge composition -->
+        <div>
+          <div class="panel-section-label">Composition at t = 0</div>
+          <div class="hedge-box">
+            <div class="hedge-row">
+              <span class="hedge-label" id="hedge-action">Short 1 call</span>
+              <span class="hedge-val" id="hedge-premium" style="color: var(--bull);">+$0.00</span>
+            </div>
+            <div class="hedge-divider"></div>
+            <div class="hedge-row">
+              <span class="hedge-label" id="hedge-shares-action">Buy 0.000 shares</span>
+              <span class="hedge-val" id="hedge-shares-cost">−$0.00</span>
+            </div>
+            <div class="hedge-divider"></div>
+            <div class="hedge-row total">
+              <span class="hedge-label">Net cash (bond)</span>
+              <span class="hedge-val" id="hedge-net">$0.00</span>
+            </div>
+          </div>
+
+          <div style="margin-top: 16px; padding: 12px 14px; background: var(--bg-elevated); border-left: 2px solid var(--accent-dim); font-family: var(--mono); font-size: 11px; line-height: 1.6; color: var(--text-muted);">
+            <div style="margin-bottom: 8px;">
+              <span style="color: var(--accent);">σ used:</span>
+              <span id="hedge-sigma" style="color: var(--text); font-weight: 500;">0.00%</span>
+            </div>
+            Δ is highly sensitive to σ. A wrongly-priced σ produces a perfectly delta-hedged portfolio that still drifts in P&amp;L — this is <em style="color: var(--accent); font-family: var(--serif);">vega risk</em>. Volatility forecasting is the actual edge.
+          </div>
+
+          <div class="learn-note">
+            <em>The riskless portfolio identity.</em> This is the core trick from Black-Scholes' derivation. The combined position — short option plus Δ shares — has zero <strong>instantaneous</strong> P&amp;L regardless of which way the stock moves, because the option's value change (Δ · dS) exactly offsets the share P&amp;L (Δ · dS, opposite sign). That's why such a portfolio must earn the risk-free rate — there's no risk to compensate for. The catch: Δ itself changes as S moves (that's <strong>gamma</strong>), so the hedge needs continuous rebalancing. In practice you rebalance discretely and accept the slippage.
+          </div>
+        </div>
+
+        <!-- Delta curve -->
+        <div>
+          <div class="panel-section-label">Δ as a function of S — multiple times to expiry</div>
+          <svg id="delta-curve" viewBox="0 0 600 280" preserveAspectRatio="none" style="width: 100%; height: 280px; display: block;"></svg>
+          <div class="legend" id="delta-curve-legend"></div>
+          <div style="margin-top: 8px; color: var(--text-dim); font-family: var(--mono); font-size: 10px;">
+            Curves: Black-Scholes Δ at decreasing τ. Highlighted point: tree-computed Δ at current S₀. For American puts near the exercise boundary, tree Δ snaps to −1 while BS curve smooths.
+          </div>
+          <div class="learn-note">
+            <em>Reading the Δ curves.</em> The S-curve shape is the geometric signature of an option. <strong>Deep OTM</strong> (S far below K for calls, above K for puts): Δ ≈ 0, the option barely moves with the stock. <strong>ATM</strong> (S ≈ K): Δ ≈ 0.5 for calls, −0.5 for puts — the "coin flip" zone. <strong>Deep ITM</strong>: Δ ≈ 1 (calls) or −1 (puts), the option moves dollar-for-dollar with the stock. As <strong>τ → 0</strong> (expiry approaches), curves steepen toward a step function at K — small price moves can flip Δ violently, which is why short-dated options have huge gamma. Higher <strong>σ flattens</strong> the curves: with lots of remaining vol, even ITM positions could still go OTM, so Δ stays moderate.
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<footer>
+  Built for working through <em>Hull-style</em> binomial problems · risk-neutral pricing · all math derived from first principles
+</footer>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+// =============================================================================
+// Normal CDF (Abramowitz-Stegun, accurate to ~1e-7)
+// =============================================================================
+function normCdf(x) {
+  const a1 =  0.254829592, a2 = -0.284496736, a3 =  1.421413741;
+  const a4 = -1.453152027, a5 =  1.061405429, p  =  0.3275911;
+  const sign = x < 0 ? -1 : 1;
+  x = Math.abs(x) / Math.sqrt(2);
+  const t = 1.0 / (1.0 + p * x);
+  const y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
+  return 0.5 * (1.0 + sign * y);
+}
+
+// =============================================================================
+// Black-Scholes (with continuous dividend yield)
+// =============================================================================
+function blackScholes(S, K, T, r, q, sigma, type) {
+  if (T <= 0 || sigma <= 0) {
+    return type === 'call' ? Math.max(0, S - K) : Math.max(0, K - S);
+  }
+  const sqrtT = Math.sqrt(T);
+  const d1 = (Math.log(S / K) + (r - q + 0.5 * sigma * sigma) * T) / (sigma * sqrtT);
+  const d2 = d1 - sigma * sqrtT;
+  if (type === 'call') {
+    return S * Math.exp(-q * T) * normCdf(d1) - K * Math.exp(-r * T) * normCdf(d2);
+  } else {
+    return K * Math.exp(-r * T) * normCdf(-d2) - S * Math.exp(-q * T) * normCdf(-d1);
+  }
+}
+
+// Black-Scholes Delta (with continuous dividend yield)
+function bsDelta(S, K, tau, r, q, sigma, type) {
+  if (tau <= 0 || sigma <= 0) {
+    // At expiry: Δ is a step function
+    if (type === 'call') return S > K ? 1 : (S === K ? 0.5 : 0);
+    else return S < K ? -1 : (S === K ? -0.5 : 0);
+  }
+  const d1 = (Math.log(S / K) + (r - q + 0.5 * sigma * sigma) * tau) / (sigma * Math.sqrt(tau));
+  if (type === 'call') return Math.exp(-q * tau) * normCdf(d1);
+  else return -Math.exp(-q * tau) * normCdf(-d1);
+}
+
+// Standard normal PDF — needed for Greeks (Gamma, Vega, Theta have φ(d₁) terms)
+function normPdf(x) {
+  return Math.exp(-x * x / 2) / Math.sqrt(2 * Math.PI);
+}
+
+// Full Black-Scholes-Merton: returns price, all 5 Greeks analytically, plus intermediates
+function bsmFull(S, K, T, r, q, sigma, type) {
+  if (T <= 0 || sigma <= 0) {
+    return null;
+  }
+  const sqrtT = Math.sqrt(T);
+  const d1 = (Math.log(S / K) + (r - q + 0.5 * sigma * sigma) * T) / (sigma * sqrtT);
+  const d2 = d1 - sigma * sqrtT;
+  const Nd1 = normCdf(d1);
+  const Nd2 = normCdf(d2);
+  const Nmd1 = normCdf(-d1);
+  const Nmd2 = normCdf(-d2);
+  const phid1 = normPdf(d1);
+  const expQT = Math.exp(-q * T);
+  const expRT = Math.exp(-r * T);
+
+  let price, delta, theta, rho;
+  if (type === 'call') {
+    price = S * expQT * Nd1 - K * expRT * Nd2;
+    delta = expQT * Nd1;
+    theta = -S * phid1 * sigma * expQT / (2 * sqrtT) - r * K * expRT * Nd2 + q * S * expQT * Nd1;
+    rho = K * T * expRT * Nd2;
+  } else {
+    price = K * expRT * Nmd2 - S * expQT * Nmd1;
+    delta = -expQT * Nmd1;
+    theta = -S * phid1 * sigma * expQT / (2 * sqrtT) + r * K * expRT * Nmd2 - q * S * expQT * Nmd1;
+    rho = -K * T * expRT * Nmd2;
+  }
+  // Gamma and Vega are symmetric in call/put
+  const gamma = expQT * phid1 / (S * sigma * sqrtT);
+  const vega = S * expQT * phid1 * sqrtT;
+
+  return { price, delta, gamma, theta, vega, rho, d1, d2, Nd1, Nd2, Nmd1, Nmd2 };
+}
+
+// Implied volatility: solve BSM(σ) = marketPrice using Newton-Raphson
+// Returns { sigma, iters, converged } or null if no solution exists
+function impliedVol(marketPrice, S, K, T, r, q, type) {
+  // Arbitrage bounds check — price must lie between intrinsic and forward bounds
+  const expQT = Math.exp(-q * T);
+  const expRT = Math.exp(-r * T);
+  const intrinsic = type === 'call'
+    ? Math.max(0, S * expQT - K * expRT)
+    : Math.max(0, K * expRT - S * expQT);
+  const upperBound = type === 'call' ? S * expQT : K * expRT;
+  if (marketPrice < intrinsic - 1e-6 || marketPrice > upperBound + 1e-6) {
+    return { sigma: null, iters: 0, converged: false, reason: 'arbitrage' };
+  }
+
+  let sigma = 0.3; // sensible starting point
+  const maxIter = 100;
+  const tol = 1e-7;
+
+  for (let i = 0; i < maxIter; i++) {
+    const bsm = bsmFull(S, K, T, r, q, sigma, type);
+    if (!bsm) return null;
+    const diff = bsm.price - marketPrice;
+    if (Math.abs(diff) < tol) {
+      return { sigma, iters: i + 1, converged: true };
+    }
+    if (bsm.vega < 1e-10) {
+      // Vega too small (deep OTM/ITM) → switch to bisection fallback
+      return bisectIV(marketPrice, S, K, T, r, q, type);
+    }
+    sigma = sigma - diff / bsm.vega;
+    // Keep sigma in (0, 5) — beyond 500% vol is unrealistic
+    if (sigma <= 0.0001) sigma = 0.01;
+    if (sigma > 5) sigma = 5;
+  }
+  return { sigma, iters: maxIter, converged: false };
+}
+
+// Bisection fallback for cases where Newton-Raphson struggles (very low vega)
+function bisectIV(marketPrice, S, K, T, r, q, type) {
+  let lo = 0.0001, hi = 5;
+  for (let i = 0; i < 100; i++) {
+    const mid = (lo + hi) / 2;
+    const bsm = bsmFull(S, K, T, r, q, mid, type);
+    if (!bsm) return null;
+    const diff = bsm.price - marketPrice;
+    if (Math.abs(diff) < 1e-6) {
+      return { sigma: mid, iters: i + 1, converged: true };
+    }
+    if (diff > 0) hi = mid; else lo = mid;
+  }
+  return { sigma: (lo + hi) / 2, iters: 100, converged: false };
+}
+
+// =============================================================================
+// CRR Binomial Pricer
+// Returns price, full lattice, Greeks, early-exercise flags
+// =============================================================================
+function payoff(S, K, type) {
+  return type === 'call' ? Math.max(0, S - K) : Math.max(0, K - S);
+}
+
+function binomial(S0, K, T, r, q, N, type, style, uIn, dIn) {
+  const dt = T / N;
+  const u = uIn;
+  const d = dIn;
+  const a = Math.exp((r - q) * dt);
+  const p = (a - d) / (u - d);
+  const disc = Math.exp(-r * dt);
+
+  // Stock price lattice
+  const S = [];
+  for (let i = 0; i <= N; i++) {
+    S.push([]);
+    for (let j = 0; j <= i; j++) {
+      S[i].push(S0 * Math.pow(u, j) * Math.pow(d, i - j));
+    }
+  }
+
+  // Option value lattice + early-exercise flag lattice
+  const V = [];
+  const EX = [];
+  for (let i = 0; i <= N; i++) {
+    V.push(new Array(i + 1));
+    EX.push(new Array(i + 1).fill(false));
+  }
+
+  // Terminal payoffs
+  for (let j = 0; j <= N; j++) V[N][j] = payoff(S[N][j], K, type);
+
+  // Backward induction
+  for (let i = N - 1; i >= 0; i--) {
+    for (let j = 0; j <= i; j++) {
+      const continuation = disc * (p * V[i + 1][j + 1] + (1 - p) * V[i + 1][j]);
+      if (style === 'american') {
+        const intrinsic = payoff(S[i][j], K, type);
+        if (intrinsic > continuation) {
+          V[i][j] = intrinsic;
+          EX[i][j] = true;
+        } else {
+          V[i][j] = continuation;
+        }
+      } else {
+        V[i][j] = continuation;
+      }
+    }
+  }
+
+  // Delta lattice: at every non-terminal node, Δ(i,j) = (V_up − V_down) / (S_up − S_down)
+  // This is the lecture's Δ = (f_u − f_d) / (S₀u − S₀d), generalized to every node.
+  const D = [];
+  for (let i = 0; i < N; i++) {
+    D.push([]);
+    for (let j = 0; j <= i; j++) {
+      D[i].push((V[i + 1][j + 1] - V[i + 1][j]) / (S[i + 1][j + 1] - S[i + 1][j]));
+    }
+  }
+
+  // Greeks from the tree
+  let delta = null, gamma = null, theta = null;
+  if (N >= 1) {
+    delta = (V[1][1] - V[1][0]) / (S[1][1] - S[1][0]);
+  }
+  if (N >= 2) {
+    const deltaUp   = (V[2][2] - V[2][1]) / (S[2][2] - S[2][1]);
+    const deltaDown = (V[2][1] - V[2][0]) / (S[2][1] - S[2][0]);
+    gamma = (deltaUp - deltaDown) / ((S[2][2] - S[2][0]) / 2);
+    theta = (V[2][1] - V[0][0]) / (2 * dt);
+  }
+
+  return { price: V[0][0], delta, gamma, theta, S, V, EX, D, u, d, p, dt, disc };
+}
+
+// CRR parameters from sigma
+function crrParams(sigma, dt) {
+  const u = Math.exp(sigma * Math.sqrt(dt));
+  const d = 1 / u;
+  return { u, d };
+}
+
+// Sigma implied by a given (u, d) under CRR convention
+function impliedSigma(u, dt) {
+  return Math.log(u) / Math.sqrt(dt);
+}
+
+// =============================================================================
+// State + UI wiring
+// =============================================================================
+const state = {
+  type: 'call',
+  style: 'european',
+  param: 'crr',
+  asset: 'stock',
+  dividends: [],  // array of {amount, time} for discrete dividends
+};
+
+function pvDividends(divs, r) {
+  return divs.reduce((sum, d) => {
+    if (d.amount > 0 && d.time > 0) {
+      return sum + d.amount * Math.exp(-r * d.time);
+    }
+    return sum;
+  }, 0);
+}
+
+function getInputs() {
+  const S0raw = +document.getElementById('S0').value;
+  const K  = +document.getElementById('K').value;
+  const T  = +document.getElementById('T').value;
+  const r  = +document.getElementById('r').value / 100;
+  let q    = +document.getElementById('q').value / 100;
+  const N  = Math.max(1, Math.min(500, Math.round(+document.getElementById('N').value)));
+  const sigma = +document.getElementById('sigma').value / 100;
+  const uIn = +document.getElementById('u').value;
+  const dIn = +document.getElementById('d').value;
+  // Asset-type overrides
+  if (state.asset === 'stock')   q = 0;
+  if (state.asset === 'futures') q = r;
+
+  // Discrete-dividend adjustment: subtract PV of dividends from S₀
+  // (Hull's method — only meaningful for stocks; ignored for index/FX/futures)
+  const validDivs = state.dividends.filter(
+    d => d.amount > 0 && d.time > 0 && d.time <= T
+  );
+  const pvDivs = (state.asset === 'stock') ? pvDividends(validDivs, r) : 0;
+  const S0 = S0raw - pvDivs;
+
+  return { S0, S0raw, K, T, r, q, N, sigma, uIn, dIn, pvDivs };
+}
+
+function getUD(inputs) {
+  if (state.param === 'crr') {
+    const dt = inputs.T / inputs.N;
+    return crrParams(inputs.sigma, dt);
+  } else {
+    return { u: inputs.uIn, d: inputs.dIn };
+  }
+}
+
+// Effective sigma for BS comparison (whatever the user is using)
+function effectiveSigma(inputs) {
+  if (state.param === 'crr') return inputs.sigma;
+  const dt = inputs.T / inputs.N;
+  return impliedSigma(inputs.uIn, dt);
+}
+
+// =============================================================================
+// Formatting helpers
+// =============================================================================
+function fmt(x, dp = 4) {
+  if (x === null || x === undefined || !isFinite(x)) return '—';
+  return x.toFixed(dp);
+}
+function fmtPct(x, dp = 2) {
+  if (x === null || x === undefined || !isFinite(x)) return '—';
+  return (x * 100).toFixed(dp) + '%';
+}
+
+// =============================================================================
+// Main render
+// =============================================================================
+function render() {
+  const inp = getInputs();
+  const { u, d } = getUD(inp);
+
+  // Validity checks
+  const dt = inp.T / inp.N;
+  const a = Math.exp((inp.r - inp.q) * dt);
+  if (d >= a || a >= u) {
+    document.getElementById('price').textContent = 'arb';
+    document.getElementById('price-meta').textContent =
+      'No-arbitrage violated: need d < e^((r−q)Δt) < u';
+    return;
+  }
+  if (u <= 1 || d >= 1 || d <= 0) {
+    document.getElementById('price').textContent = 'invalid';
+    document.getElementById('price-meta').textContent =
+      'Need u > 1, 0 < d < 1';
+    return;
+  }
+
+  const res = binomial(inp.S0, inp.K, inp.T, inp.r, inp.q, inp.N,
+                       state.type, state.style, u, d);
+
+  // Price + meta
+  document.getElementById('price').textContent = fmt(res.price, 4);
+  document.getElementById('price-meta').textContent =
+    `${state.style === 'american' ? 'American' : 'European'} ${state.type.toUpperCase()} · ${inp.N} steps · ${state.param === 'crr' ? 'CRR' : 'custom u/d'}`;
+
+  // BS reference (European only is exact comparison; for American it's the European reference)
+  const sigEff = effectiveSigma(inp);
+  const bsPrice = blackScholes(inp.S0, inp.K, inp.T, inp.r, inp.q, sigEff, state.type);
+  document.getElementById('bs-price').textContent = fmt(bsPrice, 4);
+  document.getElementById('bs-diff').textContent =
+    (res.price - bsPrice >= 0 ? '+' : '') + fmt(res.price - bsPrice, 4);
+
+  // Early exercise premium = American price − European price (compute both for same inputs)
+  if (state.style === 'american') {
+    const euRes = binomial(inp.S0, inp.K, inp.T, inp.r, inp.q, inp.N,
+                           state.type, 'european', u, d);
+    const premium = res.price - euRes.price;
+    document.getElementById('early-ex-row').style.display = 'flex';
+    document.getElementById('early-ex-val').textContent =
+      (premium >= 0 ? '+' : '') + fmt(premium, 4);
+  } else {
+    document.getElementById('early-ex-row').style.display = 'none';
+  }
+
+  // Greeks
+  document.getElementById('delta').textContent = fmt(res.delta, 4);
+  document.getElementById('gamma').textContent = fmt(res.gamma, 5);
+  document.getElementById('theta').textContent = fmt(res.theta, 4);
+
+  // Vega (bump σ by 1%) — only applicable in CRR mode
+  if (state.param === 'crr') {
+    const bumpedSig = inp.sigma + 0.01;
+    const bumpedDt = inp.T / inp.N;
+    const bumpedU = Math.exp(bumpedSig * Math.sqrt(bumpedDt));
+    const bumpedD = 1 / bumpedU;
+    const bumped = binomial(inp.S0, inp.K, inp.T, inp.r, inp.q, inp.N,
+                            state.type, state.style, bumpedU, bumpedD);
+    document.getElementById('vega').textContent = fmt(bumped.price - res.price, 4);
+  } else {
+    document.getElementById('vega').textContent = 'n/a (custom u/d)';
+  }
+
+  // Rho (bump r by 1%)
+  const bumpedRho = binomial(inp.S0, inp.K, inp.T, inp.r + 0.01, inp.q, inp.N,
+                             state.type, state.style, u, d);
+  document.getElementById('rho').textContent = fmt(bumpedRho.price - res.price, 4);
+
+  // Tree params
+  document.getElementById('param-sigma').textContent = (effectiveSigma(inp) * 100).toFixed(2) + '%';
+  document.getElementById('param-u').textContent  = fmt(res.u, 5);
+  document.getElementById('param-d').textContent  = fmt(res.d, 5);
+  document.getElementById('param-alpha').textContent = fmt(Math.exp((inp.r - inp.q) * res.dt), 5);
+  document.getElementById('param-p').textContent  = fmt(res.p, 5);
+  document.getElementById('param-dt').textContent = fmt(res.dt, 5);
+
+  // E[S_T] under Q: should equal S0 * exp((r-q)*T) — the martingale property
+  // Compute via terminal distribution
+  let est = 0;
+  for (let j = 0; j <= inp.N; j++) {
+    // Binomial probability of j ups in N steps under Q
+    let binCoef = 1;
+    for (let k = 0; k < j; k++) binCoef *= (inp.N - k) / (k + 1);
+    est += binCoef * Math.pow(res.p, j) * Math.pow(1 - res.p, inp.N - j) * res.S[inp.N][j];
+  }
+  const estTheory = inp.S0 * Math.exp((inp.r - inp.q) * inp.T);
+  document.getElementById('param-est').textContent =
+    `${fmt(est, 4)}   (theory: ${fmt(estTheory, 4)})`;
+
+  // Convergence chart
+  drawConvergence(inp);
+
+  // Tree
+  drawTree(inp, res);
+
+  // Delta Hedging panel
+  updateHedge(inp, res);
+  drawDeltaCurve(inp, res);
+
+  // BSM panel
+  updateBSM(inp);
+
+  // Dividend summary
+  updateDividendSummary(inp);
+
+  // Learn-mode dynamic explanations
+  updateLearnNotes(inp, res);
+}
+
+// =============================================================================
+// Learn mode — toggle visibility and populate dynamic explanations
+// =============================================================================
+function toggleLearnMode() {
+  document.body.classList.toggle('learn-on');
+  document.getElementById('learn-toggle').classList.toggle('active');
+}
+
+function updateLearnNotes(inp, res) {
+  const isCall = state.type === 'call';
+  const isAmerican = state.style === 'american';
+  const sigEff = effectiveSigma(inp);
+  const bsm = bsmFull(inp.S0, inp.K, inp.T, inp.r, inp.q, sigEff, state.type);
+
+  // ─── Option Premium ───────────────────────────────────────────────────────
+  const verb = isCall ? 'buy' : 'sell';
+  const action = isCall ? 'rise above' : 'fall below';
+  const styleNote = isAmerican
+    ? `Because this is American, you can exercise at any time before expiry.`
+    : `Because this is European, exercise only at expiry T.`;
+  document.getElementById('learn-premium').innerHTML = `
+    <em>What this number is.</em> The premium <strong>$${res.price.toFixed(4)}</strong> is what
+    you'd pay today for the right (not obligation) to ${verb} the underlying at <code>K = ${inp.K}</code>
+    until <code>T = ${inp.T} years</code>. ${styleNote} The binomial tree computes this as the
+    risk-neutral expected payoff at expiry, discounted backward step by step at the risk-free rate.
+    Your option will gain value if the underlying tends to ${action} the strike before expiry.
+  `;
+
+  // ─── Greeks (consolidated) ────────────────────────────────────────────────
+  const dailyTheta = res.theta !== null ? res.theta / 365 : 0;
+  const vegaPer1Pct = bsm ? bsm.vega / 100 : 0;
+  const rhoPer1Pct = bsm ? bsm.rho / 100 : 0;
+  document.getElementById('learn-greeks').innerHTML = `
+    <em>Reading the Greeks.</em><br>
+    <strong>Δ = ${res.delta !== null ? res.delta.toFixed(4) : '—'}</strong> →
+      per $1 move in the underlying, this option's value moves by ≈ $${res.delta !== null ? Math.abs(res.delta).toFixed(4) : '—'}
+      (${isCall ? 'same direction' : 'opposite direction'}). Also: shares you'd hold against one short option to hedge.<br>
+    <strong>Γ = ${res.gamma !== null ? res.gamma.toFixed(5) : '—'}</strong> →
+      Δ shifts by this much per $1 stock move. High Γ means your hedge drifts fast and needs frequent rebalancing.<br>
+    <strong>Θ = ${res.theta !== null ? res.theta.toFixed(4) : '—'} / year</strong> →
+      ≈ $${Math.abs(dailyTheta).toFixed(4)} of value bleed per day from time passing.
+      Long options lose this; short options earn it as carry.<br>
+    <strong>ν (vega)</strong> → per <strong>1 percentage point</strong> rise in σ (e.g. 30% → 31%), option gains ≈ $${Math.abs(vegaPer1Pct).toFixed(4)}.
+      This is your exposure to volatility being mispriced.<br>
+    <strong>ρ (rho)</strong> → per 1 pp rise in r (e.g. 5% → 6%), option value changes by ≈ $${Math.abs(rhoPer1Pct).toFixed(4)}.
+      Usually the smallest Greek; only matters for long-dated options.
+  `;
+
+  // ─── BSM Price ────────────────────────────────────────────────────────────
+  if (bsm) {
+    const americanNote = isAmerican
+      ? `<strong style="color: var(--exercise);">Important:</strong> for American options, BSM <em>understates</em> the price because it ignores early exercise. The binomial price above (which does account for it) is the correct one to use.`
+      : `For European options, the binomial price above converges here as N → ∞.`;
+    document.getElementById('learn-bsm-price').innerHTML = `
+      <em>What this number is.</em> The BSM closed-form price <strong>$${bsm.price.toFixed(4)}</strong>
+      assumes the underlying follows geometric Brownian motion (lognormal returns), trading is continuous,
+      and rates &amp; vol are constant. ${americanNote}
+    `;
+
+    // ─── d₁ and d₂ ──────────────────────────────────────────────────────────
+    const callPutTerms = isCall
+      ? `For calls: <strong>N(d₂) = ${(bsm.Nd2*100).toFixed(2)}%</strong> is the risk-neutral probability of finishing ITM. <strong>N(d₁) = ${bsm.Nd1.toFixed(4)}</strong> is closely related to delta (for non-dividend stocks, it <em>is</em> delta).`
+      : `For puts: <strong>N(−d₂) = ${(bsm.Nmd2*100).toFixed(2)}%</strong> is the risk-neutral probability of finishing ITM. <strong>N(−d₁) = ${bsm.Nmd1.toFixed(4)}</strong> is related to (negative) delta.`;
+    document.getElementById('learn-d1d2').innerHTML = `
+      <em>What d₁ and d₂ actually mean.</em> They're standardized "how far in-the-money" measures, scaled by volatility and time. Roughly: <code>d ≈ moneyness / (σ√T)</code>. The bigger d is, the deeper ITM the option is in vol-normalized units. <strong>d₂ = d₁ − σ√T</strong> — they differ by exactly one standard deviation of log-returns over the option's life. Running them through the standard normal CDF gives the two "probabilities" that appear in the price formula. ${callPutTerms}<br><br>
+      <strong>Crucial subtlety:</strong> these are <strong>risk-neutral</strong> probabilities, not real-world ones. Under Q, the stock drifts at r, not at its true expected return μ. Real-world probability of exercise is usually <em>higher</em> than N(d₂) for stocks with positive risk premia.
+    `;
+
+    // ─── BSM Greeks (note about closed-form vs tree) ────────────────────────
+    document.getElementById('learn-bsm-greeks').innerHTML = `
+      <em>Closed-form vs tree Greeks.</em> These BSM Greeks are exact derivatives of the price formula — analytical, not numerical. The Greeks in the Valuation panel above are <strong>finite differences on the tree</strong>: same idea, computed differently. For European options at large N they should match closely. For American options, the tree Greeks are the correct ones to trust because they account for early exercise; BSM Greeks here are for reference only.<br><br>
+      <strong>Vega</strong> here is per <em>1.0 of σ</em> (i.e. moving σ from 0.30 to 1.30 = +100 percentage points). Divide by 100 for the realistic "per 1%" figure. Same convention for rho.
+    `;
+  }
+}
+
+// =============================================================================
+// Black-Scholes-Merton panel
+// =============================================================================
+function updateBSM(inp) {
+  const sigEff = effectiveSigma(inp);
+  const bsm = bsmFull(inp.S0, inp.K, inp.T, inp.r, inp.q, sigEff, state.type);
+
+  if (!bsm) {
+    document.getElementById('bsm-price').textContent = '—';
+    document.getElementById('bsm-meta').textContent = 'T and σ must be positive';
+    return;
+  }
+
+  document.getElementById('bsm-price').textContent = fmt(bsm.price, 4);
+  document.getElementById('bsm-meta').textContent =
+    `European ${state.type.toUpperCase()} · σ = ${(sigEff * 100).toFixed(2)}%${
+      inp.pvDivs > 0 ? ` · using S₀ adj = ${inp.S0.toFixed(4)}` : ''
+    }`;
+
+  // Intermediates — show the values that actually appear in the formula for the chosen type
+  document.getElementById('bsm-d1').textContent = fmt(bsm.d1, 4);
+  document.getElementById('bsm-d2').textContent = fmt(bsm.d2, 4);
+  if (state.type === 'call') {
+    document.getElementById('bsm-Nd1').textContent = fmt(bsm.Nd1, 4);
+    document.getElementById('bsm-Nd2').textContent = fmt(bsm.Nd2, 4);
+    document.getElementById('bsm-prob-interp').innerHTML =
+      `<span style="color: var(--text);">N(d₂) = ${(bsm.Nd2 * 100).toFixed(2)}%</span> risk-neutral probability the call finishes ITM (S<sub>T</sub> > K)`;
+  } else {
+    document.getElementById('bsm-Nd1').textContent = fmt(bsm.Nmd1, 4) + '  [N(−d₁)]';
+    document.getElementById('bsm-Nd2').textContent = fmt(bsm.Nmd2, 4) + '  [N(−d₂)]';
+    document.getElementById('bsm-prob-interp').innerHTML =
+      `<span style="color: var(--text);">N(−d₂) = ${(bsm.Nmd2 * 100).toFixed(2)}%</span> risk-neutral probability the put finishes ITM (S<sub>T</sub> < K)`;
+  }
+
+  // Greeks
+  document.getElementById('bsm-delta').textContent = fmt(bsm.delta, 4);
+  document.getElementById('bsm-gamma').textContent = fmt(bsm.gamma, 5);
+  document.getElementById('bsm-theta').textContent = fmt(bsm.theta, 4);
+  document.getElementById('bsm-vega').textContent  = fmt(bsm.vega, 4);
+  document.getElementById('bsm-rho').textContent   = fmt(bsm.rho, 4);
+}
+
+// Implied volatility solver — triggered by Solve button
+function solveIV() {
+  const inp = getInputs();
+  const marketPrice = +document.getElementById('market-price').value;
+  const resultEl = document.getElementById('iv-result');
+
+  if (!marketPrice || marketPrice <= 0) {
+    resultEl.style.display = 'block';
+    resultEl.innerHTML = '<span style="color: var(--bear);">Enter a positive market price.</span>';
+    return;
+  }
+
+  const result = impliedVol(marketPrice, inp.S0, inp.K, inp.T, inp.r, inp.q, state.type);
+
+  if (!result || result.sigma === null) {
+    resultEl.style.display = 'block';
+    resultEl.innerHTML = `<span style="color: var(--bear);">No solution — price violates arbitrage bounds.</span><br>
+      <span style="color: var(--text-dim); font-size: 10px;">Intrinsic ≤ market ≤ Se<sup>−qT</sup> (call) or Ke<sup>−rT</sup> (put)</span>`;
+    return;
+  }
+
+  const sigEff = effectiveSigma(inp);
+  const ivPct = (result.sigma * 100).toFixed(2);
+  const currPct = (sigEff * 100).toFixed(2);
+  const diff = (result.sigma - sigEff) * 100;
+  const cmpColor = Math.abs(diff) < 0.5 ? 'var(--text-muted)' : (diff > 0 ? 'var(--bull)' : 'var(--bear)');
+  const cmpSign = diff > 0 ? '+' : '';
+  const convergenceMsg = result.converged
+    ? `${result.iters} iter${result.iters > 1 ? 's' : ''} · converged`
+    : `${result.iters} iters · did not converge`;
+
+  resultEl.style.display = 'block';
+  resultEl.innerHTML = `
+    <div style="display: flex; justify-content: space-between; align-items: baseline;">
+      <span style="color: var(--text-muted);">Implied σ</span>
+      <span style="color: var(--accent); font-size: 16px; font-weight: 600;">${ivPct}%</span>
+    </div>
+    <div style="display: flex; justify-content: space-between; margin-top: 4px;">
+      <span style="color: var(--text-muted);">vs current σ (${currPct}%)</span>
+      <span style="color: ${cmpColor};">${cmpSign}${diff.toFixed(2)}%</span>
+    </div>
+    <div style="color: var(--text-dim); font-size: 10px; margin-top: 6px;">${convergenceMsg}</div>
+  `;
+}
+
+// =============================================================================
+// Discrete Dividends
+// =============================================================================
+function addDividend() {
+  state.dividends.push({ amount: 0.5, time: 0.25 });
+  renderDividendList();
+  render();
+}
+
+function removeDividend(i) {
+  state.dividends.splice(i, 1);
+  renderDividendList();
+  render();
+}
+
+function updateDividend(i, field, value) {
+  state.dividends[i][field] = +value;
+  render();
+}
+
+function renderDividendList() {
+  const list = document.getElementById('dividend-list');
+  const header = document.getElementById('div-header');
+  const summary = document.getElementById('div-summary');
+  if (state.dividends.length === 0) {
+    list.innerHTML = '';
+    header.style.display = 'none';
+    summary.style.display = 'none';
+    return;
+  }
+  header.style.display = 'grid';
+  summary.style.display = 'block';
+  list.innerHTML = state.dividends.map((d, i) => `
+    <div class="div-row">
+      <input type="number" value="${d.amount}" step="0.05" min="0"
+             oninput="updateDividend(${i}, 'amount', this.value)">
+      <input type="number" value="${d.time}" step="0.05" min="0"
+             oninput="updateDividend(${i}, 'time', this.value)">
+      <button class="div-remove" onclick="removeDividend(${i})">×</button>
+    </div>
+  `).join('');
+}
+
+function updateDividendSummary(inp) {
+  document.getElementById('pv-divs').textContent = '$' + inp.pvDivs.toFixed(4);
+  document.getElementById('adj-s0').textContent = '$' + inp.S0.toFixed(4);
+}
+
+// =============================================================================
+// Convergence chart
+// =============================================================================
+function drawConvergence(inp) {
+  const svg = document.getElementById('convergence-chart');
+  svg.innerHTML = '';
+
+  const Nmax = 100;
+  const prices = [];
+  const euPrices = [];
+
+  for (let N = 1; N <= Nmax; N++) {
+    let ud;
+    if (state.param === 'crr') {
+      const dt = inp.T / N;
+      ud = crrParams(inp.sigma, dt);
+    } else {
+      // for custom u/d, holding u,d fixed doesn't really converge — just show fixed
+      ud = { u: inp.uIn, d: inp.dIn };
+    }
+    const r = binomial(inp.S0, inp.K, inp.T, inp.r, inp.q, N,
+                       state.type, state.style, ud.u, ud.d);
+    prices.push(r.price);
+    if (state.style === 'american') {
+      const re = binomial(inp.S0, inp.K, inp.T, inp.r, inp.q, N,
+                          state.type, 'european', ud.u, ud.d);
+      euPrices.push(re.price);
+    }
+  }
+
+  const sigEff = effectiveSigma(inp);
+  const bsPrice = blackScholes(inp.S0, inp.K, inp.T, inp.r, inp.q, sigEff, state.type);
+
+  // Chart dims
+  const W = 800, H = 280;
+  const padL = 50, padR = 20, padT = 20, padB = 32;
+  const innerW = W - padL - padR;
+  const innerH = H - padT - padB;
+
+  // Y range
+  let allVals = prices.slice();
+  if (euPrices.length) allVals = allVals.concat(euPrices);
+  allVals.push(bsPrice);
+  const yMin = Math.min(...allVals);
+  const yMax = Math.max(...allVals);
+  const yPad = (yMax - yMin) * 0.15 || 0.1;
+  const y0 = yMin - yPad;
+  const y1 = yMax + yPad;
+
+  const xScale = N => padL + ((N - 1) / (Nmax - 1)) * innerW;
+  const yScale = v => padT + (1 - (v - y0) / (y1 - y0)) * innerH;
+
+  // Grid
+  const gridLines = 5;
+  for (let i = 0; i <= gridLines; i++) {
+    const yVal = y0 + (y1 - y0) * (i / gridLines);
+    const yPx = yScale(yVal);
+    svg.innerHTML += `<line x1="${padL}" y1="${yPx}" x2="${W - padR}" y2="${yPx}" stroke="#222" stroke-width="0.5"/>`;
+    svg.innerHTML += `<text x="${padL - 6}" y="${yPx + 4}" fill="#5a5550" font-family="JetBrains Mono" font-size="10" text-anchor="end">${yVal.toFixed(3)}</text>`;
+  }
+
+  // X axis labels
+  [1, 25, 50, 75, 100].forEach(N => {
+    const xPx = xScale(N);
+    svg.innerHTML += `<text x="${xPx}" y="${H - padB + 18}" fill="#5a5550" font-family="JetBrains Mono" font-size="10" text-anchor="middle">${N}</text>`;
+  });
+
+  // BS reference line
+  if (state.style === 'european' && inp.q >= 0) {
+    const bsY = yScale(bsPrice);
+    svg.innerHTML += `<line x1="${padL}" y1="${bsY}" x2="${W - padR}" y2="${bsY}" stroke="#d4a574" stroke-width="1" stroke-dasharray="4,4" opacity="0.6"/>`;
+    svg.innerHTML += `<text x="${W - padR - 4}" y="${bsY - 6}" fill="#d4a574" font-family="JetBrains Mono" font-size="10" text-anchor="end">BS = ${bsPrice.toFixed(4)}</text>`;
+  }
+
+  // N=30 reference marker — "practice standard" per slide 16
+  const x30 = xScale(30);
+  svg.innerHTML += `<line x1="${x30}" y1="${padT}" x2="${x30}" y2="${H - padB}" stroke="#5a5550" stroke-width="0.5" stroke-dasharray="2,3" opacity="0.7"/>`;
+  svg.innerHTML += `<text x="${x30 + 4}" y="${padT + 12}" fill="#5a5550" font-family="JetBrains Mono" font-size="9">N=30 · practice std</text>`;
+
+  // European line (background reference for American)
+  if (euPrices.length) {
+    let path = '';
+    euPrices.forEach((v, i) => {
+      const x = xScale(i + 1);
+      const y = yScale(v);
+      path += (i === 0 ? 'M' : 'L') + x + ',' + y;
+    });
+    svg.innerHTML += `<path d="${path}" fill="none" stroke="#8a6a4a" stroke-width="1" opacity="0.7"/>`;
+  }
+
+  // Main binomial line
+  let path = '';
+  prices.forEach((v, i) => {
+    const x = xScale(i + 1);
+    const y = yScale(v);
+    path += (i === 0 ? 'M' : 'L') + x + ',' + y;
+  });
+  const lineColor = state.type === 'call' ? '#6fbf8a' : '#d47362';
+  svg.innerHTML += `<path d="${path}" fill="none" stroke="${lineColor}" stroke-width="1.5"/>`;
+
+  // Highlight current N
+  const currentN = Math.min(inp.N, Nmax);
+  if (currentN <= Nmax) {
+    const cx = xScale(currentN);
+    const cy = yScale(prices[currentN - 1]);
+    svg.innerHTML += `<line x1="${cx}" y1="${padT}" x2="${cx}" y2="${H - padB}" stroke="#ebe3d0" stroke-width="0.5" opacity="0.4"/>`;
+    svg.innerHTML += `<circle cx="${cx}" cy="${cy}" r="4" fill="${lineColor}" stroke="#0a0a0a" stroke-width="1.5"/>`;
+    svg.innerHTML += `<text x="${cx + 8}" y="${cy - 6}" fill="${lineColor}" font-family="JetBrains Mono" font-size="11" font-weight="500">N=${currentN}</text>`;
+  }
+
+  // Axis labels
+  svg.innerHTML += `<text x="${padL + innerW / 2}" y="${H - 4}" fill="#8c8479" font-family="JetBrains Mono" font-size="10" text-anchor="middle">N (tree steps)</text>`;
+  svg.innerHTML += `<text x="14" y="${padT + innerH / 2}" fill="#8c8479" font-family="JetBrains Mono" font-size="10" text-anchor="middle" transform="rotate(-90, 14, ${padT + innerH / 2})">Option price</text>`;
+
+  // Legend
+  const legend = document.getElementById('convergence-legend');
+  let legendHtml = `<div class="legend-item"><span class="legend-dot" style="background: ${lineColor}"></span>Binomial · ${state.style} ${state.type}</div>`;
+  if (euPrices.length) {
+    legendHtml += `<div class="legend-item"><span class="legend-dot" style="background: #8a6a4a"></span>European reference</div>`;
+  }
+  if (state.style === 'european') {
+    legendHtml += `<div class="legend-item"><span class="legend-dot" style="background: #d4a574"></span>Black-Scholes limit</div>`;
+  }
+  legend.innerHTML = legendHtml;
+}
+
+// =============================================================================
+// Tree visualization
+// =============================================================================
+function drawTree(inp, res) {
+  const container = document.getElementById('tree-container');
+  const N = inp.N;
+  const MAX_DISPLAY = 8;
+
+  if (N > MAX_DISPLAY) {
+    container.innerHTML = `<div class="tree-empty">Tree visualization shown for N ≤ ${MAX_DISPLAY}.<br>Current N = ${N}.<br><br>Reduce N to inspect the lattice node-by-node.</div>`;
+    return;
+  }
+
+  // Recompute with the actual N for the tree (already done; res contains it)
+  const S = res.S, V = res.V, EX = res.EX;
+
+  // SVG layout
+  const nodeR = 28;
+  const xSpacing = 110;
+  const ySpacing = 80;
+  const padX = 40, padY = 50;
+  const showDelta = (N <= 4);
+  const nodeH = showDelta ? 62 : 44;
+  const W = padX * 2 + xSpacing * N;
+  const H = padY * 2 + ySpacing * N + nodeH;
+
+  const xPos = i => padX + i * xSpacing;
+  // Up moves (higher j) render ABOVE the parent → smaller y in SVG
+  const yPos = (i, j) => H / 2 + (i * ySpacing) / 2 - j * ySpacing;
+
+  let svg = `<svg id="tree-svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">`;
+
+  // Draw edges first
+  for (let i = 0; i < N; i++) {
+    for (let j = 0; j <= i; j++) {
+      const x1 = xPos(i), y1 = yPos(i, j);
+      const x2u = xPos(i + 1), y2u = yPos(i + 1, j + 1);
+      const x2d = xPos(i + 1), y2d = yPos(i + 1, j);
+      svg += `<line x1="${x1}" y1="${y1}" x2="${x2u}" y2="${y2u}" stroke="#3a3733" stroke-width="0.8"/>`;
+      svg += `<line x1="${x1}" y1="${y1}" x2="${x2d}" y2="${y2d}" stroke="#3a3733" stroke-width="0.8"/>`;
+    }
+  }
+
+  // Edge probability labels — only on the root's two outgoing edges for clarity
+  if (N <= 4) {
+    const x1 = xPos(0), y1 = yPos(0, 0);
+    const x2u = xPos(1), y2u = yPos(1, 1);
+    const x2d = xPos(1), y2d = yPos(1, 0);
+    // Up edge: p
+    const midXu = (x1 + x2u) / 2 + 4;
+    const midYu = (y1 + y2u) / 2 - 4;
+    svg += `<text x="${midXu}" y="${midYu}" fill="#d4a574" font-family="JetBrains Mono" font-size="11" font-style="italic">p = ${res.p.toFixed(4)}</text>`;
+    // Down edge: 1-p
+    const midXd = (x1 + x2d) / 2 + 4;
+    const midYd = (y1 + y2d) / 2 + 12;
+    svg += `<text x="${midXd}" y="${midYd}" fill="#8a6a4a" font-family="JetBrains Mono" font-size="11" font-style="italic">1−p = ${(1-res.p).toFixed(4)}</text>`;
+  }
+
+  // A/B/C node labels — only for N=2 to match the lecture exactly
+  const lectureLabels = (N === 2) ? { '0_0': 'A', '1_1': 'B', '1_0': 'C' } : null;
+
+  // Draw nodes
+  for (let i = 0; i <= N; i++) {
+    for (let j = 0; j <= i; j++) {
+      const x = xPos(i), y = yPos(i, j);
+      const sVal = S[i][j];
+      const vVal = V[i][j];
+      const dVal = (i < N) ? res.D[i][j] : null;
+      const isITM = (state.type === 'call' ? sVal > inp.K : sVal < inp.K);
+      const isEX = EX[i][j];
+
+      let fillColor = '#1a1917';
+      let strokeColor = '#3a3733';
+      if (isEX) { strokeColor = '#e8a14a'; fillColor = '#3a2818'; }
+      else if (isITM) { strokeColor = '#6fbf8a'; fillColor = '#1c2a20'; }
+
+      const topY = y - nodeH / 2;
+      svg += `<g class="tree-node" data-i="${i}" data-j="${j}" data-s="${sVal}" data-v="${vVal}" data-d="${dVal}" data-ex="${isEX}" style="cursor: pointer;">`;
+      svg += `<rect x="${x - nodeR}" y="${topY}" width="${nodeR * 2}" height="${nodeH}" fill="${fillColor}" stroke="${strokeColor}" stroke-width="1"/>`;
+      // Stock price (top)
+      svg += `<text x="${x}" y="${topY + 14}" fill="#ebe3d0" font-family="JetBrains Mono" font-size="11" text-anchor="middle" font-weight="500">${sVal.toFixed(2)}</text>`;
+      svg += `<line x1="${x - nodeR + 4}" y1="${topY + 20}" x2="${x + nodeR - 4}" y2="${topY + 20}" stroke="#3a3733" stroke-width="0.5"/>`;
+      // Option value (middle)
+      svg += `<text x="${x}" y="${topY + 34}" fill="${isEX ? '#e8a14a' : '#d4a574'}" font-family="JetBrains Mono" font-size="11" text-anchor="middle" font-weight="500">${vVal.toFixed(3)}</text>`;
+      // Delta (bottom) — only for non-terminal nodes when N is small
+      if (showDelta && dVal !== null) {
+        svg += `<line x1="${x - nodeR + 4}" y1="${topY + 40}" x2="${x + nodeR - 4}" y2="${topY + 40}" stroke="#3a3733" stroke-width="0.5"/>`;
+        svg += `<text x="${x}" y="${topY + 54}" fill="#8c8479" font-family="JetBrains Mono" font-size="10" text-anchor="middle">Δ ${dVal.toFixed(3)}</text>`;
+      }
+      // Lecture-style A/B/C label for 2-step trees
+      if (lectureLabels && lectureLabels[`${i}_${j}`]) {
+        svg += `<text x="${x - nodeR - 10}" y="${y + 3}" fill="#d47362" font-family="Fraunces" font-size="16" font-style="italic" font-weight="500" text-anchor="middle">${lectureLabels[`${i}_${j}`]}</text>`;
+      }
+      svg += `</g>`;
+    }
+  }
+
+  // Step labels
+  for (let i = 0; i <= N; i++) {
+    svg += `<text x="${xPos(i)}" y="${H - 8}" fill="#5a5550" font-family="JetBrains Mono" font-size="10" text-anchor="middle">t = ${(i * res.dt).toFixed(3)}</text>`;
+  }
+
+  svg += `</svg>`;
+  container.innerHTML = svg;
+
+  // Tooltip handlers
+  const nodes = container.querySelectorAll('.tree-node');
+  const tooltip = document.getElementById('tooltip');
+  nodes.forEach(node => {
+    node.addEventListener('mouseenter', e => {
+      const i = node.dataset.i, j = node.dataset.j;
+      const s = parseFloat(node.dataset.s);
+      const v = parseFloat(node.dataset.v);
+      const ex = node.dataset.ex === 'true';
+      const dStr = node.dataset.d;
+      const intrinsic = payoff(s, inp.K, state.type);
+      tooltip.innerHTML = `
+        <div class="row"><span class="key">Node</span><span>(${i}, ${j})</span></div>
+        <div class="row"><span class="key">Stock</span><span>$${s.toFixed(4)}</span></div>
+        <div class="row"><span class="key">Option</span><span>$${v.toFixed(4)}</span></div>
+        <div class="row"><span class="key">Intrinsic</span><span>$${intrinsic.toFixed(4)}</span></div>
+        ${dStr && dStr !== 'null' ? `<div class="row"><span class="key">Δ (local)</span><span>${parseFloat(dStr).toFixed(4)}</span></div>` : ''}
+        ${ex ? '<div class="row" style="color: #e8a14a;"><span>► Exercise here</span></div>' : ''}
+      `;
+      tooltip.classList.add('show');
+    });
+    node.addEventListener('mousemove', e => {
+      tooltip.style.left = (e.pageX + 14) + 'px';
+      tooltip.style.top  = (e.pageY + 14) + 'px';
+    });
+    node.addEventListener('mouseleave', () => {
+      tooltip.classList.remove('show');
+    });
+  });
+}
+
+// =============================================================================
+// Delta Hedging panel
+// =============================================================================
+function unitName() {
+  return state.asset === 'currency' ? 'spot FX units'
+       : state.asset === 'futures'  ? 'futures contracts'
+       : 'shares';
+}
+
+function updateHedge(inp, res) {
+  const premium = res.price;
+  const D = res.delta;
+  const sigEff = effectiveSigma(inp);
+  const isCall = state.type === 'call';
+
+  const sharesValue = D * inp.S0;
+  const netCash = premium - sharesValue;
+  const action = D >= 0 ? 'Buy' : 'Sell';
+  const sign = D >= 0 ? '−' : '+';
+
+  document.getElementById('hedge-action').textContent =
+    `Short 1 ${isCall ? 'call' : 'put'}`;
+  document.getElementById('hedge-premium').textContent = `+$${premium.toFixed(4)}`;
+  document.getElementById('hedge-shares-action').textContent =
+    `${action} ${Math.abs(D).toFixed(4)} ${unitName()}`;
+  document.getElementById('hedge-shares-cost').textContent =
+    `${sign}$${Math.abs(sharesValue).toFixed(4)}`;
+  document.getElementById('hedge-net').textContent =
+    `${netCash >= 0 ? '+' : '−'}$${Math.abs(netCash).toFixed(4)}  ${netCash >= 0 ? '(lend at r)' : '(borrow at r)'}`;
+  document.getElementById('hedge-sigma').textContent = (sigEff * 100).toFixed(2) + '%';
+}
+
+function drawDeltaCurve(inp, res) {
+  const svg = document.getElementById('delta-curve');
+  svg.innerHTML = '';
+
+  const W = 600, H = 280;
+  const padL = 50, padR = 20, padT = 24, padB = 36;
+  const innerW = W - padL - padR;
+  const innerH = H - padT - padB;
+
+  const sigEff = effectiveSigma(inp);
+
+  // S range: center on K, span ±3σ moves over T or generous around S₀
+  const center = (inp.K + inp.S0) / 2;
+  const stdMove = inp.S0 * sigEff * Math.sqrt(Math.max(inp.T, 0.01));
+  const halfRange = Math.max(stdMove * 2.5,
+                             Math.abs(inp.K - inp.S0) * 1.6,
+                             inp.S0 * 0.35);
+  const sMin = Math.max(0.01, center - halfRange);
+  const sMax = center + halfRange;
+
+  // Times to expiry: from current (T) decreasing toward 0
+  const taus = [inp.T, inp.T * 0.5, inp.T * 0.1, 0];
+  const colors = ['#d4a574', '#a8855e', '#7c6347', '#5a4533'];
+  const labels = ['τ = T (now)', 'τ = T/2', 'τ = T/10', 'τ = 0 (expiry)'];
+
+  // Y range — call: [0, 1], put: [-1, 0]
+  const yMin = state.type === 'call' ? -0.05 : -1.05;
+  const yMax = state.type === 'call' ? 1.05 : 0.05;
+
+  const xScale = s => padL + ((s - sMin) / (sMax - sMin)) * innerW;
+  const yScale = d => padT + (1 - (d - yMin) / (yMax - yMin)) * innerH;
+
+  // Grid
+  const gridY = state.type === 'call' ? [0, 0.25, 0.5, 0.75, 1.0] : [-1.0, -0.75, -0.5, -0.25, 0];
+  gridY.forEach(yVal => {
+    const yPx = yScale(yVal);
+    svg.innerHTML += `<line x1="${padL}" y1="${yPx}" x2="${W - padR}" y2="${yPx}" stroke="#222" stroke-width="0.5"/>`;
+    svg.innerHTML += `<text x="${padL - 6}" y="${yPx + 4}" fill="#5a5550" font-family="JetBrains Mono" font-size="10" text-anchor="end">${yVal.toFixed(2)}</text>`;
+  });
+
+  // X axis labels
+  for (let i = 0; i <= 4; i++) {
+    const sVal = sMin + (sMax - sMin) * (i / 4);
+    const xPx = xScale(sVal);
+    svg.innerHTML += `<text x="${xPx}" y="${H - padB + 18}" fill="#5a5550" font-family="JetBrains Mono" font-size="10" text-anchor="middle">${sVal.toFixed(1)}</text>`;
+  }
+
+  // Strike marker
+  if (inp.K >= sMin && inp.K <= sMax) {
+    const kX = xScale(inp.K);
+    svg.innerHTML += `<line x1="${kX}" y1="${padT}" x2="${kX}" y2="${H - padB}" stroke="#5a5550" stroke-width="0.5" stroke-dasharray="2,3"/>`;
+    svg.innerHTML += `<text x="${kX + 4}" y="${padT + 12}" fill="#5a5550" font-family="JetBrains Mono" font-size="10">K=${inp.K}</text>`;
+  }
+
+  // Plot Δ curves at each τ
+  const numPoints = 80;
+  taus.forEach((tau, idx) => {
+    let path = '';
+    for (let i = 0; i < numPoints; i++) {
+      const S = sMin + (sMax - sMin) * (i / (numPoints - 1));
+      const delta = bsDelta(S, inp.K, tau, inp.r, inp.q, sigEff, state.type);
+      const x = xScale(S);
+      const y = yScale(delta);
+      path += (i === 0 ? 'M' : 'L') + x + ',' + y;
+    }
+    const lw = idx === 0 ? 2.2 : 1.3;
+    const op = idx === 0 ? 1 : 0.75;
+    svg.innerHTML += `<path d="${path}" fill="none" stroke="${colors[idx]}" stroke-width="${lw}" opacity="${op}"/>`;
+  });
+
+  // Current point (S₀, tree Δ)
+  const currDelta = res.delta;
+  if (inp.S0 >= sMin && inp.S0 <= sMax && currDelta !== null) {
+    const cx = xScale(inp.S0);
+    const cy = yScale(currDelta);
+    svg.innerHTML += `<line x1="${cx}" y1="${padT}" x2="${cx}" y2="${H - padB}" stroke="#ebe3d0" stroke-width="0.5" opacity="0.3"/>`;
+    const pointColor = state.type === 'call' ? '#6fbf8a' : '#d47362';
+    svg.innerHTML += `<circle cx="${cx}" cy="${cy}" r="5" fill="${pointColor}" stroke="#0a0a0a" stroke-width="1.5"/>`;
+    const labelY = state.type === 'call' ? cy - 10 : cy + 18;
+    svg.innerHTML += `<text x="${cx + 8}" y="${labelY}" fill="#ebe3d0" font-family="JetBrains Mono" font-size="11" font-weight="500">S₀=${inp.S0}, Δ=${currDelta.toFixed(3)}</text>`;
+  }
+
+  // Axis titles
+  svg.innerHTML += `<text x="${padL + innerW / 2}" y="${H - 4}" fill="#8c8479" font-family="JetBrains Mono" font-size="10" text-anchor="middle">Stock price S</text>`;
+  svg.innerHTML += `<text x="14" y="${padT + innerH / 2}" fill="#8c8479" font-family="JetBrains Mono" font-size="10" text-anchor="middle" transform="rotate(-90, 14, ${padT + innerH / 2})">Delta Δ</text>`;
+
+  // Legend
+  let legendHtml = '';
+  taus.forEach((tau, idx) => {
+    legendHtml += `<div class="legend-item"><span class="legend-dot" style="background: ${colors[idx]}"></span>${labels[idx]}</div>`;
+  });
+  document.getElementById('delta-curve-legend').innerHTML = legendHtml;
+}
+
+// =============================================================================
+// Event wiring
+// =============================================================================
+document.querySelectorAll('#type-toggle button').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('#type-toggle button').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    state.type = b.dataset.type;
+    render();
+  });
+});
+
+document.querySelectorAll('#style-toggle button').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('#style-toggle button').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    state.style = b.dataset.style;
+    render();
+  });
+});
+
+document.querySelectorAll('#param-toggle button').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('#param-toggle button').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    state.param = b.dataset.param;
+    document.getElementById('crr-inputs').style.display = state.param === 'crr' ? 'block' : 'none';
+    document.getElementById('custom-inputs').style.display = state.param === 'custom' ? 'block' : 'none';
+    render();
+  });
+});
+
+function setAsset(asset) {
+  state.asset = asset;
+  document.querySelectorAll('[data-asset]').forEach(b =>
+    b.classList.toggle('active', b.dataset.asset === asset)
+  );
+
+  const notes = {
+    stock:    'Sets α = e<sup>rΔt</sup>. No income on underlying.',
+    index:    'Sets α = e<sup>(r−q)Δt</sup>. q = dividend yield on the index.',
+    currency: 'Sets α = e<sup>(r−r_f)Δt</sup>. <strong style="color:var(--text);">r</strong> = domestic risk-free rate, <strong style="color:var(--text);">r_f</strong> = foreign risk-free rate. S = quote per base (e.g. USD per EUR).',
+    futures:  'Sets α = 1 (q auto-locked = r). Drift cancels for futures contracts.',
+  };
+  document.getElementById('asset-note').innerHTML = notes[asset];
+
+  // Dynamic input labels per asset class
+  const labelMap = {
+    stock:    { q: ['q',              'div yld %'],   r: ['r', 'cont. %'],    s: 'spot' },
+    index:    { q: ['q',              'div yld %'],   r: ['r', 'cont. %'],    s: 'index level' },
+    currency: { q: ['r<sub>f</sub>',  'foreign %'],   r: ['r', 'domestic %'], s: 'spot FX' },
+    futures:  { q: ['q',              'auto = r'],    r: ['r', 'cont. %'],    s: 'futures price' }
+  };
+  const m = labelMap[asset];
+  document.getElementById('q-label').innerHTML = m.q[0];
+  document.getElementById('q-hint').textContent = m.q[1];
+  document.getElementById('r-label').innerHTML = m.r[0];
+  document.getElementById('r-hint').textContent = m.r[1];
+  document.getElementById('s0-hint').textContent = m.s;
+
+  // Lock q for stock and futures
+  const qInput = document.getElementById('q');
+  if (asset === 'stock') { qInput.value = 0; qInput.disabled = true; }
+  else if (asset === 'futures') { qInput.value = +document.getElementById('r').value; qInput.disabled = true; }
+  else { qInput.disabled = false; }
+
+  // Discrete dividends only meaningful for stocks
+  document.getElementById('dividends-section').style.display =
+    (asset === 'stock') ? 'block' : 'none';
+}
+
+document.querySelectorAll('[data-asset]').forEach(b => {
+  b.addEventListener('click', () => {
+    setAsset(b.dataset.asset);
+    render();
+  });
+});
+
+// Keep q synced to r when in futures mode
+document.getElementById('r').addEventListener('input', () => {
+  if (state.asset === 'futures') {
+    document.getElementById('q').value = +document.getElementById('r').value;
+  }
+});
+
+['S0', 'K', 'T', 'r', 'q', 'N', 'sigma', 'u', 'd'].forEach(id => {
+  document.getElementById(id).addEventListener('input', render);
+});
+
+// =============================================================================
+// Textbook example presets
+// =============================================================================
+function setVal(id, v) { document.getElementById(id).value = v; }
+
+function setType(t) {
+  state.type = t;
+  document.querySelectorAll('#type-toggle button').forEach(b => {
+    b.classList.toggle('active', b.dataset.type === t);
+  });
+}
+
+function setStyle(s) {
+  state.style = s;
+  document.querySelectorAll('#style-toggle button').forEach(b => {
+    b.classList.toggle('active', b.dataset.style === s);
+  });
+}
+
+function setParam(p) {
+  state.param = p;
+  document.querySelectorAll('#param-toggle button').forEach(b => {
+    b.classList.toggle('active', b.dataset.param === p);
+  });
+  document.getElementById('crr-inputs').style.display = p === 'crr' ? 'block' : 'none';
+  document.getElementById('custom-inputs').style.display = p === 'custom' ? 'block' : 'none';
+}
+
+// Initial render
+render();
+</script>
 
 </body>
 </html>
