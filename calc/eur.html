@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YARD Financial — BGN ⇄ EUR Converter</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/style.css?v=2" />
+  <link rel="stylesheet" href="calc.css" />
+</head>
+<body class="landing-body">
+
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="../index.html" class="brand">
+        <span class="brand-icon">◈</span>
+        <span class="brand-name">YARD Financial</span>
+      </a>
+      <div class="nav-links">
+        <a href="../pm.html" class="nav-link">PM Management</a>
+        <a href="../trading/index.html" class="nav-link">Trading Desk</a>
+        <a href="../lattice.html" class="nav-link">Lattice</a>
+        <a href="index.html" class="nav-link" style="color: var(--accent-text);">Calculators</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="calc-wrap">
+    <div class="calc-head">
+      <p class="calc-eyebrow">Calculator</p>
+      <h1 class="calc-title">BGN ⇄ EUR converter</h1>
+      <p class="calc-sub">Convert between Bulgarian lev and euro at the fixed, irrevocable rate adopted for Bulgaria's entry to the euro area — a handy aid during the dual-display transition.</p>
+      <div class="calc-note calc-note--neutral">
+        Fixed rate: <strong>1 EUR = 1.95583 BGN</strong>. Results are rounded to the nearest cent. For legal or accounting use, apply the official conversion-and-rounding rules.
+      </div>
+    </div>
+
+    <div class="calc-card">
+      <div class="calc-card-title">Convert</div>
+      <div class="calc-grid">
+        <div class="calc-field">
+          <label class="calc-label" for="eur">Euro <span class="hint">EUR</span></label>
+          <input class="calc-input" id="eur" type="number" inputmode="decimal" value="100" step="0.01" min="0" />
+        </div>
+        <div class="calc-field">
+          <label class="calc-label" for="bgn">Lev <span class="hint">BGN</span></label>
+          <input class="calc-input" id="bgn" type="number" inputmode="decimal" value="195.58" step="0.01" min="0" />
+        </div>
+      </div>
+      <div class="calc-results" style="margin-top:18px;">
+        <div class="calc-result primary">
+          <div class="calc-result-label">EUR</div>
+          <div class="calc-result-value"><span id="o-eur">100.00</span> €</div>
+        </div>
+        <div class="calc-result">
+          <div class="calc-result-label">BGN</div>
+          <div class="calc-result-value"><span id="o-bgn">195.58</span> лв</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="brand brand--small">
+        <span class="brand-icon">◈</span>
+        <span class="brand-name">YARD Financial</span>
+      </div>
+      <p class="footer-note">Fixed legal rate · <a href="../disclaimer.html" style="color: var(--accent-text);">Disclaimer</a></p>
+      <a href="https://yardlaw.eu" target="_blank" rel="noopener" class="footer-partner">A project by <strong>YARD Law Co.</strong></a>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      var RATE = 1.95583;
+      var eur = document.getElementById('eur'), bgn = document.getElementById('bgn');
+      var oEur = document.getElementById('o-eur'), oBgn = document.getElementById('o-bgn');
+      function r2(x) { return (Math.round(x * 100) / 100); }
+      function show(e, b) { oEur.textContent = r2(e).toFixed(2); oBgn.textContent = r2(b).toFixed(2); }
+      eur.addEventListener('input', function () {
+        var v = parseFloat(eur.value); if (!isFinite(v)) { bgn.value = ''; return; }
+        var b = r2(v * RATE); bgn.value = b.toFixed(2); show(v, b);
+      });
+      bgn.addEventListener('input', function () {
+        var v = parseFloat(bgn.value); if (!isFinite(v)) { eur.value = ''; return; }
+        var e = r2(v / RATE); eur.value = e.toFixed(2); show(e, v);
+      });
+    })();
+  </script>
+</body>
+</html>
