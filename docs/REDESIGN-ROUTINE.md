@@ -61,12 +61,25 @@ Rotate deterministically through category × city (e.g. index by day-of-year):
 
 1. Search via the `places` Edge Function (bot JWT):
    `GET https://wtzrxscdlqdgdiefsmru.supabase.co/functions/v1/places?q=<category>+in+<city>&region=BG&max=20`
-2. Pick **one** business that (a) isn't already on the board (`place_id`), and
-   (b) has a weak web presence: no website, only a facebook.com / business.site
-   link, or a site that's clearly dated when you fetch it.
-3. Insert it as a `lead` (owner null, `place_id` set) and log a `system` event
-   like `Prospected: Dentists in Plovdiv`.
-4. If nothing qualifies, log that and move on — never force a bad lead.
+   (paginate with `&pageToken=<next_page_token>` for up to 60 results if the
+   first page has no qualifying candidate).
+2. **Rate every candidate's website** with the `site-score` Edge Function:
+   `POST …/functions/v1/site-score` with `{ "urls": [ ...website_urls ] }`
+   (bot JWT, max 25/call). It returns `{score 1-10, label, reasons}` per site —
+   **1 = terrible site = prime lead**; no-website and social-only score 1–2.
+   Optionally deep-check one finalist with mobile Lighthouse:
+   `GET …/site-score?action=psi&url=<site>` (performance/SEO 0–100, slow).
+3. Pick the **lowest-scoring** business with `score ≤ 6` that isn't already on
+   the board (`place_id`). Never pitch a site scoring 7+ — it's already decent
+   and unlikely to convert.
+4. Insert it as a `lead` (owner null, `place_id`, `site_score`, `score_notes`
+   set) and log a `system` event like `Prospected: Dentists in Plovdiv (3/10)`.
+5. If nothing qualifies, log that and move on — never force a bad lead.
+
+**Also applies at BUILD time:** if a `lead` has no `site_score`, score it
+before building. If it scores **≥ 7**, don't redesign it — set
+`status='passed'` with a note like `Site already decent (8/10) — unlikely to
+convert` and log it. A human can revert from the dashboard if they disagree.
 
 ---
 
@@ -182,9 +195,11 @@ in the ear2earGrin/pm-helper repo exactly. Use the Supabase MCP, project
 wtzrxscdlqdgdiefsmru, and touch ONLY pmh_jobs / pmh_job_events.
 
 Each run:
-1. PROSPECT: add 1 new qualifying lead per the "Daily prospecting" section
-   (category × city rotation, weak-website filter, place_id dedupe).
-2. BUILD: for up to 2 jobs with status='lead' and redesign_url null:
+1. PROSPECT: add 1 new qualifying lead per the "Daily prospecting" section:
+   category × city rotation, score all candidates with site-score, pick the
+   lowest score ≤ 6, dedupe by place_id, store site_score/score_notes.
+2. BUILD: for up to 2 jobs with status='lead' and redesign_url null
+   (score first if unscored; if ≥ 7, set status='passed' with a note instead):
    a. Set status='redesigning', log a 'status' event (author 'claude-redesign').
    b. Build a modern, self-contained redesign using the company's real info.
       Photos: prefer images from their own website; else their Places photo;

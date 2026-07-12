@@ -139,7 +139,15 @@ The dashboard can pull real businesses straight from Google:
 - **🔍 Find prospects** — pick a **country**, type a **city**, and choose a
   **business type** (Dentists, Lawyers, Accountants, …). Results list matching
   businesses with address, phone, website and Maps link; **+ Add** drops any of
-  them onto the board as a `lead` (deduped by Google `place_id`).
+  them onto the board as a `lead` (deduped by Google `place_id`). "More
+  results" pages through up to 60 per query.
+- **Website rating (1–10)** — every result's site is auto-rated by the
+  `site-score` Edge Function (mobile-friendliness, HTTPS, SEO basics, outdated
+  HTML, stale copyright…). **1 = terrible site = prime lead**; results sort
+  worst-first so you pitch the 2–4/10s, not the already-decent 8/10s. The
+  score + reasons are stored on the lead and shown on its card; the daily
+  routine uses the same scorer and auto-passes anything ≥ 7/10. A
+  `?action=psi` endpoint exposes mobile Lighthouse (PageSpeed) for deep checks.
 - **🔍 Find on Google** (inside *New company*) — autofills one company's
   address, Maps link, phone and website from a name search.
 
