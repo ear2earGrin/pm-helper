@@ -328,7 +328,11 @@ async function placesSearch({ q, region, max = 5 }) {
     headers: { Authorization: `Bearer ${token}`, apikey: SUPABASE_ANON },
   });
   const j = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(j.error || `HTTP ${res.status}`);
+  if (!res.ok) {
+    const detail = j.detail?.error?.message || j.detail?.message;
+    if (j.error === 'places_error') throw new Error('Google Places: ' + (detail || 'request rejected'));
+    throw new Error(j.error || `HTTP ${res.status}`);
+  }
   return j.results || [];
 }
 
