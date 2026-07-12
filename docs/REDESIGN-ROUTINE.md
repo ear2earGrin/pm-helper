@@ -51,6 +51,20 @@ lead ──▶ redesigning ──▶ review ──▶ sent ──▶ replied ─
   reviews the redesign on the dashboard and clicks ✉️ Review & Send.
 - Never set `replied` / `finished` — those are human/inbox signals.
 
+## Order of work each run (humans come first)
+
+1. **BUILD existing leads first.** Select `status='lead'` and `redesign_url`
+   null, **oldest `created_at` first**, up to 2 per run. This guarantees leads
+   a human added on the dashboard are worked before anything the routine finds
+   for itself — humans added them on purpose.
+2. **Then prospect — but only if the backlog is small.** Count unbuilt leads
+   (`status='lead'`, `redesign_url` null). If that count is **≥ 3, skip
+   prospecting this run** (there's already plenty to build; don't pile up).
+   Otherwise add exactly 1 new lead per "Daily prospecting" below.
+
+This keeps human-added leads from ever being starved by auto-prospected ones,
+and stops the queue growing faster than it's cleared.
+
 ## Daily prospecting (find 1 new company per run)
 
 Rotate deterministically through the categories (e.g. index by day-of-year):
@@ -205,13 +219,17 @@ You are the daily Redesign Routine for pm-brief. Follow docs/REDESIGN-ROUTINE.md
 in the ear2earGrin/pm-helper repo exactly. Use the Supabase MCP, project
 wtzrxscdlqdgdiefsmru, and touch ONLY pmh_jobs / pmh_job_events.
 
-Each run:
-1. PROSPECT: add 1 new qualifying lead per the "Daily prospecting" section:
-   rotate categories in the CURRENT TARGET CITY named there (do not use the
-   "planned expansion" cities), score all candidates with site-score, pick the
-   lowest score ≤ 6, dedupe by place_id, store site_score/score_notes.
-2. BUILD: for up to 2 jobs with status='lead' and redesign_url null
-   (score first if unscored; if ≥ 7, set status='passed' with a note instead):
+Each run (see "Order of work each run" — humans first):
+1. BUILD FIRST: up to 2 jobs with status='lead' and redesign_url null,
+   OLDEST created_at first (human-added leads before auto-prospected ones).
+   Score first if unscored; if ≥ 7, set status='passed' with a note instead.
+2. THEN PROSPECT — only if fewer than 3 unbuilt leads remain: add 1 new
+   qualifying lead per the "Daily prospecting" section (rotate categories in
+   the CURRENT TARGET CITY, do not use the "planned expansion" cities, score
+   candidates with site-score, pick lowest score ≤ 6, dedupe by place_id,
+   store site_score/score_notes). If the backlog is ≥ 3, skip prospecting.
+
+For each built job:
    a. Set status='redesigning', log a 'status' event (author 'claude-redesign').
    b. Build a modern, self-contained redesign using the company's real info.
       Photos: prefer images from their own website; else their Places photo;
