@@ -57,6 +57,8 @@ pm-helper/
 ├── index.html          ← Hub / launcher (cards: PM Management · Trading Desk · Lattice)
 ├── login.html          ← Redesign Studio — team login (Supabase Auth)
 ├── dashboard.html      ← Redesign Studio — shared outreach dashboard
+├── redesigns/          ← hosted redesign artifacts (one folder per company)
+├── supabase/functions/ ← Edge Functions (places = Google Places proxy)
 ├── pm.html             ← PM Management landing (how it works · artefacts)
 ├── app.html            ← Wizard app (main PM experience)
 ├── tools.html          ← PM² planning tools
@@ -157,6 +159,12 @@ the redesigns reads/writes the **same** `pmh_jobs` table (Supabase project
 | `status`       | flip to `redesigning` while building, `sent` once the pitch email goes out |
 | `email`        | the company address the pitch was sent to |
 | `pmh_job_events` | append a row (`author: 'claude-redesign'`) to log what it did |
+
+**The full contract is in [`docs/REDESIGN-ROUTINE.md`](docs/REDESIGN-ROUTINE.md)** —
+it's the paste-in instruction set for that routine (how to pull leads, host the
+redesign under `/redesigns/<slug>/`, write results back, and the guardrails). A
+dedicated **`claude-redesign`** bot account exists for it (least-privilege, same
+RLS as the partners; password stored as a routine secret, not in this repo).
 
 Client dependency: `@supabase/supabase-js@2` is loaded from the jsDelivr CDN as
 an ES module (no build step) — matching the site's vanilla approach.
