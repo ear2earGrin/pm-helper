@@ -53,14 +53,17 @@ lead ──▶ redesigning ──▶ review ──▶ sent ──▶ replied ─
 
 ## Daily prospecting (find 1 new company per run)
 
-Rotate deterministically through category × city (e.g. index by day-of-year):
+Rotate deterministically through the categories (e.g. index by day-of-year):
 
 - **Categories:** Dentists, Accountants, Lawyers, Hair salons, Auto repair
   shops, Restaurants, Veterinarians, Gyms, Real estate agencies, Bakeries.
-- **Cities:** Sofia, Plovdiv, Varna, Burgas, Ruse, Stara Zagora.
+- **Target city — current goal: Thessaloniki, Greece** (`region=GR`).
+  This is the only city to prospect for now. Planned expansion (do NOT use
+  yet, humans will move them up when ready): Athens (GR), then Sofia,
+  Plovdiv, Varna, Burgas (BG, `region=BG`).
 
 1. Search via the `places` Edge Function (bot JWT):
-   `GET https://wtzrxscdlqdgdiefsmru.supabase.co/functions/v1/places?q=<category>+in+<city>&region=BG&max=20`
+   `GET https://wtzrxscdlqdgdiefsmru.supabase.co/functions/v1/places?q=<category>+in+<city>&region=<city's region code>&max=20`
    (paginate with `&pageToken=<next_page_token>` for up to 60 results if the
    first page has no qualifying candidate).
 2. **Rate every candidate's website** with the `site-score` Edge Function:
@@ -196,7 +199,8 @@ wtzrxscdlqdgdiefsmru, and touch ONLY pmh_jobs / pmh_job_events.
 
 Each run:
 1. PROSPECT: add 1 new qualifying lead per the "Daily prospecting" section:
-   category × city rotation, score all candidates with site-score, pick the
+   rotate categories in the CURRENT TARGET CITY named there (do not use the
+   "planned expansion" cities), score all candidates with site-score, pick the
    lowest score ≤ 6, dedupe by place_id, store site_score/score_notes.
 2. BUILD: for up to 2 jobs with status='lead' and redesign_url null
    (score first if unscored; if ≥ 7, set status='passed' with a note instead):
