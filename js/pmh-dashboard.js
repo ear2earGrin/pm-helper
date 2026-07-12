@@ -355,32 +355,20 @@ async function placesSearch({ q, region, max = 5, pageToken }) {
   return { results: j.results || [], nextPageToken: j.next_page_token || null };
 }
 
-// Batch-rate websites 1-10 via the `site-score` Edge Function (1 = terrible
-// site = great lead). Returns a map url -> {score,label,reasons}.
-async function scoreSites(urls) {
-  if (!urls.length) return {};
+// Batch-rate businesses 1-10 via the `site-score` Edge Function (1 = terrible
+// site = great lead). Sends {website_url, company, city} so the function can
+// hunt for a website that isn't listed on Google. Returns results in order.
+async function scoreSites(items) {
+  if (!items.length) return [];
   const { data } = await supabase.auth.getSession();
   const res = await fetch(`${SUPABASE_URL}/functions/v1/site-score`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${data.session.access_token}`, apikey: SUPABASE_ANON, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ urls: urls.slice(0, 25) }),
+    body: JSON.stringify({ items: items.slice(0, 25) }),
   });
   const j = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(j.error || `HTTP ${res.status}`);
-  const map = {};
-  (j.results || []).forEach((r) => { map[r.url] = r; });
-  return map;
-}
-
-function applyScores(results, map) {
-  results.forEach((r) => {
-    if (r.score != null) return; // already scored
-    if (!r.website_url) {
-      r.score = 1; r.label = 'No website'; r.reasons = ['No website at all — prime candidate'];
-    } else if (map[r.website_url]) {
-      Object.assign(r, map[r.website_url]);
-    }
-  });
+  return j.results || [];
 }
 
 // ── Prospecting modal ───────────────────────────────────────
@@ -415,16 +403,25 @@ async function runProspect(loadMore = false) {
     const fresh = results.filter((r) => !prospectResults.some((p) => p.place_id === r.place_id));
     prospectResults.push(...fresh);
 
-    // Rate every new site 1-10 (worst = best lead), then sort worst-first
-    $('p_status').textContent = `Rating ${fresh.length} website${fresh.length === 1 ? '' : 's'}…`;
+    // Rate every new business 1-10 (worst = best lead; resolver finds sites
+    // not listed on Google), then sort worst-first
+    $('p_status').textContent = `Rating ${fresh.length} business${fresh.length === 1 ? '' : 'es'}…`;
     renderProspectResults(prospectResults);
     try {
-      const toScore = fresh.filter((r) => r.website_url).map((r) => r.website_url);
-      const map = await scoreSites(toScore);
-      applyScores(prospectResults, map);
+      const items = fresh.map((r) => ({ website_url: r.website_url || '', company: r.company, city }));
+      const scored = await scoreSites(items);
+      fresh.forEach((r, i) => {
+        const s = scored[i];
+        if (!s) return;
+        r.score = s.score; r.label = s.label; r.reasons = s.reasons || [];
+        if (s.resolved_url && !r.website_url) { r.website_url = s.resolved_url; r.found_via_search = true; }
+      });
     } catch (e) {
-      applyScores(prospectResults, {});
-      $('p_status').textContent = 'Rating unavailable (' + e.message + ') — showing unrated results.';
+      fresh.forEach((r) => {
+        if (r.score != null) return;
+        if (!r.website_url) { r.score = 1; r.label = 'No website'; r.reasons = ['No website listed on Google']; }
+      });
+      $('p_status').textContent = 'Rating unavailable (' + e.message + ') — showing partial ratings.';
     }
     prospectResults.sort((a, b) => (a.score ?? 11) - (b.score ?? 11));
     const weak = prospectResults.filter((r) => (r.score ?? 11) <= 6).length;
@@ -443,7 +440,6 @@ function renderProspectResults(results) {
   box.innerHTML = results.map((r, i) => {
     const onBoard = r.place_id && jobs.some((j) => j.place_id === r.place_id);
     const web = r.website_url ? r.website_url.replace(/^https?:\/\//, '').replace(/\/$/, '') : '';
-    const sub = [r.address, web].filter(Boolean).join(' · ');
     let badge = '<span class="score-badge s-wait" title="Rating…">…</span>';
     if (r.score != null) {
       const cls = r.score <= 3 ? 's-red' : r.score <= 6 ? 's-amber' : 's-green';
@@ -452,7 +448,7 @@ function renderProspectResults(results) {
     return `<div class="p-result ${onBoard ? 'is-on' : ''}">
       <div class="p-result-main">
         <div class="p-result-name">${esc(r.company)} ${badge}</div>
-        <div class="p-result-sub">${web ? `<a href="${esc(r.website_url)}" target="_blank" rel="noopener">${esc(web)}</a> · ` : ''}${esc(r.address || '')}</div>
+        <div class="p-result-sub">${web ? `${r.found_via_search ? '🔎 ' : ''}<a href="${esc(r.website_url)}" target="_blank" rel="noopener">${esc(web)}</a> · ` : ''}${esc(r.address || '')}</div>
       </div>
       <button type="button" class="btn btn-primary p-result-add" data-i="${i}">${onBoard ? 'On board' : '+ Add'}</button>
     </div>`;
