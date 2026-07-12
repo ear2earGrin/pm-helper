@@ -3,16 +3,16 @@
 //  Rates websites 1–10 for redesign-pitch potential (1 = terrible
 //  site = great lead; 8+ = decent site = unlikely to pay).
 //
-//  Heuristics checked per site (server-side fetch, 8s timeout):
-//    no site / social-only / broken → 1–2
-//    no HTTPS, no mobile viewport, missing title/meta description,
-//    outdated HTML (font/frames/flash), stale copyright year,
-//    ancient jQuery, near-empty page → subtractions from 10
+//  When a business has NO website on its Google listing, the scorer
+//  tries to FIND one via a DuckDuckGo web search (name + city) before
+//  concluding "no website" — because many businesses have a site they
+//  just never linked on Google Maps. A found site is scored normally
+//  and flagged "found via search (verify)".
 //
 //  Endpoints (Authorization: Bearer <user or bot JWT>):
-//    POST { urls: string[] }            → { results: [{url,score,label,reasons}] }  (max 25)
-//    GET  ?action=psi&url=<site>        → mobile Lighthouse scores via Google
-//         PageSpeed Insights (needs GOOGLE_MAPS_KEY secret; slow, ~10-40s)
+//    POST { items: [{website_url?, company?, city?}] }  → ordered results   (max 25)
+//    POST { urls: string[] }                            → ordered results (no resolver)
+//    GET  ?action=psi&url=<site>                         → mobile Lighthouse via PSI
 //
 //  Repo copy is sanitized: the deployed version may inline a fallback key.
 // ============================================================
@@ -33,12 +33,40 @@ function json(obj: unknown, status = 200) {
   });
 }
 
+// Social / directory / aggregator hosts that are never "their own website".
 const SOCIAL_RE = /facebook\.com|instagram\.com|business\.site|linktr\.ee|\bfb\.com|wixsite\.com\/|tiktok\.com|goo\.gl\/maps/i;
+const SKIP_HOST_RE = /facebook\.|instagram\.|linkedin\.|youtube\.|twitter\.|x\.com|tiktok\.|pinterest\.|google\.|goo\.gl|gstatic|maps\.app|yelp\.|tripadvisor\.|foursquare|booking\.|wikipedia\.|apple\.com|play\.google|doctoranytime|vrisko\.gr|xo\.gr|11888\.gr|be24\.gr|yellowpages|europages/i;
 
-async function scoreOne(raw: string): Promise<Record<string, unknown>> {
-  if (!raw || !raw.trim()) {
-    return { url: raw, score: 1, label: "No website", reasons: ["No website at all — prime candidate"] };
+// Try to find a business's real website via DuckDuckGo's HTML endpoint (keyless).
+async function findWebsite(name: string, city: string): Promise<string | null> {
+  try {
+    const q = encodeURIComponent(`${name} ${city}`.trim());
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 7000);
+    const res = await fetch(`https://html.duckduckgo.com/html/?q=${q}`, {
+      signal: ctrl.signal,
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; SiteScore/1.0; +https://pm-brief.com)" },
+    });
+    clearTimeout(timer);
+    if (!res.ok) return null;
+    const html = await res.text();
+    const re = /uddg=([^&"']+)/g;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(html))) {
+      let u: string;
+      try { u = decodeURIComponent(m[1]); } catch (_) { continue; }
+      if (!/^https?:\/\//i.test(u)) continue;
+      if (SKIP_HOST_RE.test(u)) continue;
+      return u;
+    }
+    return null;
+  } catch (_) {
+    return null;
   }
+}
+
+// Score a known, non-empty URL 1–10.
+async function scoreUrl(raw: string): Promise<Record<string, unknown>> {
   let url = raw.trim();
   if (!/^https?:\/\//i.test(url)) url = "https://" + url;
   if (SOCIAL_RE.test(url)) {
@@ -90,10 +118,28 @@ async function scoreOne(raw: string): Promise<Record<string, unknown>> {
   }
 }
 
+// Score one item: resolve a hidden website first if none was listed.
+async function scoreItem(item: { website_url?: string; company?: string; city?: string }): Promise<Record<string, unknown>> {
+  let url = (item.website_url || "").trim();
+  let resolved: string | null = null;
+  if (!url && item.company) {
+    resolved = await findWebsite(item.company, item.city || "");
+    if (resolved) url = resolved;
+  }
+  if (!url) {
+    return { url: "", score: 1, label: "No website", reasons: ["No website on Google, and none found via search — prime candidate"], resolved_url: null };
+  }
+  const base = await scoreUrl(url);
+  if (resolved) {
+    base.resolved_url = resolved;
+    base.reasons = ["⚠ Site found via web search — not on their Google listing (verify)", ...(base.reasons as string[])];
+  }
+  return base;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
 
-  // Signed-in partners + the redesign bot only.
   try {
     const token = (req.headers.get("Authorization") ?? "").replace("Bearer ", "");
     const supa = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!);
@@ -108,7 +154,6 @@ Deno.serve(async (req) => {
   if (req.method === "POST") { try { body = await req.json(); } catch (_) { /* ignore */ } }
   const action = (url.searchParams.get("action") ?? body.action ?? "score") as string;
 
-  // action=psi : mobile Lighthouse via Google PageSpeed Insights (slow!)
   if (action === "psi") {
     const target = (url.searchParams.get("url") ?? body.url) as string | undefined;
     if (!target) return json({ error: "missing url" }, 400);
@@ -120,16 +165,15 @@ Deno.serve(async (req) => {
     if (!r.ok) return json({ error: "psi_error", detail: d?.error?.message ?? null }, 502);
     const cats = d?.lighthouseResult?.categories ?? {};
     const pct = (c: any) => (c && typeof c.score === "number") ? Math.round(c.score * 100) : null;
-    return json({
-      performance: pct(cats.performance),
-      seo: pct(cats.seo),
-      best_practices: pct(cats["best-practices"]),
-    });
+    return json({ performance: pct(cats.performance), seo: pct(cats.seo), best_practices: pct(cats["best-practices"]) });
   }
 
-  // default: batch heuristic scoring
-  const urls = Array.isArray(body.urls) ? body.urls.slice(0, 25) : null;
-  if (!urls || !urls.length) return json({ error: "missing urls[]" }, 400);
-  const results = await Promise.all(urls.map((u: string) => scoreOne(String(u ?? ""))));
+  // Preferred: items[] (enables the hidden-website resolver). Legacy: urls[].
+  let items: Array<{ website_url?: string; company?: string; city?: string }> | null = null;
+  if (Array.isArray(body.items)) items = body.items.slice(0, 25);
+  else if (Array.isArray(body.urls)) items = body.urls.slice(0, 25).map((u: string) => ({ website_url: String(u ?? "") }));
+  if (!items || !items.length) return json({ error: "missing items[] or urls[]" }, 400);
+
+  const results = await Promise.all(items.map((it) => scoreItem(it)));
   return json({ results });
 });

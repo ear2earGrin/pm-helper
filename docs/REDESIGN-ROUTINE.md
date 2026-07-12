@@ -66,10 +66,18 @@ Rotate deterministically through the categories (e.g. index by day-of-year):
    `GET https://wtzrxscdlqdgdiefsmru.supabase.co/functions/v1/places?q=<category>+in+<city>&region=<city's region code>&max=20`
    (paginate with `&pageToken=<next_page_token>` for up to 60 results if the
    first page has no qualifying candidate).
-2. **Rate every candidate's website** with the `site-score` Edge Function:
-   `POST …/functions/v1/site-score` with `{ "urls": [ ...website_urls ] }`
-   (bot JWT, max 25/call). It returns `{score 1-10, label, reasons}` per site —
-   **1 = terrible site = prime lead**; no-website and social-only score 1–2.
+2. **Rate every candidate** with the `site-score` Edge Function:
+   `POST …/functions/v1/site-score` with
+   `{ "items": [ {"website_url": "...", "company": "...", "city": "..."} ] }`
+   (bot JWT, max 25/call). It returns `{score 1-10, label, reasons, resolved_url}`
+   per business — **1 = terrible site = prime lead**; social-only ≈ 2.
+   **Important:** Google often omits a business's website from its listing.
+   Passing `company`+`city` lets the function web-search for the real site
+   first; if it finds one it returns `resolved_url` and scores THAT (flagged
+   "found via search"). Because you (the routine) have your own WebSearch/
+   WebFetch tools, also independently confirm before treating any lead as
+   "no website" — a business with a real (but unlisted) site is scored on that
+   site, not auto-rated 1/10. Store the resolved site in `pmh_jobs.website_url`.
    Optionally deep-check one finalist with mobile Lighthouse:
    `GET …/site-score?action=psi&url=<site>` (performance/SEO 0–100, slow).
 3. Pick the **lowest-scoring** business with `score ≤ 6` that isn't already on
