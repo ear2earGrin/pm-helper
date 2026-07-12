@@ -1,7 +1,35 @@
 // ============================================================
 //  Redesign Studio — dashboard logic
 // ============================================================
-import { supabase, currentUsername } from './pmh-supabase.js';
+import { supabase, currentUsername, SUPABASE_URL, SUPABASE_ANON } from './pmh-supabase.js';
+
+// ── Prospecting lists ───────────────────────────────────────
+const COUNTRIES = [
+  { code: 'BG', name: 'Bulgaria' }, { code: 'GB', name: 'United Kingdom' },
+  { code: 'US', name: 'United States' }, { code: 'IE', name: 'Ireland' },
+  { code: 'DE', name: 'Germany' }, { code: 'FR', name: 'France' },
+  { code: 'ES', name: 'Spain' }, { code: 'IT', name: 'Italy' },
+  { code: 'NL', name: 'Netherlands' }, { code: 'BE', name: 'Belgium' },
+  { code: 'AT', name: 'Austria' }, { code: 'CH', name: 'Switzerland' },
+  { code: 'PT', name: 'Portugal' }, { code: 'GR', name: 'Greece' },
+  { code: 'RO', name: 'Romania' }, { code: 'RS', name: 'Serbia' },
+  { code: 'HR', name: 'Croatia' }, { code: 'SI', name: 'Slovenia' },
+  { code: 'HU', name: 'Hungary' }, { code: 'PL', name: 'Poland' },
+  { code: 'CZ', name: 'Czechia' }, { code: 'SK', name: 'Slovakia' },
+  { code: 'DK', name: 'Denmark' }, { code: 'SE', name: 'Sweden' },
+  { code: 'NO', name: 'Norway' }, { code: 'FI', name: 'Finland' },
+  { code: 'TR', name: 'Turkey' }, { code: 'CA', name: 'Canada' },
+  { code: 'AU', name: 'Australia' }, { code: 'AE', name: 'United Arab Emirates' },
+];
+const BUSINESS_TYPES = [
+  'Accountants', 'Lawyers', 'Dentists', 'Doctors / Clinics', 'Restaurants',
+  'Cafes', 'Bars', 'Hotels', 'Hair salons', 'Beauty salons', 'Barbers',
+  'Gyms', 'Real estate agencies', 'Plumbers', 'Electricians', 'Builders',
+  'Auto repair shops', 'Car dealers', 'Bakeries', 'Butchers', 'Florists',
+  'Pharmacies', 'Opticians', 'Veterinarians', 'Photographers', 'Architects',
+  'Interior designers', 'Marketing agencies', 'Travel agencies', 'Notaries',
+  'Cleaning services', 'Landscapers', 'Tattoo studios', 'Pet groomers',
+];
 
 // ── Status model ────────────────────────────────────────────
 const STATUS = {
@@ -58,6 +86,7 @@ function timeAgo(iso) {
   $('whoami').textContent = me || 'partner';
 
   buildStatusSelect();
+  buildProspectControls();
   wireUI();
   await loadAll();
   subscribeRealtime();
@@ -228,6 +257,9 @@ function openModal(job) {
   const editing = !!job;
   $('modalTitle').textContent = editing ? 'Edit company' : 'New company';
   $('f_id').value = editing ? job.id : '';
+  $('f_placeid').value = editing ? job.place_id || '' : '';
+  $('f_search').value = '';
+  $('f_results').innerHTML = '';
   $('f_company').value = editing ? job.company || '' : '';
   $('f_address').value = editing ? job.address || '' : '';
   $('f_maps').value = editing ? job.maps_url || '' : '';
@@ -257,6 +289,7 @@ async function saveJob(e) {
     status: $('f_status').value,
     owner: $('f_owner').value || null,
     notes: $('f_notes').value.trim() || null,
+    place_id: $('f_placeid').value || null,
   };
   if (!payload.company) return;
 
@@ -284,13 +317,130 @@ function subscribeRealtime() {
   } catch (err) { console.warn('Realtime unavailable, using manual refresh.', err); }
 }
 
+// ── Google Places (via the `places` Edge Function) ──────────
+async function placesSearch({ q, region, max = 5 }) {
+  const { data } = await supabase.auth.getSession();
+  const token = data?.session?.access_token;
+  if (!token) throw new Error('Not signed in');
+  const params = new URLSearchParams({ q, max: String(max) });
+  if (region) params.set('region', region);
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/places?${params.toString()}`, {
+    headers: { Authorization: `Bearer ${token}`, apikey: SUPABASE_ANON },
+  });
+  const j = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(j.error || `HTTP ${res.status}`);
+  return j.results || [];
+}
+
+// ── Prospecting modal ───────────────────────────────────────
+function buildProspectControls() {
+  $('p_country').innerHTML = COUNTRIES.map((c) =>
+    `<option value="${c.code}" ${c.code === 'BG' ? 'selected' : ''}>${c.name}</option>`).join('');
+  $('p_type_list').innerHTML = BUSINESS_TYPES.map((t) => `<option value="${esc(t)}"></option>`).join('');
+}
+function openProspect() { $('prospectBack').classList.add('show'); $('p_city').focus(); }
+function closeProspect() { $('prospectBack').classList.remove('show'); }
+
+async function runProspect() {
+  const country = COUNTRIES.find((c) => c.code === $('p_country').value);
+  const city = $('p_city').value.trim();
+  const type = $('p_type').value.trim();
+  if (!type) { $('p_status').textContent = 'Pick or type a business type first.'; return; }
+  const q = `${type} in ${city}${city && country ? ', ' : ''}${country ? country.name : ''}`.trim();
+  $('p_status').textContent = 'Searching…';
+  $('p_results').innerHTML = '';
+  try {
+    const results = await placesSearch({ q, region: country?.code, max: 20 });
+    $('p_status').textContent = `${results.length} result${results.length === 1 ? '' : 's'} for “${q}”`;
+    renderProspectResults(results);
+  } catch (e) {
+    $('p_status').textContent = 'Search failed: ' + e.message;
+  }
+}
+
+function renderProspectResults(results) {
+  const box = $('p_results');
+  if (!results.length) { box.innerHTML = '<div class="p-note">No matches. Try a broader city or a different business type.</div>'; return; }
+  box.innerHTML = results.map((r, i) => {
+    const onBoard = r.place_id && jobs.some((j) => j.place_id === r.place_id);
+    const web = r.website_url ? r.website_url.replace(/^https?:\/\//, '').replace(/\/$/, '') : '';
+    const sub = [r.address, web].filter(Boolean).join(' · ');
+    return `<div class="p-result ${onBoard ? 'is-on' : ''}">
+      <div class="p-result-main">
+        <div class="p-result-name">${esc(r.company)}</div>
+        <div class="p-result-sub">${esc(sub)}</div>
+      </div>
+      <button type="button" class="btn btn-primary p-result-add" data-i="${i}">${onBoard ? 'On board' : '+ Add'}</button>
+    </div>`;
+  }).join('');
+  box.querySelectorAll('.p-result-add').forEach((b) =>
+    b.addEventListener('click', () => addProspect(results[+b.dataset.i], b)));
+}
+
+async function addProspect(r, btn) {
+  if (r.place_id && jobs.some((j) => j.place_id === r.place_id)) return;
+  if (btn) { btn.disabled = true; btn.textContent = 'Adding…'; }
+  const type = $('p_type').value.trim(), city = $('p_city').value.trim();
+  const payload = {
+    company: r.company, address: r.address || null, maps_url: r.maps_url || null,
+    phone: r.phone || null, website_url: r.website_url || null, place_id: r.place_id || null,
+    status: 'lead', owner: me,
+    notes: type ? `Prospect · ${type}${city ? ' in ' + city : ''}` : null,
+  };
+  const { data, error } = await supabase.from('pmh_jobs').insert(payload).select().single();
+  if (error) { alert('Could not add: ' + error.message); if (btn) { btn.disabled = false; btn.textContent = '+ Add'; } return; }
+  if (data) {
+    jobs.unshift(data);
+    supabase.from('pmh_job_events').insert({ job_id: data.id, author: me, kind: 'system', body: 'Added from prospect search' });
+  }
+  if (btn) { const row = btn.closest('.p-result'); if (row) row.classList.add('is-on'); btn.disabled = false; btn.textContent = 'On board'; }
+  render();
+}
+
+// ── Single-company autofill (inside the New Company modal) ───
+async function searchAutofill() {
+  const q = $('f_search').value.trim();
+  if (!q) return;
+  const box = $('f_results');
+  box.innerHTML = '<div class="p-note">Searching…</div>';
+  try {
+    const results = await placesSearch({ q, max: 5 });
+    if (!results.length) { box.innerHTML = '<div class="p-note">No matches.</div>'; return; }
+    box.innerHTML = results.map((r, i) =>
+      `<button type="button" class="p-result" data-i="${i}"><div class="p-result-main">
+        <div class="p-result-name">${esc(r.company)}</div>
+        <div class="p-result-sub">${esc(r.address || '')}</div>
+      </div></button>`).join('');
+    box.querySelectorAll('.p-result').forEach((b) => b.addEventListener('click', () => {
+      const r = results[+b.dataset.i];
+      $('f_company').value = r.company || $('f_company').value;
+      $('f_address').value = r.address || '';
+      $('f_maps').value = r.maps_url || '';
+      $('f_phone').value = r.phone || '';
+      $('f_website').value = r.website_url || '';
+      $('f_placeid').value = r.place_id || '';
+      box.innerHTML = '';
+    }));
+  } catch (e) { box.innerHTML = `<div class="p-note">Search failed: ${esc(e.message)}</div>`; }
+}
+
 // ── UI wiring ───────────────────────────────────────────────
 function wireUI() {
   $('addBtn').addEventListener('click', () => openModal(null));
   $('cancelBtn').addEventListener('click', closeModal);
+  // Places autofill inside the New Company modal
+  $('f_searchBtn').addEventListener('click', searchAutofill);
+  $('f_search').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); searchAutofill(); } });
+  // Prospecting modal
+  $('prospectBtn').addEventListener('click', openProspect);
+  $('prospectClose').addEventListener('click', closeProspect);
+  $('prospectRun').addEventListener('click', runProspect);
+  $('p_city').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); runProspect(); } });
+  $('p_type').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); runProspect(); } });
+  $('prospectBack').addEventListener('click', (e) => { if (e.target === $('prospectBack')) closeProspect(); });
   $('jobForm').addEventListener('submit', saveJob);
   $('modalBack').addEventListener('click', (e) => { if (e.target === $('modalBack')) closeModal(); });
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeModal(); closeProspect(); } });
   $('infoClose').addEventListener('click', () => { $('infoBanner').style.display = 'none'; try { localStorage.setItem('pmh-info-hidden', '1'); } catch (_) {} });
   if (localStorage.getItem('pmh-info-hidden')) $('infoBanner').style.display = 'none';
   $('logoutBtn').addEventListener('click', async () => { await supabase.auth.signOut(); location.replace('login.html'); });

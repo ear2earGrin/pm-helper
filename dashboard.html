@@ -161,7 +161,10 @@
         <h1 class="db-title">Outreach <em>dashboard</em></h1>
         <p class="db-subtitle">Companies you're pitching redesigns to — from first lead to closed deal.</p>
       </div>
-      <button class="btn btn-primary" id="addBtn">+ New company</button>
+      <div style="display:flex; gap:8px; flex-wrap:wrap">
+        <button class="btn" id="prospectBtn">🔍 Find prospects</button>
+        <button class="btn btn-primary" id="addBtn">+ New company</button>
+      </div>
     </div>
 
     <div class="db-info" id="infoBanner">
@@ -188,6 +191,15 @@
     <form class="modal" id="jobForm">
       <h2 id="modalTitle">New company</h2>
       <input type="hidden" id="f_id" />
+      <input type="hidden" id="f_placeid" />
+      <div class="form-row" id="autofillRow">
+        <label for="f_search">🔍 Find on Google <span class="muted" style="text-transform:none">(auto-fills the fields below)</span></label>
+        <div style="display:flex; gap:8px">
+          <input id="f_search" placeholder="Sunrise Bakery, Sofia" autocomplete="off" />
+          <button type="button" class="btn" id="f_searchBtn" style="white-space:nowrap">Search</button>
+        </div>
+        <div id="f_results" class="p-results"></div>
+      </div>
       <div class="form-row">
         <label for="f_company">Company name *</label>
         <input id="f_company" required placeholder="Sunrise Bakery" />
@@ -244,6 +256,61 @@
       </div>
     </form>
   </div>
+
+  <!-- Prospecting modal -->
+  <div class="modal-back" id="prospectBack">
+    <div class="modal modal-wide">
+      <h2>Find prospects</h2>
+      <p class="prospect-sub">Search Google for businesses to pitch, then add them straight to the board.</p>
+      <div class="form-row three">
+        <div>
+          <label for="p_country">Country</label>
+          <select id="p_country"></select>
+        </div>
+        <div>
+          <label for="p_city">City</label>
+          <input id="p_city" placeholder="Sofia" autocomplete="off" />
+        </div>
+        <div>
+          <label for="p_type">Business type</label>
+          <input id="p_type" list="p_type_list" placeholder="Dentists" autocomplete="off" />
+          <datalist id="p_type_list"></datalist>
+        </div>
+      </div>
+      <div class="prospect-bar">
+        <span id="p_status" class="muted"></span>
+        <div style="display:flex; gap:10px; margin-left:auto">
+          <button type="button" class="btn" id="prospectClose">Close</button>
+          <button type="button" class="btn btn-primary" id="prospectRun">Search</button>
+        </div>
+      </div>
+      <div id="p_results" class="p-results p-results--tall"></div>
+    </div>
+  </div>
+
+  <style>
+    .modal-wide { max-width: 640px; }
+    .prospect-sub { color: var(--text-secondary); font-size: 14px; margin-bottom: var(--space-lg); }
+    .form-row.three { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--space-md); }
+    @media (max-width: 560px) { .form-row.three { grid-template-columns: 1fr; } }
+    .prospect-bar { display: flex; align-items: center; gap: 10px; margin: var(--space-md) 0; }
+
+    .p-results { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+    .p-results--tall { max-height: 46vh; overflow-y: auto; }
+    .p-result {
+      display: flex; align-items: center; gap: 12px; width: 100%;
+      background: var(--bg-0); border: 1px solid var(--border-subtle);
+      border-radius: var(--r-md); padding: 10px 12px; text-align: left;
+    }
+    .p-result:hover { border-color: var(--border-default); }
+    .p-result-main { flex: 1; min-width: 0; }
+    .p-result-name { font-weight: 600; font-size: 14px; }
+    .p-result-sub { font-size: 12px; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .p-result-sub a { color: var(--accent-text); }
+    .p-result-add { flex-shrink: 0; padding: 6px 12px; font-size: 12px; }
+    .p-result.is-on .p-result-add { opacity: 0.5; pointer-events: none; }
+    .p-note { color: var(--text-muted); font-size: 13px; padding: 8px 2px; }
+  </style>
 
   <script type="module" src="js/pmh-dashboard.js"></script>
 </body>
