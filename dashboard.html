@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Redesign Studio — Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css?v=2" />
+  <style>
+    body { background: var(--bg-0); min-height: 100vh; }
+
+    /* ── Top bar ─────────────────────────────────────────── */
+    .db-bar {
+      position: sticky; top: 0; z-index: 20;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: var(--space-md);
+      padding: 14px clamp(16px, 4vw, 40px);
+      background: rgba(10,14,26,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .db-brand { display: flex; align-items: center; gap: 10px; font-weight: 600; }
+    .db-brand .brand-icon { color: var(--accent); font-size: 20px; }
+    .db-brand small { color: var(--text-muted); font-weight: 400; font-family: var(--font-mono); font-size: 11px; }
+    .db-bar-right { display: flex; align-items: center; gap: var(--space-md); }
+    .db-user { font-size: 13px; color: var(--text-secondary); }
+    .db-user b { color: var(--text-primary); font-weight: 600; }
+
+    .db-main { padding: clamp(20px, 4vw, 40px); max-width: 1200px; margin: 0 auto; }
+
+    .db-head { display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: var(--space-md); margin-bottom: var(--space-lg); }
+    .db-title { font-family: var(--font-display); font-size: clamp(30px, 5vw, 44px); line-height: 1.05; }
+    .db-title em { font-style: italic; color: var(--accent); }
+    .db-subtitle { color: var(--text-secondary); font-size: 14px; margin-top: 4px; }
+
+    /* ── Info hand-off banner ────────────────────────────── */
+    .db-info {
+      display: flex; gap: 12px; align-items: flex-start;
+      background: var(--pro-dim); border: 1px solid var(--pro-border);
+      border-radius: var(--r-md); padding: 12px 16px; margin-bottom: var(--space-lg);
+      font-size: 13px; color: var(--text-secondary); line-height: 1.55;
+    }
+    .db-info b { color: var(--text-primary); }
+    .db-info .x { margin-left: auto; cursor: pointer; color: var(--text-muted); background: none; border: none; font-size: 16px; }
+
+    /* ── Stat tiles ──────────────────────────────────────── */
+    .db-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: var(--space-md); margin-bottom: var(--space-lg); }
+    .stat {
+      background: var(--bg-2); border: 1px solid var(--border-subtle);
+      border-radius: var(--r-md); padding: 14px 16px;
+    }
+    .stat-n { font-family: var(--font-display); font-size: 30px; line-height: 1; }
+    .stat-l { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 6px; }
+
+    /* ── Tabs ────────────────────────────────────────────── */
+    .db-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: var(--space-lg); border-bottom: 1px solid var(--border-subtle); }
+    .db-tab {
+      background: none; border: none; border-bottom: 2px solid transparent;
+      color: var(--text-secondary); padding: 10px 14px; font-size: 14px; font-weight: 500;
+      transition: all var(--duration) var(--ease);
+    }
+    .db-tab .cnt { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); margin-left: 6px; }
+    .db-tab:hover { color: var(--text-primary); }
+    .db-tab.active { color: var(--text-primary); border-bottom-color: var(--accent); }
+
+    /* ── Job cards ───────────────────────────────────────── */
+    .db-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: var(--space-md); }
+    .job {
+      background: var(--bg-2); border: 1px solid var(--border-subtle);
+      border-radius: var(--r-lg); padding: var(--space-lg);
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    .job-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+    .job-company { font-size: 18px; font-weight: 600; letter-spacing: -0.01em; }
+    .job-owner { font-size: 11px; color: var(--text-muted); font-family: var(--font-mono); margin-top: 2px; }
+
+    .pill {
+      font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 999px;
+      border: 1px solid currentColor; white-space: nowrap;
+    }
+    select.pill { background: var(--bg-3); cursor: pointer; -webkit-appearance: none; appearance: none; padding-right: 22px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8'%3E%3Cpath d='M1 2l3 3 3-3' stroke='%238B93A8' fill='none' stroke-width='1.2'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 8px center; }
+
+    .job-meta { display: flex; flex-direction: column; gap: 7px; font-size: 13px; }
+    .job-meta a, .job-meta span.row { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); }
+    .job-meta a:hover { color: var(--accent-text); }
+    .job-meta .ic { width: 16px; text-align: center; opacity: 0.7; flex-shrink: 0; }
+    .job-meta .val { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .job-meta .muted { color: var(--text-muted); }
+
+    .job-redesign {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--bg-3); border: 1px solid var(--border-subtle); border-radius: var(--r-md);
+      padding: 8px 12px; font-size: 13px;
+    }
+    .job-redesign a { color: var(--accent-text); font-weight: 500; }
+    .job-redesign .muted { color: var(--text-muted); }
+
+    /* Timeline / status reports */
+    .job-events { display: flex; flex-direction: column; gap: 8px; }
+    .job-events-head { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); }
+    .ev { font-size: 12.5px; color: var(--text-secondary); line-height: 1.5; padding-left: 14px; position: relative; }
+    .ev::before { content: ''; position: absolute; left: 0; top: 7px; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); opacity: 0.6; }
+    .ev .ev-meta { color: var(--text-muted); font-family: var(--font-mono); font-size: 10.5px; }
+    .ev-add { display: flex; gap: 6px; margin-top: 2px; }
+    .ev-add input { flex: 1; padding: 7px 10px; font-size: 12.5px; background: var(--bg-0); color: var(--text-primary); border: 1px solid var(--border-default); border-radius: var(--r-sm); }
+    .ev-add input:focus { outline: none; border-color: var(--accent-border); }
+    .ev-add button { padding: 7px 12px; font-size: 12px; }
+
+    .job-foot { display: flex; gap: 8px; justify-content: flex-end; border-top: 1px solid var(--border-subtle); padding-top: 10px; }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+    .btn-ghost-danger { color: var(--danger); border-color: transparent; background: none; }
+    .btn-ghost-danger:hover { background: var(--danger-dim); border-color: rgba(248,113,113,0.3); }
+
+    .db-empty { text-align: center; color: var(--text-muted); padding: var(--space-3xl) var(--space-lg); }
+    .db-empty .big { font-family: var(--font-display); font-size: 26px; color: var(--text-secondary); margin-bottom: 8px; }
+
+    /* ── Modal ───────────────────────────────────────────── */
+    .modal-back { position: fixed; inset: 0; background: rgba(5,8,15,0.72); backdrop-filter: blur(4px); z-index: 50; display: none; place-items: center; padding: var(--space-lg); overflow-y: auto; }
+    .modal-back.show { display: grid; }
+    .modal {
+      width: 100%; max-width: 520px; background: var(--bg-2);
+      border: 1px solid var(--border-default); border-radius: var(--r-xl);
+      padding: var(--space-xl); box-shadow: 0 30px 80px -30px rgba(0,0,0,0.8);
+    }
+    .modal h2 { font-family: var(--font-display); font-size: 26px; margin-bottom: var(--space-lg); }
+    .form-row { margin-bottom: var(--space-md); }
+    .form-row.two { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md); }
+    .form-row label { display: block; font-size: 12px; color: var(--text-secondary); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .form-row input, .form-row textarea, .form-row select {
+      width: 100%; padding: 10px 12px; background: var(--bg-0); color: var(--text-primary);
+      border: 1px solid var(--border-default); border-radius: var(--r-md); font-size: 14px;
+    }
+    .form-row textarea { resize: vertical; min-height: 60px; }
+    .form-row input:focus, .form-row textarea:focus, .form-row select:focus { outline: none; border-color: var(--accent-border); }
+    .modal-foot { display: flex; gap: 10px; justify-content: flex-end; margin-top: var(--space-lg); }
+
+    .db-loading { text-align: center; color: var(--text-muted); padding: var(--space-2xl); font-family: var(--font-mono); font-size: 13px; }
+  </style>
+</head>
+<body>
+  <!-- Top bar -->
+  <header class="db-bar">
+    <div class="db-brand">
+      <span class="brand-icon">◈</span>
+      <span>Redesign Studio <small>/ outreach</small></span>
+    </div>
+    <div class="db-bar-right">
+      <span class="db-user">Signed in as <b id="whoami">…</b></span>
+      <button class="btn btn-sm" id="logoutBtn">Log out</button>
+    </div>
+  </header>
+
+  <main class="db-main">
+    <div class="db-head">
+      <div>
+        <h1 class="db-title">Outreach <em>dashboard</em></h1>
+        <p class="db-subtitle">Companies you're pitching redesigns to — from first lead to closed deal.</p>
+      </div>
+      <button class="btn btn-primary" id="addBtn">+ New company</button>
+    </div>
+
+    <div class="db-info" id="infoBanner">
+      <span>🔗</span>
+      <div>
+        <b>How the Claude redesign hand-off works.</b> Each company here is one shared record.
+        A second Claude session that builds the website redesigns reads &amp; writes this same
+        board — it drops the finished <b>redesign link</b> onto the card, flips the status to
+        <b>Sent</b> once the pitch email goes out, and logs updates in the timeline. You and your
+        partner both see every change live.
+      </div>
+      <button class="x" id="infoClose" title="Dismiss">×</button>
+    </div>
+
+    <div class="db-stats" id="stats"></div>
+
+    <div class="db-tabs" id="tabs"></div>
+
+    <div id="board"><div class="db-loading">Loading board…</div></div>
+  </main>
+
+  <!-- Add / edit modal -->
+  <div class="modal-back" id="modalBack">
+    <form class="modal" id="jobForm">
+      <h2 id="modalTitle">New company</h2>
+      <input type="hidden" id="f_id" />
+      <div class="form-row">
+        <label for="f_company">Company name *</label>
+        <input id="f_company" required placeholder="Sunrise Bakery" />
+      </div>
+      <div class="form-row">
+        <label for="f_address">Address</label>
+        <input id="f_address" placeholder="15 Vitosha Blvd, Sofia 1000" />
+      </div>
+      <div class="form-row">
+        <label for="f_maps">Google Maps link <span class="muted" style="text-transform:none">(auto-filled from address if blank)</span></label>
+        <input id="f_maps" placeholder="https://maps.google.com/…" />
+      </div>
+      <div class="form-row two">
+        <div>
+          <label for="f_email">Company email</label>
+          <input id="f_email" type="email" placeholder="hello@company.com" />
+        </div>
+        <div>
+          <label for="f_phone">Phone</label>
+          <input id="f_phone" placeholder="+359 …" />
+        </div>
+      </div>
+      <div class="form-row two">
+        <div>
+          <label for="f_website">Current website</label>
+          <input id="f_website" placeholder="https://…" />
+        </div>
+        <div>
+          <label for="f_redesign">Redesign link</label>
+          <input id="f_redesign" placeholder="https://…" />
+        </div>
+      </div>
+      <div class="form-row two">
+        <div>
+          <label for="f_status">Status</label>
+          <select id="f_status"></select>
+        </div>
+        <div>
+          <label for="f_owner">Owner</label>
+          <select id="f_owner">
+            <option value="">— unassigned —</option>
+            <option value="mdonkov">mdonkov</option>
+            <option value="lkashkin">lkashkin</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <label for="f_notes">Notes</label>
+        <textarea id="f_notes" placeholder="Anything worth remembering about this lead…"></textarea>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn" id="cancelBtn">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="saveBtn">Save</button>
+      </div>
+    </form>
+  </div>
+
+  <script type="module" src="js/pmh-dashboard.js"></script>
+</body>
+</html>

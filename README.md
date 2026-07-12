@@ -55,6 +55,8 @@ On first launch of the app, you'll be prompted for your **Anthropic API key**.
 ```
 pm-helper/
 ├── index.html          ← Hub / launcher (cards: PM Management · Trading Desk · Lattice)
+├── login.html          ← Redesign Studio — team login (Supabase Auth)
+├── dashboard.html      ← Redesign Studio — shared outreach dashboard
 ├── pm.html             ← PM Management landing (how it works · artefacts)
 ├── app.html            ← Wizard app (main PM experience)
 ├── tools.html          ← PM² planning tools
@@ -101,6 +103,42 @@ npm test        # 110 tests, all passing
 > ⚠️ **Binance needs a CORS proxy — the #1 thing that breaks.** `trading/data/binance.js` calls same-origin `/binance-spot/*`; deploy `worker-binance/` (`cd worker-binance && npx wrangler deploy`) and the section targets it via `window.__BINANCE_PROXY_BASE__` in `trading/index.html`. Without it, Scanner/Backtest fail with CORS errors in the console. See [`trading/README.md`](trading/README.md).
 
 ---
+
+## Redesign Studio (`/login.html` → `/dashboard.html`)
+
+A private, two-person dashboard for running website-redesign outreach: track the
+companies you're pitching, from first lead to closed deal.
+
+- **Login** (`login.html`) — real Supabase Auth (email/password). Two team
+  accounts exist: **`mdonkov`** and **`lkashkin`**. Sign in with just the
+  username; it maps to `<username>@pm-helper.app` behind the scenes. (Passwords
+  are set in Supabase Auth and intentionally **not** stored in this repo.)
+- **Dashboard** (`dashboard.html`) — one card per company with: address +
+  **Google Maps** link (auto-generated from the address if you don't paste one),
+  company **email** (click-to-mail), phone, current website, the **redesign
+  link**, an editable **status** (`Lead → Redesigning → Sent → Replied →
+  Finished`, plus `Passed`), an owner, and a per-job **status-report timeline**.
+  Tabs: All · Active · Redesigning · Sent · **Finished** · Passed, with live
+  stat tiles.
+- **Shared + live** — data lives in Supabase (`pmh_jobs`, `pmh_job_events`) with
+  Row-Level Security so only the two signed-in partners can read/write. Realtime
+  is enabled, so a change one partner makes appears on the other's screen live.
+
+### Redesign hand-off (the "second Claude session")
+
+The board is the integration contract. A separate Claude session that produces
+the redesigns reads/writes the **same** `pmh_jobs` table (Supabase project
+`wtzrxscdlqdgdiefsmru`):
+
+| Field          | Set by the redesign session |
+|----------------|-----------------------------|
+| `redesign_url` | link to the finished redesign it built |
+| `status`       | flip to `redesigning` while building, `sent` once the pitch email goes out |
+| `email`        | the company address the pitch was sent to |
+| `pmh_job_events` | append a row (`author: 'claude-redesign'`) to log what it did |
+
+Client dependency: `@supabase/supabase-js@2` is loaded from the jsDelivr CDN as
+an ES module (no build step) — matching the site's vanilla approach.
 
 ## Model Configuration
 
