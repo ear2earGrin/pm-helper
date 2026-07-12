@@ -71,10 +71,12 @@ Deno.serve(async (req) => {
     return json({ photoUri: d.photoUri ?? null });
   }
 
-  // action=search (default) : text search for a business
+  // action=search (default) : text search for a business (paginated, 20/page,
+  // up to 60 total per query via next_page_token)
   const q = (url.searchParams.get("q") ?? body.q ?? body.query) as string | undefined;
   if (!q) return json({ error: "missing query 'q'" }, 400);
   const region = (url.searchParams.get("region") ?? body.region) as string | undefined;
+  const pageToken = (url.searchParams.get("pageToken") ?? body.pageToken) as string | undefined;
   const maxRaw = parseInt((url.searchParams.get("max") ?? String(body.max ?? "")), 10);
   const maxResultCount = Number.isFinite(maxRaw) ? Math.min(Math.max(maxRaw, 1), 20) : 5;
 
@@ -84,12 +86,13 @@ Deno.serve(async (req) => {
       "Content-Type": "application/json",
       "X-Goog-Api-Key": GOOGLE_KEY,
       "X-Goog-FieldMask":
-        "places.id,places.displayName,places.formattedAddress,places.nationalPhoneNumber,places.internationalPhoneNumber,places.websiteUri,places.googleMapsUri,places.photos",
+        "places.id,places.displayName,places.formattedAddress,places.nationalPhoneNumber,places.internationalPhoneNumber,places.websiteUri,places.googleMapsUri,places.photos,nextPageToken",
     },
     body: JSON.stringify({
       textQuery: q,
       maxResultCount,
       ...(region ? { regionCode: region } : {}),
+      ...(pageToken ? { pageToken } : {}),
     }),
   });
   const d = await r.json();
@@ -104,5 +107,5 @@ Deno.serve(async (req) => {
     maps_url: p.googleMapsUri ?? "",
     photo_name: p.photos?.[0]?.name ?? null,
   }));
-  return json({ results });
+  return json({ results, next_page_token: d.nextPageToken ?? null });
 });

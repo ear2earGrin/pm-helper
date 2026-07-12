@@ -281,6 +281,7 @@
         <span id="p_status" class="muted"></span>
         <div style="display:flex; gap:10px; margin-left:auto">
           <button type="button" class="btn" id="prospectClose">Close</button>
+          <button type="button" class="btn" id="prospectMore" style="display:none">More results</button>
           <button type="button" class="btn btn-primary" id="prospectRun">Search</button>
         </div>
       </div>
@@ -310,6 +311,17 @@
     .p-result-add { flex-shrink: 0; padding: 6px 12px; font-size: 12px; }
     .p-result.is-on .p-result-add { opacity: 0.5; pointer-events: none; }
     .p-note { color: var(--text-muted); font-size: 13px; padding: 8px 2px; }
+
+    /* Website quality badges (1 = terrible site = great lead) */
+    .score-badge {
+      display: inline-block; font-size: 10.5px; font-weight: 700;
+      font-family: var(--font-mono); padding: 2px 7px; border-radius: 999px;
+      vertical-align: middle; margin-left: 6px; white-space: nowrap;
+    }
+    .s-red   { background: rgba(248,113,113,0.15); color: #FCA5A5; }
+    .s-amber { background: rgba(245,166,35,0.15);  color: #FCD34D; }
+    .s-green { background: rgba(15,217,160,0.12);  color: #6EE7B7; }
+    .s-wait  { background: var(--bg-3); color: var(--text-muted); }
   </style>
 
   <!-- Review & Send modal -->

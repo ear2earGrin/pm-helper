@@ -204,7 +204,7 @@ function jobCard(j) {
     <div class="job-top">
       <div>
         <div class="job-company">${esc(j.company)}</div>
-        ${j.owner ? `<div class="job-owner">@${esc(j.owner)}</div>` : ''}
+        ${j.owner || j.site_score != null ? `<div class="job-owner">${j.owner ? '@' + esc(j.owner) : ''}${j.owner && j.site_score != null ? ' · ' : ''}${j.site_score != null ? `<span title="${esc(j.score_notes || '')}">site ${j.site_score}/10</span>` : ''}</div>` : ''}
       </div>
       ${statusSelect}
     </div>
@@ -336,12 +336,13 @@ function subscribeRealtime() {
 }
 
 // ── Google Places (via the `places` Edge Function) ──────────
-async function placesSearch({ q, region, max = 5 }) {
+async function placesSearch({ q, region, max = 5, pageToken }) {
   const { data } = await supabase.auth.getSession();
   const token = data?.session?.access_token;
   if (!token) throw new Error('Not signed in');
   const params = new URLSearchParams({ q, max: String(max) });
   if (region) params.set('region', region);
+  if (pageToken) params.set('pageToken', pageToken);
   const res = await fetch(`${SUPABASE_URL}/functions/v1/places?${params.toString()}`, {
     headers: { Authorization: `Bearer ${token}`, apikey: SUPABASE_ANON },
   });
@@ -351,7 +352,35 @@ async function placesSearch({ q, region, max = 5 }) {
     if (j.error === 'places_error') throw new Error('Google Places: ' + (detail || 'request rejected'));
     throw new Error(j.error || `HTTP ${res.status}`);
   }
-  return j.results || [];
+  return { results: j.results || [], nextPageToken: j.next_page_token || null };
+}
+
+// Batch-rate websites 1-10 via the `site-score` Edge Function (1 = terrible
+// site = great lead). Returns a map url -> {score,label,reasons}.
+async function scoreSites(urls) {
+  if (!urls.length) return {};
+  const { data } = await supabase.auth.getSession();
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/site-score`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${data.session.access_token}`, apikey: SUPABASE_ANON, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ urls: urls.slice(0, 25) }),
+  });
+  const j = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(j.error || `HTTP ${res.status}`);
+  const map = {};
+  (j.results || []).forEach((r) => { map[r.url] = r; });
+  return map;
+}
+
+function applyScores(results, map) {
+  results.forEach((r) => {
+    if (r.score != null) return; // already scored
+    if (!r.website_url) {
+      r.score = 1; r.label = 'No website'; r.reasons = ['No website at all — prime candidate'];
+    } else if (map[r.website_url]) {
+      Object.assign(r, map[r.website_url]);
+    }
+  });
 }
 
 // ── Prospecting modal ───────────────────────────────────────
@@ -363,18 +392,46 @@ function buildProspectControls() {
 function openProspect() { $('prospectBack').classList.add('show'); $('p_city').focus(); }
 function closeProspect() { $('prospectBack').classList.remove('show'); }
 
-async function runProspect() {
+let prospectResults = [];
+let prospectQuery = null;
+let prospectNextToken = null;
+
+async function runProspect(loadMore = false) {
   const country = COUNTRIES.find((c) => c.code === $('p_country').value);
   const city = $('p_city').value.trim();
   const type = $('p_type').value.trim();
   if (!type) { $('p_status').textContent = 'Pick or type a business type first.'; return; }
   const q = `${type} in ${city}${city && country ? ', ' : ''}${country ? country.name : ''}`.trim();
-  $('p_status').textContent = 'Searching…';
-  $('p_results').innerHTML = '';
+
+  if (!loadMore) { prospectResults = []; prospectNextToken = null; prospectQuery = q; $('p_results').innerHTML = ''; }
+  $('p_status').textContent = loadMore ? 'Loading more…' : 'Searching…';
+  $('prospectMore').style.display = 'none';
   try {
-    const results = await placesSearch({ q, region: country?.code, max: 20 });
-    $('p_status').textContent = `${results.length} result${results.length === 1 ? '' : 's'} for “${q}”`;
-    renderProspectResults(results);
+    const { results, nextPageToken } = await placesSearch({
+      q, region: country?.code, max: 20,
+      pageToken: loadMore ? prospectNextToken : undefined,
+    });
+    prospectNextToken = nextPageToken;
+    const fresh = results.filter((r) => !prospectResults.some((p) => p.place_id === r.place_id));
+    prospectResults.push(...fresh);
+
+    // Rate every new site 1-10 (worst = best lead), then sort worst-first
+    $('p_status').textContent = `Rating ${fresh.length} website${fresh.length === 1 ? '' : 's'}…`;
+    renderProspectResults(prospectResults);
+    try {
+      const toScore = fresh.filter((r) => r.website_url).map((r) => r.website_url);
+      const map = await scoreSites(toScore);
+      applyScores(prospectResults, map);
+    } catch (e) {
+      applyScores(prospectResults, {});
+      $('p_status').textContent = 'Rating unavailable (' + e.message + ') — showing unrated results.';
+    }
+    prospectResults.sort((a, b) => (a.score ?? 11) - (b.score ?? 11));
+    const weak = prospectResults.filter((r) => (r.score ?? 11) <= 6).length;
+    $('p_status').textContent =
+      `${prospectResults.length} results for “${prospectQuery}” — ${weak} look weak (≤6/10), worst first`;
+    renderProspectResults(prospectResults);
+    $('prospectMore').style.display = prospectNextToken ? '' : 'none';
   } catch (e) {
     $('p_status').textContent = 'Search failed: ' + e.message;
   }
@@ -387,10 +444,15 @@ function renderProspectResults(results) {
     const onBoard = r.place_id && jobs.some((j) => j.place_id === r.place_id);
     const web = r.website_url ? r.website_url.replace(/^https?:\/\//, '').replace(/\/$/, '') : '';
     const sub = [r.address, web].filter(Boolean).join(' · ');
+    let badge = '<span class="score-badge s-wait" title="Rating…">…</span>';
+    if (r.score != null) {
+      const cls = r.score <= 3 ? 's-red' : r.score <= 6 ? 's-amber' : 's-green';
+      badge = `<span class="score-badge ${cls}" title="${esc((r.reasons || []).join(' · '))}">${r.score}/10 ${esc(r.label || '')}</span>`;
+    }
     return `<div class="p-result ${onBoard ? 'is-on' : ''}">
       <div class="p-result-main">
-        <div class="p-result-name">${esc(r.company)}</div>
-        <div class="p-result-sub">${esc(sub)}</div>
+        <div class="p-result-name">${esc(r.company)} ${badge}</div>
+        <div class="p-result-sub">${web ? `<a href="${esc(r.website_url)}" target="_blank" rel="noopener">${esc(web)}</a> · ` : ''}${esc(r.address || '')}</div>
       </div>
       <button type="button" class="btn btn-primary p-result-add" data-i="${i}">${onBoard ? 'On board' : '+ Add'}</button>
     </div>`;
@@ -407,6 +469,8 @@ async function addProspect(r, btn) {
     company: r.company, address: r.address || null, maps_url: r.maps_url || null,
     phone: r.phone || null, website_url: r.website_url || null, place_id: r.place_id || null,
     status: 'lead', owner: me,
+    site_score: r.score ?? null,
+    score_notes: r.reasons ? r.reasons.join(' · ') : null,
     notes: type ? `Prospect · ${type}${city ? ' in ' + city : ''}` : null,
   };
   const { data, error } = await supabase.from('pmh_jobs').insert(payload).select().single();
@@ -426,7 +490,7 @@ async function searchAutofill() {
   const box = $('f_results');
   box.innerHTML = '<div class="p-note">Searching…</div>';
   try {
-    const results = await placesSearch({ q, max: 5 });
+    const { results } = await placesSearch({ q, max: 5 });
     if (!results.length) { box.innerHTML = '<div class="p-note">No matches.</div>'; return; }
     box.innerHTML = results.map((r, i) =>
       `<button type="button" class="p-result" data-i="${i}"><div class="p-result-main">
@@ -551,7 +615,8 @@ function wireUI() {
   // Prospecting modal
   $('prospectBtn').addEventListener('click', openProspect);
   $('prospectClose').addEventListener('click', closeProspect);
-  $('prospectRun').addEventListener('click', runProspect);
+  $('prospectRun').addEventListener('click', () => runProspect(false));
+  $('prospectMore').addEventListener('click', () => runProspect(true));
   $('p_city').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); runProspect(); } });
   $('p_type').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); runProspect(); } });
   $('prospectBack').addEventListener('click', (e) => { if (e.target === $('prospectBack')) closeProspect(); });
