@@ -124,6 +124,27 @@ companies you're pitching, from first lead to closed deal.
   Row-Level Security so only the two signed-in partners can read/write. Realtime
   is enabled, so a change one partner makes appears on the other's screen live.
 
+### Finding prospects (Google Places)
+
+The dashboard can pull real businesses straight from Google:
+
+- **🔍 Find prospects** — pick a **country**, type a **city**, and choose a
+  **business type** (Dentists, Lawyers, Accountants, …). Results list matching
+  businesses with address, phone, website and Maps link; **+ Add** drops any of
+  them onto the board as a `lead` (deduped by Google `place_id`).
+- **🔍 Find on Google** (inside *New company*) — autofills one company's
+  address, Maps link, phone and website from a name search.
+
+Both go through a Supabase **Edge Function** (`supabase/functions/places/`) that
+holds the Google key **server-side** — the key is never in the site, the repo,
+or the browser, and the function only answers signed-in partners (protecting the
+billing quota). Note: Google Places returns name/address/phone/website/photos
+but **not email** — emails still come from scraping (Hermes) or a human.
+
+> 🔑 **Lock down the Google key** in Google Cloud Console: restrict it to the
+> Places API, add an application restriction, and set a billing quota cap.
+> To rotate it, set the `GOOGLE_MAPS_KEY` secret on the `places` function.
+
 ### Redesign hand-off (the "second Claude session")
 
 The board is the integration contract. A separate Claude session that produces
