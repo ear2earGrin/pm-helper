@@ -40,6 +40,19 @@
     body.fx-on .fx-glowgrid, body.fx-on .fx-spot { opacity: 1; }
     @media (prefers-reduced-motion: reduce) { .fx-glowgrid, .fx-spot { display: none; } }
     .hub-grid { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+
+    /* Login pill — stays visible on mobile (other nav links are hidden ≤768px) */
+    .nav-login {
+      display: inline-flex; align-items: center; gap: 5px;
+      border: 1px solid var(--accent-border);
+      color: var(--accent-text);
+      padding: 6px 14px; border-radius: 999px;
+      font-weight: 500;
+    }
+    .nav-login:hover { background: var(--accent-dim); }
+    @media (max-width: 768px) {
+      .nav-links .nav-link.nav-login { display: inline-flex; }
+    }
   </style>
 </head>
 <body class="landing-body">
@@ -62,7 +75,7 @@
         <a href="pm.html" class="nav-link"><span data-lang="en">Project Management</span><span data-lang="bg">Управление на проекти</span></a>
         <a href="trading/index.html" class="nav-link"><span data-lang="en">Trading Desk</span><span data-lang="bg">Търговско бюро</span></a>
         <a href="calc/index.html" class="nav-link"><span data-lang="en">Calculators</span><span data-lang="bg">Калкулатори</span></a>
-        <a href="login.html" class="nav-link"><span data-lang="en">Studio</span><span data-lang="bg">Студио</span></a>
+        <a href="login.html" class="nav-link nav-login">🔒 <span data-lang="en">Log in</span><span data-lang="bg">Вход</span></a>
       </div>
     </div>
   </nav>
