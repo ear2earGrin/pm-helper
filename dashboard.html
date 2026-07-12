@@ -170,11 +170,11 @@
     <div class="db-info" id="infoBanner">
       <span>🔗</span>
       <div>
-        <b>How the Claude redesign hand-off works.</b> Each company here is one shared record.
-        A second Claude session that builds the website redesigns reads &amp; writes this same
-        board — it drops the finished <b>redesign link</b> onto the card, flips the status to
-        <b>Sent</b> once the pitch email goes out, and logs updates in the timeline. You and your
-        partner both see every change live.
+        <b>How the pipeline works.</b> A daily Claude routine prospects new companies, builds a
+        redesign, and parks each job at <b>Review</b> with the redesign link on the card. You look
+        it over and hit <b>✉️ Review &amp; Send</b> — nothing is emailed without your click. If a
+        pitched company goes quiet for 7+ days it shows up under <b>Follow up</b>: call or visit,
+        then log it. You and your partner see every change live.
       </div>
       <button class="x" id="infoClose" title="Dismiss">×</button>
     </div>
@@ -310,6 +310,37 @@
     .p-result-add { flex-shrink: 0; padding: 6px 12px; font-size: 12px; }
     .p-result.is-on .p-result-add { opacity: 0.5; pointer-events: none; }
     .p-note { color: var(--text-muted); font-size: 13px; padding: 8px 2px; }
+  </style>
+
+  <!-- Review & Send modal -->
+  <div class="modal-back" id="sendBack">
+    <div class="modal modal-wide">
+      <h2>Review &amp; send pitch</h2>
+      <p class="send-meta" id="s_meta"></p>
+      <div class="form-row">
+        <label for="s_to">To (company email) *</label>
+        <input id="s_to" type="email" placeholder="hello@company.com" />
+      </div>
+      <div class="form-row">
+        <label for="s_subject">Subject *</label>
+        <input id="s_subject" />
+      </div>
+      <div class="form-row">
+        <label for="s_body">Message *</label>
+        <textarea id="s_body" style="min-height:190px"></textarea>
+      </div>
+      <div class="p-note" id="s_hint"></div>
+      <div class="modal-foot" style="flex-wrap:wrap">
+        <button type="button" class="btn" id="s_cancel">Cancel</button>
+        <button type="button" class="btn" id="s_mailto">Open in mail app</button>
+        <button type="button" class="btn" id="s_marksent">Mark as sent</button>
+        <button type="button" class="btn btn-primary" id="s_auto">Send automatically</button>
+      </div>
+    </div>
+  </div>
+  <style>
+    .send-meta { color: var(--text-secondary); font-size: 14px; margin: -10px 0 var(--space-lg); }
+    .send-meta a { color: var(--accent-text); font-weight: 500; }
   </style>
 
   <script type="module" src="js/pmh-dashboard.js"></script>

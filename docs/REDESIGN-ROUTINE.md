@@ -38,16 +38,35 @@ board updates live.
 ## Status pipeline (what the routine drives)
 
 ```
-lead ──▶ redesigning ──▶ sent ──▶ replied ──▶ finished
-                                      └─(no fit)─▶ passed
+lead ──▶ redesigning ──▶ review ──▶ sent ──▶ replied ──▶ finished
+        (routine)       (routine │  (HUMAN clicks Send      └─(no fit)─▶ passed
+                         stops   │   on the dashboard)
+                         HERE)   ▼
 ```
 
 - Pick up work at **`status = 'lead'`**.
 - Flip to **`redesigning`** while building.
-- Flip to **`sent`** once the outreach email goes out (only if email sending is
-  configured — see below). If you don't send, stop at `redesigning` and leave a
-  note; a human sends it.
+- When the redesign is hosted and `redesign_url` is set, flip to **`review`**
+  and stop. **The routine NEVER sends email and NEVER sets `sent`** — a human
+  reviews the redesign on the dashboard and clicks ✉️ Review & Send.
 - Never set `replied` / `finished` — those are human/inbox signals.
+
+## Daily prospecting (find 1 new company per run)
+
+Rotate deterministically through category × city (e.g. index by day-of-year):
+
+- **Categories:** Dentists, Accountants, Lawyers, Hair salons, Auto repair
+  shops, Restaurants, Veterinarians, Gyms, Real estate agencies, Bakeries.
+- **Cities:** Sofia, Plovdiv, Varna, Burgas, Ruse, Stara Zagora.
+
+1. Search via the `places` Edge Function (bot JWT):
+   `GET https://wtzrxscdlqdgdiefsmru.supabase.co/functions/v1/places?q=<category>+in+<city>&region=BG&max=20`
+2. Pick **one** business that (a) isn't already on the board (`place_id`), and
+   (b) has a weak web presence: no website, only a facebook.com / business.site
+   link, or a site that's clearly dated when you fetch it.
+3. Insert it as a `lead` (owner null, `place_id` set) and log a `system` event
+   like `Prospected: Dentists in Plovdiv`.
+4. If nothing qualifies, log that and move on — never force a bad lead.
 
 ---
 
@@ -102,15 +121,23 @@ See `redesigns/README.md` for the folder rules.
 
 ## Assets & fallbacks
 
-- **Design images / hero art needed?** Use the **Higgsfield MCP**
-  (`generate_image`) and inline/commit the result.
-- **Can't find the company's email, or need real photos of the business?**
-  Google Places does **not** return emails. Hand that to **Hermes** (the VM
-  agent): it scrapes the site / Maps for the contact email and photos, then
-  writes them back the same way (email + photo URL → `pmh_jobs`; photo files →
-  `redesigns/<slug>/`).
+- **Photos — order of preference:** (1) images scraped from the company's
+  **own website** (cleanest rights-wise — it's their content, used to pitch
+  them); (2) their Google Places photo via the `places` function
+  (`?action=photo&name=<photo_name>`); (3) **Higgsfield** (`generate_image`)
+  for generic hero/atmosphere art only — never to fake photos of their actual
+  business.
+- **Emails:** Google Places does **not** return emails. While building, fetch
+  the company's website and look for a contact email (mailto links, contact
+  page, imprint). If found, write it into `pmh_jobs.email` — the human's Send
+  button prefills from it. If not found, log it and hand off to **Hermes**
+  (the VM agent), which scrapes harder and writes back the same way.
 
 ## Email sending — the `send-pitch` function
+
+> **⛔ Not for the routine.** `send-pitch` exists for the dashboard's
+> ✉️ Review & Send button — a human decision. The routine must never call it;
+> its job ends at `status = 'review'`.
 
 A `send-pitch` Edge Function is deployed and handles sending + logging:
 
@@ -123,15 +150,13 @@ POST https://wtzrxscdlqdgdiefsmru.supabase.co/functions/v1/send-pitch
 
 On success it sends via Resend, logs an `email` event, and flips the job to
 `sent`. **It is safe to call even before it's configured** — with no Resend key
-it just returns `{ ok:false, error:"not_configured" }` and sends nothing.
+it just returns `{ ok:false, error:"not_configured" }` and sends nothing; the
+dashboard then falls back to "Open in mail app" + "Mark as sent".
 
-- **Check first:** `GET …/send-pitch?action=status` → `{ configured: true|false }`.
-  If `configured` is false, **do not** treat the lead as sent — stop at
-  `redesigning`, note that a human should send, and move on.
 - Turn it on by setting `RESEND_API_KEY` and `RESEND_FROM` secrets on the
   function — see `docs/EMAIL-SETUP.md`.
 - Cold B2B email in the EU/BG needs a clear sender identity and an opt-out line —
-  keep both in the template.
+  the dashboard's default template includes both; keep them.
 
 ---
 
@@ -152,24 +177,28 @@ it just returns `{ ok:false, error:"not_configured" }` and sends nothing.
 ## Routine prompt (paste this into the routine)
 
 ```
-You are the Redesign Routine for pm-brief. Follow docs/REDESIGN-ROUTINE.md in
-the ear2earGrin/pm-helper repo exactly.
+You are the daily Redesign Routine for pm-brief. Follow docs/REDESIGN-ROUTINE.md
+in the ear2earGrin/pm-helper repo exactly. Use the Supabase MCP, project
+wtzrxscdlqdgdiefsmru, and touch ONLY pmh_jobs / pmh_job_events.
 
 Each run:
-1. Read pmh_jobs where status = 'lead' and redesign_url is null
-   (Supabase project wtzrxscdlqdgdiefsmru, via the Supabase MCP).
-2. For each lead (cap at 5 per run):
-   a. Set status = 'redesigning' and log a 'status' event (author 'claude-redesign').
-   b. Look at website_url; build a modern, self-contained redesign index.html.
-      Use the Higgsfield MCP for hero/imagery if useful.
-   c. Commit it to redesigns/<company-slug>/index.html on main and push.
-   d. Set redesign_url = https://pm-brief.com/redesigns/<company-slug>/ and log a
-      'redesign' event describing what you changed.
-   e. If (and only if) an email sender is configured, send the pitch, set
-      status = 'sent', and log an 'email' event. Otherwise leave status at
-      'redesigning' and note that a human should send it.
-3. If you can't find a company's email or need real photos, note it and defer to
-   Hermes.
-Obey the guardrails in the doc: only pmh_jobs / pmh_job_events, dedupe, be
-idempotent, never overwrite owner or a later status.
+1. PROSPECT: add 1 new qualifying lead per the "Daily prospecting" section
+   (category × city rotation, weak-website filter, place_id dedupe).
+2. BUILD: for up to 2 jobs with status='lead' and redesign_url null:
+   a. Set status='redesigning', log a 'status' event (author 'claude-redesign').
+   b. Build a modern, self-contained redesign using the company's real info.
+      Photos: prefer images from their own website; else their Places photo;
+      Higgsfield only for generic hero art.
+   c. Commit to redesigns/<company-slug>/index.html on main and push.
+   d. Set redesign_url = https://pm-brief.com/redesigns/<company-slug>/.
+   e. Try to find their contact email on their website; if found, set
+      pmh_jobs.email.
+   f. Set status='review' and log a 'redesign' event describing what you did.
+3. NEVER send email, never call send-pitch, never set status='sent' — a human
+   reviews on the dashboard and clicks Send.
+4. If email or photos can't be found, log it and defer to Hermes.
+If something is broken (Places rejects, push fails), log what you can to
+pmh_job_events and stop gracefully — don't improvise around guardrails:
+only pmh_jobs / pmh_job_events, dedupe by place_id, be idempotent, never
+overwrite owner or a later status.
 ```
