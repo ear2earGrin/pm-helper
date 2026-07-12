@@ -118,10 +118,16 @@ companies you're pitching, from first lead to closed deal.
 - **Dashboard** (`dashboard.html`) — one card per company with: address +
   **Google Maps** link (auto-generated from the address if you don't paste one),
   company **email** (click-to-mail), phone, current website, the **redesign
-  link**, an editable **status** (`Lead → Redesigning → Sent → Replied →
-  Finished`, plus `Passed`), an owner, and a per-job **status-report timeline**.
-  Tabs: All · Active · Redesigning · Sent · **Finished** · Passed, with live
-  stat tiles.
+  link**, an editable **status** (`Lead → Redesigning → Review → Sent →
+  Replied → Finished`, plus `Passed`), an owner, and a per-job **status-report
+  timeline**. Tabs: All · Active · **Review** · Sent · **Follow up** ·
+  Finished · Passed, with live stat tiles.
+- **Human-in-the-loop sending** — the daily routine parks finished redesigns at
+  `Review`; the **✉️ Review & Send** button opens a pre-drafted pitch (editable)
+  that sends via `send-pitch`/Resend, or via your own mail app + "Mark as sent".
+  Nothing is ever emailed without a human click. Jobs `sent` 7+ days ago with
+  no reply surface under **Follow up** (call / visit, one-click logging).
+  Client-facing handover guide: [`docs/CLIENT-HANDOVER.md`](docs/CLIENT-HANDOVER.md).
 - **Shared + live** — data lives in Supabase (`pmh_jobs`, `pmh_job_events`) with
   Row-Level Security so only the two signed-in partners can read/write. Realtime
   is enabled, so a change one partner makes appears on the other's screen live.

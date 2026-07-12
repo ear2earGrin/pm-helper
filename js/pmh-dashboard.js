@@ -35,20 +35,28 @@ const BUSINESS_TYPES = [
 const STATUS = {
   lead:        { label: 'Lead',        color: '#8B93A8' },
   redesigning: { label: 'Redesigning', color: '#A78BFA' },
+  review:      { label: 'Review',      color: '#38BDF8' },
   sent:        { label: 'Sent',        color: '#F5A623' },
   replied:     { label: 'Replied',     color: '#0FD9A0' },
   finished:    { label: 'Finished',    color: '#0FD9A0' },
   passed:      { label: 'Passed',      color: '#4A5268' },
 };
-const STATUS_ORDER = ['lead', 'redesigning', 'sent', 'replied', 'finished', 'passed'];
+const STATUS_ORDER = ['lead', 'redesigning', 'review', 'sent', 'replied', 'finished', 'passed'];
+
+// A job pitched this long ago with no reply needs a call/visit.
+const FOLLOWUP_DAYS = 7;
+function needsFollowup(j) {
+  return j.status === 'sent' && (Date.now() - new Date(j.updated_at)) / 86400000 >= FOLLOWUP_DAYS;
+}
 
 const TABS = [
-  { key: 'all',      label: 'All',         match: () => true },
-  { key: 'active',   label: 'Active',      match: (s) => ['lead', 'redesigning', 'sent', 'replied'].includes(s) },
-  { key: 'redesign', label: 'Redesigning', match: (s) => s === 'redesigning' },
-  { key: 'sent',     label: 'Sent',        match: (s) => s === 'sent' || s === 'replied' },
-  { key: 'finished', label: 'Finished',    match: (s) => s === 'finished' },
-  { key: 'passed',   label: 'Passed',      match: (s) => s === 'passed' },
+  { key: 'all',      label: 'All',       match: () => true },
+  { key: 'active',   label: 'Active',    match: (j) => ['lead', 'redesigning', 'review', 'sent', 'replied'].includes(j.status) },
+  { key: 'review',   label: 'Review',    match: (j) => j.status === 'review' },
+  { key: 'sent',     label: 'Sent',      match: (j) => j.status === 'sent' || j.status === 'replied' },
+  { key: 'followup', label: 'Follow up', match: needsFollowup },
+  { key: 'finished', label: 'Finished',  match: (j) => j.status === 'finished' },
+  { key: 'passed',   label: 'Passed',    match: (j) => j.status === 'passed' },
 ];
 
 // ── State ───────────────────────────────────────────────────
@@ -123,10 +131,12 @@ function renderStats() {
   const counts = { total: jobs.length };
   STATUS_ORDER.forEach((k) => (counts[k] = 0));
   jobs.forEach((j) => (counts[j.status] = (counts[j.status] || 0) + 1));
+  const followups = jobs.filter(needsFollowup).length;
   const tiles = [
     { n: counts.total, l: 'Companies', c: 'var(--text-primary)' },
-    { n: counts.redesigning, l: 'Redesigning', c: STATUS.redesigning.color },
+    { n: counts.review, l: 'To review', c: STATUS.review.color },
     { n: counts.sent + counts.replied, l: 'Pitched', c: STATUS.sent.color },
+    { n: followups, l: 'Follow up', c: followups ? 'var(--danger)' : 'var(--text-muted)' },
     { n: counts.finished, l: 'Finished', c: STATUS.finished.color },
   ];
   $('stats').innerHTML = tiles.map((t) =>
@@ -136,7 +146,7 @@ function renderStats() {
 
 function renderTabs() {
   $('tabs').innerHTML = TABS.map((t) => {
-    const n = jobs.filter((j) => t.match(j.status)).length;
+    const n = jobs.filter((j) => t.match(j)).length;
     return `<button class="db-tab ${t.key === activeTab ? 'active' : ''}" data-tab="${t.key}">${t.label}<span class="cnt">${n}</span></button>`;
   }).join('');
   $('tabs').querySelectorAll('.db-tab').forEach((b) =>
@@ -145,7 +155,7 @@ function renderTabs() {
 
 function renderBoard() {
   const tab = TABS.find((t) => t.key === activeTab);
-  const list = jobs.filter((j) => tab.match(j.status));
+  const list = jobs.filter((j) => tab.match(j));
   const board = $('board');
 
   if (!list.length) {
@@ -203,6 +213,11 @@ function jobCard(j) {
     ${notes}
     ${timeline}
     <div class="job-foot">
+      ${j.status === 'sent' || j.status === 'replied' ? `
+        <button class="btn btn-sm" data-act="log-called" data-id="${j.id}" style="margin-right:auto">📞 Called</button>
+        <button class="btn btn-sm" data-act="log-visited" data-id="${j.id}">🚶 Visited</button>` : ''}
+      ${j.status === 'review' || (j.redesign_url && j.status === 'redesigning') ? `
+        <button class="btn btn-sm btn-primary" data-act="send" data-id="${j.id}">✉️ Review &amp; Send</button>` : ''}
       <button class="btn btn-sm" data-act="edit" data-id="${j.id}">Edit</button>
       <button class="btn btn-sm btn-ghost-danger" data-act="delete" data-id="${j.id}">Delete</button>
     </div>
@@ -214,6 +229,9 @@ function wireCards() {
     const act = el.dataset.act, id = el.dataset.id;
     if (act === 'status') el.addEventListener('change', () => changeStatus(id, el.value));
     if (act === 'edit') el.addEventListener('click', () => openModal(jobs.find((j) => j.id === id)));
+    if (act === 'send') el.addEventListener('click', () => openSend(jobs.find((j) => j.id === id)));
+    if (act === 'log-called') el.addEventListener('click', () => quickLog(id, '📞 Called — waiting to hear back'));
+    if (act === 'log-visited') el.addEventListener('click', () => quickLog(id, '🚶 Visited in person'));
     if (act === 'delete') el.addEventListener('click', () => deleteJob(id));
     if (act === 'ev-add') el.addEventListener('click', () => addEvent(id));
     if (act === 'ev-input') el.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); addEvent(id); } });
@@ -428,6 +446,101 @@ async function searchAutofill() {
   } catch (e) { box.innerHTML = `<div class="p-note">Search failed: ${esc(e.message)}</div>`; }
 }
 
+// ── Review & Send (human-in-the-loop email) ─────────────────
+const DISPLAY_NAME = { mdonkov: 'M. Donkov', lkashkin: 'L. Kashkin' };
+let sendJob = null;
+
+function pitchTemplate(j) {
+  const sig = DISPLAY_NAME[me] || me || '';
+  return `Hello ${j.company} team,
+
+We took the liberty of redesigning your website as a free preview — see it live here:
+${j.redesign_url || '(redesign link)'}
+
+We build modern, fast websites for local businesses. If you like the new look, we'll refine it with your feedback and hand it over ready to use — a flat €500, no subscriptions required.
+
+Best regards,
+${sig}
+Redesign Studio · pm-brief.com
+
+—
+You received this one-time email because your business is publicly listed. Reply "unsubscribe" and we won't contact you again.`;
+}
+
+async function openSend(j) {
+  if (!j) return;
+  sendJob = j;
+  $('s_meta').innerHTML = `<b>${esc(j.company)}</b>`
+    + (j.redesign_url ? ` · <a href="${esc(j.redesign_url)}" target="_blank" rel="noopener">redesign ↗</a>` : '')
+    + (j.website_url ? ` · <a href="${esc(j.website_url)}" target="_blank" rel="noopener">current site ↗</a>` : '');
+  $('s_to').value = j.email || '';
+  $('s_subject').value = `A new website for ${j.company}`;
+  $('s_body').value = pitchTemplate(j);
+  $('s_hint').textContent = 'Checking auto-send config…';
+  $('sendBack').classList.add('show');
+  ($('s_to').value ? $('s_subject') : $('s_to')).focus();
+  try {
+    const { data } = await supabase.auth.getSession();
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/send-pitch?action=status`, {
+      headers: { Authorization: `Bearer ${data.session.access_token}`, apikey: SUPABASE_ANON },
+    });
+    const s = await res.json();
+    $('s_auto').disabled = !s.configured;
+    $('s_hint').textContent = s.configured
+      ? 'Auto-send is configured — "Send automatically" delivers via Resend and marks the job Sent.'
+      : 'Auto-send not configured yet (see docs/EMAIL-SETUP.md). Use "Open in mail app", then "Mark as sent".';
+  } catch (_) {
+    $('s_auto').disabled = true;
+    $('s_hint').textContent = 'Could not check email config — use "Open in mail app", then "Mark as sent".';
+  }
+}
+function closeSend() { $('sendBack').classList.remove('show'); sendJob = null; }
+
+function openMailto() {
+  const to = $('s_to').value.trim();
+  if (!to) { alert('Enter the company email first.'); return; }
+  window.open(`mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent($('s_subject').value)}&body=${encodeURIComponent($('s_body').value)}`, '_blank');
+}
+
+async function markSentManually() {
+  const to = $('s_to').value.trim(), subject = $('s_subject').value.trim();
+  if (!to || !sendJob) { alert('Enter the company email first.'); return; }
+  const { error } = await supabase.from('pmh_jobs').update({ status: 'sent', email: to }).eq('id', sendJob.id);
+  if (error) { alert('Could not update: ' + error.message); return; }
+  await supabase.from('pmh_job_events').insert({
+    job_id: sendJob.id, author: me, kind: 'email', body: `Sent pitch manually to ${to} — “${subject}”`,
+  });
+  closeSend(); await loadAll();
+}
+
+async function sendAuto() {
+  const to = $('s_to').value.trim(), subject = $('s_subject').value.trim(), text = $('s_body').value;
+  if (!to || !subject || !text.trim() || !sendJob) { alert('Fill in to, subject and message.'); return; }
+  $('s_auto').disabled = true;
+  try {
+    const { data } = await supabase.auth.getSession();
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/send-pitch`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${data.session.access_token}`, apikey: SUPABASE_ANON, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ job_id: sendJob.id, to, subject, text }),
+    });
+    const r = await res.json().catch(() => ({}));
+    if (r.ok) { closeSend(); await loadAll(); return; }
+    $('s_hint').textContent = r.error === 'not_configured'
+      ? 'Auto-send not configured — use "Open in mail app" + "Mark as sent".'
+      : 'Send failed: ' + (r.message || r.error || `HTTP ${res.status}`);
+  } catch (e) { $('s_hint').textContent = 'Send failed: ' + e.message; }
+  $('s_auto').disabled = false;
+}
+
+async function quickLog(id, body) {
+  const { error } = await supabase.from('pmh_job_events').insert({ job_id: id, author: me, kind: 'note', body });
+  if (error) { alert('Could not log: ' + error.message); return; }
+  // touch the job so updated_at resets the follow-up clock
+  await supabase.from('pmh_jobs').update({ notes: body }).eq('id', id);
+  await loadAll();
+}
+
 // ── UI wiring ───────────────────────────────────────────────
 function wireUI() {
   $('addBtn').addEventListener('click', () => openModal(null));
@@ -442,9 +555,15 @@ function wireUI() {
   $('p_city').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); runProspect(); } });
   $('p_type').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); runProspect(); } });
   $('prospectBack').addEventListener('click', (e) => { if (e.target === $('prospectBack')) closeProspect(); });
+  // Review & Send modal
+  $('s_cancel').addEventListener('click', closeSend);
+  $('s_mailto').addEventListener('click', openMailto);
+  $('s_marksent').addEventListener('click', markSentManually);
+  $('s_auto').addEventListener('click', sendAuto);
+  $('sendBack').addEventListener('click', (e) => { if (e.target === $('sendBack')) closeSend(); });
   $('jobForm').addEventListener('submit', saveJob);
   $('modalBack').addEventListener('click', (e) => { if (e.target === $('modalBack')) closeModal(); });
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeModal(); closeProspect(); } });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeModal(); closeProspect(); closeSend(); } });
   $('infoClose').addEventListener('click', () => { $('infoBanner').style.display = 'none'; try { localStorage.setItem('pmh-info-hidden', '1'); } catch (_) {} });
   if (localStorage.getItem('pmh-info-hidden')) $('infoBanner').style.display = 'none';
   $('logoutBtn').addEventListener('click', async () => { await supabase.auth.signOut(); location.replace('login.html'); });
