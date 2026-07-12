@@ -110,14 +110,28 @@ See `redesigns/README.md` for the folder rules.
   writes them back the same way (email + photo URL → `pmh_jobs`; photo files →
   `redesigns/<slug>/`).
 
-## Email sending (optional, gated)
+## Email sending — the `send-pitch` function
 
-Only send if a transactional provider is wired up (e.g. a `send-pitch` Edge
-Function backed by Resend). If it is: send the pitch, set `status = 'sent'`,
-and log an `email` event with the subject + address. If it is **not** wired up
-yet, **do not attempt to send** — stop at `redesigning`, write a note, and let a
-human send. (Cold B2B email in the EU/BG needs a clear sender identity and an
-opt-out line — bake that into the template when the time comes.)
+A `send-pitch` Edge Function is deployed and handles sending + logging:
+
+```
+POST https://wtzrxscdlqdgdiefsmru.supabase.co/functions/v1/send-pitch
+  Authorization: Bearer <user or bot JWT>,  apikey: <anon key>
+  { "job_id": "<uuid>", "to": "hello@company.com",
+    "subject": "…", "html": "…", "mark_sent": true }
+```
+
+On success it sends via Resend, logs an `email` event, and flips the job to
+`sent`. **It is safe to call even before it's configured** — with no Resend key
+it just returns `{ ok:false, error:"not_configured" }` and sends nothing.
+
+- **Check first:** `GET …/send-pitch?action=status` → `{ configured: true|false }`.
+  If `configured` is false, **do not** treat the lead as sent — stop at
+  `redesigning`, note that a human should send, and move on.
+- Turn it on by setting `RESEND_API_KEY` and `RESEND_FROM` secrets on the
+  function — see `docs/EMAIL-SETUP.md`.
+- Cold B2B email in the EU/BG needs a clear sender identity and an opt-out line —
+  keep both in the template.
 
 ---
 
