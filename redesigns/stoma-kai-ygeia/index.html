@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Στόμα & Υγεία — Δρ. Γ. Μήτσας · Γναθοχειρουργός & Εμφυτεύματα · Θεσσαλονίκη</title>
+<meta name="description" content="Στόμα & Υγεία — Οδοντιατρείο & Γναθοχειρουργική Δρ. Γ. Μήτσα στη Θεσσαλονίκη. Εμφυτεύματα δοντιών, στοματική χειρουργική, αισθητική οδοντιατρική." />
+<style>
+  :root{
+    --bg:#f6f9fb; --ink:#0f2431; --muted:#5b7180; --line:#e2ebf0;
+    --teal:#0fb5a6; --teal-d:#0a8f83; --navy:#123a4d; --white:#fff; --soft:#eef6f6;
+    --r:16px; --shadow:0 18px 50px -24px rgba(18,58,77,.35);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:'Segoe UI',system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;color:var(--ink);background:var(--bg);line-height:1.65;-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 22px}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:13px 22px;border-radius:999px;font-weight:600;font-size:15px;transition:.2s;border:1.5px solid transparent;cursor:pointer}
+  .btn-primary{background:var(--teal);color:#fff;box-shadow:0 10px 24px -10px var(--teal)}
+  .btn-primary:hover{background:var(--teal-d);transform:translateY(-1px)}
+  .btn-ghost{border-color:var(--line);background:#fff;color:var(--navy)}
+  .btn-ghost:hover{border-color:var(--teal)}
+
+  /* Header */
+  header{position:sticky;top:0;z-index:20;background:rgba(246,249,251,.86);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .nav{display:flex;align-items:center;justify-content:space-between;height:70px}
+  .brand{display:flex;align-items:center;gap:11px;font-weight:800;letter-spacing:-.02em;font-size:19px;color:var(--navy)}
+  .logo{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,var(--teal),var(--navy));display:grid;place-items:center;color:#fff}
+  .nav-links{display:flex;gap:26px;align-items:center;font-size:15px;color:var(--muted);font-weight:500}
+  .nav-links a:hover{color:var(--teal)}
+  .nav-cta{display:flex;gap:10px;align-items:center}
+  .langtog{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font-size:13px;font-weight:600;color:var(--navy);cursor:pointer}
+  @media(max-width:820px){.nav-links{display:none}}
+
+  /* Hero */
+  .hero{padding:72px 0 60px;position:relative;overflow:hidden}
+  .hero-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:48px;align-items:center}
+  .eyebrow{display:inline-flex;align-items:center;gap:8px;background:var(--soft);color:var(--teal-d);font-weight:700;font-size:13px;padding:7px 14px;border-radius:999px;margin-bottom:20px}
+  .hero h1{font-size:clamp(34px,5vw,52px);line-height:1.08;letter-spacing:-.02em;color:var(--navy);margin-bottom:18px}
+  .hero h1 span{color:var(--teal)}
+  .hero p.lead{font-size:19px;color:var(--muted);max-width:52ch;margin-bottom:28px}
+  .hero-cta{display:flex;gap:12px;flex-wrap:wrap}
+  .trust{display:flex;gap:26px;margin-top:34px;flex-wrap:wrap}
+  .trust b{display:block;font-size:26px;color:var(--navy);letter-spacing:-.02em}
+  .trust span{font-size:13px;color:var(--muted)}
+  .hero-card{background:#fff;border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow);padding:30px;position:relative}
+  .hero-card .tooth{width:74px;height:74px;border-radius:20px;background:linear-gradient(135deg,var(--teal),var(--navy));display:grid;place-items:center;color:#fff;margin-bottom:18px}
+  .hero-card h3{color:var(--navy);font-size:20px;margin-bottom:6px}
+  .hero-card p{color:var(--muted);font-size:15px;margin-bottom:18px}
+  .mini{display:flex;align-items:center;gap:10px;padding:12px 0;border-top:1px solid var(--line);font-size:14px;color:var(--navy);font-weight:600}
+  .mini svg{color:var(--teal);flex:none}
+  @media(max-width:820px){.hero-grid{grid-template-columns:1fr;gap:32px}}
+
+  section{padding:66px 0}
+  .sec-head{text-align:center;max-width:640px;margin:0 auto 46px}
+  .sec-head .eyebrow{margin-bottom:14px}
+  .sec-head h2{font-size:clamp(27px,4vw,38px);color:var(--navy);letter-spacing:-.02em;line-height:1.15}
+  .sec-head p{color:var(--muted);font-size:17px;margin-top:12px}
+
+  .services{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+  @media(max-width:820px){.services{grid-template-columns:1fr}}
+  .svc{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:26px;transition:.2s}
+  .svc:hover{transform:translateY(-4px);box-shadow:var(--shadow);border-color:transparent}
+  .svc .ic{width:52px;height:52px;border-radius:14px;background:var(--soft);display:grid;place-items:center;color:var(--teal-d);margin-bottom:16px}
+  .svc h3{color:var(--navy);font-size:18px;margin-bottom:7px}
+  .svc p{color:var(--muted);font-size:14.5px}
+
+  .about{background:var(--navy);color:#dbe9ee;border-radius:28px;padding:54px;display:grid;grid-template-columns:1fr 1fr;gap:44px;align-items:center}
+  .about h2{color:#fff;font-size:clamp(26px,3.5vw,34px);letter-spacing:-.02em;margin-bottom:16px;line-height:1.2}
+  .about p{color:#a9c4ce;font-size:16px;margin-bottom:14px}
+  .about .chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}
+  .chip{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);padding:8px 14px;border-radius:999px;font-size:13.5px;color:#fff}
+  .about-panel{background:linear-gradient(135deg,rgba(15,181,166,.18),rgba(255,255,255,.03));border:1px solid rgba(255,255,255,.14);border-radius:20px;padding:30px}
+  .about-panel .row{display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.1)}
+  .about-panel .row:last-child{border:0}
+  .about-panel .n{width:40px;height:40px;border-radius:12px;background:var(--teal);color:var(--navy);display:grid;place-items:center;font-weight:800;flex:none}
+  @media(max-width:820px){.about{grid-template-columns:1fr;padding:34px}}
+
+  /* Contact */
+  .contact{display:grid;grid-template-columns:1fr 1fr;gap:26px}
+  @media(max-width:820px){.contact{grid-template-columns:1fr}}
+  .info{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:32px}
+  .info .line{display:flex;gap:14px;align-items:flex-start;padding:15px 0;border-bottom:1px solid var(--line)}
+  .info .line:last-child{border:0}
+  .info .ic{width:44px;height:44px;border-radius:12px;background:var(--soft);display:grid;place-items:center;color:var(--teal-d);flex:none}
+  .info .line b{display:block;color:var(--navy);font-size:15px}
+  .info .line span{color:var(--muted);font-size:14.5px}
+  .mapcard{border-radius:var(--r);overflow:hidden;border:1px solid var(--line);background:#fff;display:flex;flex-direction:column}
+  .mapcard iframe{width:100%;border:0;flex:1;min-height:330px}
+  .mapcard .foot{padding:16px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+  .mapcard .foot span{font-size:14px;color:var(--muted)}
+
+  footer{background:var(--navy);color:#9fbcc6;padding:40px 0;margin-top:20px}
+  .foot-in{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
+  .foot-in .brand{color:#fff}
+  .foot-note{font-size:13px}
+
+  .demo-ribbon{background:linear-gradient(90deg,var(--teal),var(--navy));color:#fff;text-align:center;font-size:13px;padding:9px 14px;font-weight:600}
+  .demo-ribbon a{text-decoration:underline}
+  [data-en]{display:none}
+  html[lang="en"] [data-el]{display:none}
+  html[lang="en"] [data-en]{display:revert}
+</style>
+</head>
+<body>
+<div class="demo-ribbon">
+  <span data-el>✦ Πρόταση νέας ιστοσελίδας — δείγμα σχεδίασης για το ιατρείο σας</span>
+  <span data-en>✦ Website redesign proposal — a design preview for your practice</span>
+</div>
+
+<header>
+  <div class="wrap nav">
+    <div class="brand"><span class="logo">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 3c-3 0-4.5 1.6-6 1.6S3 4 3 7c0 4 1.4 6 2.3 9.4C6 19 6.4 21 7.7 21c1.5 0 1.4-3 2.5-4.6.6-.9 1-1 1.8-1s1.2.1 1.8 1c1.1 1.6 1 4.6 2.5 4.6 1.3 0 1.7-2 2.4-4.6C19.6 13 21 11 21 7c0-3-1.5-2.4-3-2.4S15 3 12 3Z" fill="currentColor"/></svg>
+    </span><span>Στόμα<span style="color:var(--teal)">&amp;</span>Υγεία</span></div>
+    <nav class="nav-links">
+      <a href="#services" data-el>Υπηρεσίες</a><a href="#services" data-en>Services</a>
+      <a href="#about" data-el>Το ιατρείο</a><a href="#about" data-en>Practice</a>
+      <a href="#contact" data-el>Επικοινωνία</a><a href="#contact" data-en>Contact</a>
+    </nav>
+    <div class="nav-cta">
+      <button class="langtog" onclick="toggleLang()">EN / ΕΛ</button>
+      <a href="tel:+302311222190" class="btn btn-primary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8a15 15 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.4c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.4 0 .8-.3 1l-2.1 2.2Z"/></svg>
+        231 122 2190
+      </a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <span class="eyebrow">🦷 <span data-el>Γναθοχειρουργική &amp; Εμφυτεύματα</span><span data-en>Oral Surgery &amp; Implants</span></span>
+        <h1 data-el>Το χαμόγελό σας, σε <span>έμπειρα χέρια.</span></h1>
+        <h1 data-en>Your smile, in <span>expert hands.</span></h1>
+        <p class="lead" data-el>Στο ιατρείο <b>Στόμα &amp; Υγεία</b>, ο Δρ. Γ. Μήτσας προσφέρει σύγχρονη γναθοχειρουργική και οδοντικά εμφυτεύματα στη Θεσσαλονίκη — με ασφάλεια, διακριτικότητα και φροντίδα σε κάθε βήμα.</p>
+        <p class="lead" data-en>At <b>Stoma &amp; Ygeia</b>, Dr. G. Mitsas provides modern oral surgery and dental implants in Thessaloniki — safe, discreet and caring at every step.</p>
+        <div class="hero-cta">
+          <a href="#contact" class="btn btn-primary" data-el>Κλείστε ραντεβού →</a>
+          <a href="#contact" class="btn btn-primary" data-en>Book an appointment →</a>
+          <a href="#services" class="btn btn-ghost" data-el>Οι υπηρεσίες μας</a>
+          <a href="#services" class="btn btn-ghost" data-en>Our services</a>
+        </div>
+        <div class="trust">
+          <div><b>15+</b><span data-el>χρόνια εμπειρίας</span><span data-en>years of experience</span></div>
+          <div><b>100%</b><span data-el>ψηφιακός σχεδιασμός</span><span data-en>digital planning</span></div>
+          <div><b>All-on-4</b><span data-el>ολικές αποκαταστάσεις</span><span data-en>full restorations</span></div>
+        </div>
+      </div>
+      <div class="hero-card">
+        <div class="tooth">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none"><path d="M12 3c-3 0-4.5 1.6-6 1.6S3 4 3 7c0 4 1.4 6 2.3 9.4C6 19 6.4 21 7.7 21c1.5 0 1.4-3 2.5-4.6.6-.9 1-1 1.8-1s1.2.1 1.8 1c1.1 1.6 1 4.6 2.5 4.6 1.3 0 1.7-2 2.4-4.6C19.6 13 21 11 21 7c0-3-1.5-2.4-3-2.4S15 3 12 3Z" fill="currentColor"/></svg>
+        </div>
+        <h3 data-el>Δωρεάν πρώτη εκτίμηση</h3><h3 data-en>Free first assessment</h3>
+        <p data-el>Ελάτε για μια αρχική αξιολόγηση για εμφυτεύματα — με ψηφιακή ακτινογραφία και πλάνο θεραπείας.</p>
+        <p data-en>Come in for an initial implant assessment — with a digital X-ray and a treatment plan.</p>
+        <div class="mini"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg><span data-el>Ανώδυνες τεχνικές</span><span data-en>Pain-free techniques</span></div>
+        <div class="mini"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg><span data-el>Εγγύηση εμφυτευμάτων</span><span data-en>Implant guarantee</span></div>
+        <div class="mini"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg><span data-el>Πληρωμή σε δόσεις</span><span data-en>Payment in instalments</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="services">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow" data-el>Υπηρεσίες</span><span class="eyebrow" data-en>Services</span>
+        <h2 data-el>Ολοκληρωμένη φροντίδα στόματος</h2><h2 data-en>Complete oral care</h2>
+        <p data-el>Από τα οδοντικά εμφυτεύματα έως την αισθητική οδοντιατρική — τα πάντα κάτω από μία στέγη.</p>
+        <p data-en>From dental implants to aesthetic dentistry — everything under one roof.</p>
+      </div>
+      <div class="services">
+        <div class="svc"><div class="ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 4 6v6c0 5 3.4 8.5 8 10 4.6-1.5 8-5 8-10V6l-8-4Z"/></svg></div><h3 data-el>Οδοντικά Εμφυτεύματα</h3><h3 data-en>Dental Implants</h3><p data-el>Μόνιμη, φυσική αποκατάσταση χαμένων δοντιών με ψηφιακό σχεδιασμό.</p><p data-en>Permanent, natural restoration of missing teeth with digital planning.</p></div>
+        <div class="svc"><div class="ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5a2 2 0 0 0-2 2v14l4-4h12a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Z"/></svg></div><h3 data-el>Γναθοχειρουργική</h3><h3 data-en>Oral Surgery</h3><p data-el>Εξαγωγές φρονιμιτών, οστικά μοσχεύματα και χειρουργική με ασφάλεια.</p><p data-en>Wisdom-tooth removal, bone grafts and safe surgical procedures.</p></div>
+        <div class="svc"><div class="ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a7 7 0 0 0-7 7c0 3 2 5 2 8h10c0-3 2-5 2-8a7 7 0 0 0-7-7Z"/></svg></div><h3 data-el>All-on-4 / All-on-6</h3><h3 data-en>All-on-4 / All-on-6</h3><p data-el>Ολική αποκατάσταση γνάθου με σταθερά δόντια μέσα σε μία ημέρα.</p><p data-en>Full-arch fixed teeth restoration in a single day.</p></div>
+        <div class="svc"><div class="ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 2 7l10 5 10-5-10-5Zm0 7L2 14l10 5 10-5-10-5Z"/></svg></div><h3 data-el>Αισθητική Οδοντιατρική</h3><h3 data-en>Aesthetic Dentistry</h3><p data-el>Όψεις, λεύκανση και σχεδιασμός χαμόγελου προσαρμοσμένα σε εσάς.</p><p data-en>Veneers, whitening and smile design tailored to you.</p></div>
+        <div class="svc"><div class="ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h16v4H4zM4 10h16v10H4z"/></svg></div><h3 data-el>Προληπτική Οδοντιατρική</h3><h3 data-en>Preventive Dentistry</h3><p data-el>Καθαρισμοί, σφραγίσματα και τακτικοί έλεγχοι για γερά δόντια.</p><p data-en>Cleanings, fillings and regular check-ups for healthy teeth.</p></div>
+        <div class="svc"><div class="ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.6-7 10-7 10Z"/></svg></div><h3 data-el>Παιδοδοντιατρική</h3><h3 data-en>Paediatric Care</h3><p data-el>Φροντίδα με υπομονή και χαμόγελο για τους μικρούς μας φίλους.</p><p data-en>Gentle, patient care for our youngest patients.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="about">
+    <div class="wrap">
+      <div class="about">
+        <div>
+          <span class="eyebrow" style="background:rgba(255,255,255,.1);color:#fff" data-el>Το ιατρείο</span>
+          <span class="eyebrow" style="background:rgba(255,255,255,.1);color:#fff" data-en>The practice</span>
+          <h2 data-el>Σύγχρονη γναθοχειρουργική με ανθρώπινο πρόσωπο</h2>
+          <h2 data-en>Modern oral surgery with a human touch</h2>
+          <p data-el>Το ιατρείο «Στόμα &amp; Υγεία» του Δρ. Γ. Μήτσα συνδυάζει την εξειδίκευση στη γναθοχειρουργική με σύγχρονο εξοπλισμό και μια ζεστή, φιλική ατμόσφαιρα στην καρδιά της Θεσσαλονίκης.</p>
+          <p data-en>Dr. G. Mitsas's "Stoma &amp; Ygeia" practice combines specialist oral-surgery expertise with modern equipment and a warm, friendly atmosphere in the heart of Thessaloniki.</p>
+          <div class="chips">
+            <span class="chip" data-el>Ψηφιακή ακτινογραφία</span><span class="chip" data-en>Digital X-ray</span>
+            <span class="chip" data-el>Αποστείρωση</span><span class="chip" data-en>Full sterilisation</span>
+            <span class="chip" data-el>Χωρίς πόνο</span><span class="chip" data-en>Pain-free</span>
+          </div>
+        </div>
+        <div class="about-panel">
+          <div class="row"><span class="n">1</span><div><b style="color:#fff" data-el>Αξιολόγηση</b><b style="color:#fff" data-en>Assessment</b><span style="color:#a9c4ce;font-size:14px" data-el>Εξέταση & ψηφιακό πλάνο θεραπείας.</span><span style="color:#a9c4ce;font-size:14px" data-en>Exam & digital treatment plan.</span></div></div>
+          <div class="row"><span class="n">2</span><div><b style="color:#fff" data-el>Θεραπεία</b><b style="color:#fff" data-en>Treatment</b><span style="color:#a9c4ce;font-size:14px" data-el>Ασφαλής, ανώδυνη επέμβαση.</span><span style="color:#a9c4ce;font-size:14px" data-en>Safe, pain-free procedure.</span></div></div>
+          <div class="row"><span class="n">3</span><div><b style="color:#fff" data-el>Παρακολούθηση</b><b style="color:#fff" data-en>Follow-up</b><span style="color:#a9c4ce;font-size:14px" data-el>Έλεγχοι & εγγύηση αποτελέσματος.</span><span style="color:#a9c4ce;font-size:14px" data-en>Check-ups & result guarantee.</span></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="contact">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow" data-el>Επικοινωνία</span><span class="eyebrow" data-en>Contact</span>
+        <h2 data-el>Κλείστε το ραντεβού σας</h2><h2 data-en>Book your visit</h2>
+        <p data-el>Είμαστε εδώ για κάθε ερώτηση — τηλεφωνήστε μας ή περάστε από το ιατρείο.</p>
+        <p data-en>We're here for any question — call us or drop by the practice.</p>
+      </div>
+      <div class="contact">
+        <div class="info">
+          <a class="line" href="https://www.google.com/maps/search/?api=1&query=Kimonos+Voga+95+Thessaloniki+546+46">
+            <span class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5Z"/></svg></span>
+            <span><b data-el>Διεύθυνση</b><b data-en>Address</b><span>Κίμωνος Βόγα 95, Θεσσαλονίκη 546 46</span></span>
+          </a>
+          <a class="line" href="tel:+302311222190">
+            <span class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8a15 15 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.4c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.4 0 .8-.3 1l-2.1 2.2Z"/></svg></span>
+            <span><b data-el>Τηλέφωνο</b><b data-en>Phone</b><span>+30 231 122 2190</span></span>
+          </a>
+          <div class="line">
+            <span class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm0-6a10 10 0 0 0 0 20c1 0 1-1 1-1v-3s0-1-1-1a6 6 0 1 1 6-6c0 .8-.2 1.4-.6 1.4-.4 0-.6-.5-.6-1.2V9a1 1 0 0 0-2 0 4 4 0 1 0-.8 5.6"/></svg></span>
+            <span><b data-el>Ωράριο</b><b data-en>Hours</b><span data-el>Δευ–Παρ 09:00–21:00 · Σάβ κατόπιν ραντεβού</span><span data-en>Mon–Fri 09:00–21:00 · Sat by appointment</span></span>
+          </div>
+          <div style="margin-top:18px;display:flex;gap:12px;flex-wrap:wrap">
+            <a href="tel:+302311222190" class="btn btn-primary" data-el>Καλέστε τώρα</a>
+            <a href="tel:+302311222190" class="btn btn-primary" data-en>Call now</a>
+          </div>
+        </div>
+        <div class="mapcard">
+          <iframe loading="lazy" title="Χάρτης" src="https://www.google.com/maps?q=Kimonos+Voga+95+Thessaloniki+546+46&output=embed"></iframe>
+          <div class="foot">
+            <span data-el>Εύκολη πρόσβαση στο κέντρο</span><span data-en>Central, easy to reach</span>
+            <a href="https://www.google.com/maps/search/?api=1&query=Kimonos+Voga+95+Thessaloniki+546+46" class="btn btn-ghost" style="padding:9px 16px" data-el>Οδηγίες</a>
+            <a href="https://www.google.com/maps/search/?api=1&query=Kimonos+Voga+95+Thessaloniki+546+46" class="btn btn-ghost" style="padding:9px 16px" data-en>Directions</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap foot-in">
+    <div class="brand" style="color:#fff"><span class="logo">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 3c-3 0-4.5 1.6-6 1.6S3 4 3 7c0 4 1.4 6 2.3 9.4C6 19 6.4 21 7.7 21c1.5 0 1.4-3 2.5-4.6.6-.9 1-1 1.8-1s1.2.1 1.8 1c1.1 1.6 1 4.6 2.5 4.6 1.3 0 1.7-2 2.4-4.6C19.6 13 21 11 21 7c0-3-1.5-2.4-3-2.4S15 3 12 3Z" fill="currentColor"/></svg>
+    </span>Στόμα &amp; Υγεία</div>
+    <div class="foot-note">
+      <span data-el>© Στόμα &amp; Υγεία — Δρ. Γ. Μήτσας · Κίμωνος Βόγα 95, Θεσσαλονίκη</span>
+      <span data-en>© Stoma &amp; Ygeia — Dr. G. Mitsas · Kimonos Voga 95, Thessaloniki</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  function toggleLang(){
+    var el=document.documentElement;
+    el.lang = el.lang==='en' ? 'el' : 'en';
+  }
+</script>
+</body>
+</html>
