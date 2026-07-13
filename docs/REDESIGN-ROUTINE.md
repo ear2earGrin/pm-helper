@@ -110,15 +110,23 @@ convert` and log it. A human can revert from the dashboard if they disagree.
 
 ## Access — two supported methods
 
-**Method A — Supabase MCP (preferred, if this routine has it connected).**
+> ⚠️ **Scheduled (headless) runs use REST, not the MCP.** The Supabase MCP is
+> only loaded in interactive chats; a cron/fresh-session run almost never has
+> it. So **Method B (REST) is the primary path for this routine** — the
+> scheduled trigger's own instructions carry the bot credentials for exactly
+> this reason. Only use Method A if `execute_sql` is actually loaded.
+
+**Method A — Supabase MCP (only if actually loaded).**
 Read and write `pmh_jobs` / `pmh_job_events` directly with `execute_sql`.
 DDL is already done; you only ever `select` / `insert` / `update` rows.
 
-**Method B — REST (for Hermes or a routine without the MCP).**
+**Method B — REST (primary for scheduled runs; also for Hermes).**
 Sign in as the bot user, then use the REST API with the returned token.
 
-- Bot login: `claude-redesign@pm-helper.app`, password in the env var
-  `SUPABASE_BOT_PASSWORD` (never hardcode it).
+- Bot login: `claude-redesign@pm-helper.app`. The password lives in the
+  scheduled trigger's instructions (account-private), or the env var
+  `SUPABASE_BOT_PASSWORD` — never in this public repo. Rotate it by updating
+  the `claude-redesign` auth user + the trigger/env, if it's ever exposed.
 - Get a token:
   ```bash
   curl -s "https://wtzrxscdlqdgdiefsmru.supabase.co/auth/v1/token?grant_type=password" \
