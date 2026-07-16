@@ -89,6 +89,11 @@ CSS/JS, images inlined or in the same folder. It goes live at
 
 ## 3) A run
 
+0. **Recover stuck jobs first.** A previous run may have been interrupted mid-
+   build. At the start of every run, find jobs with `status = 'redesigning'` and
+   `redesign_url IS NULL` and reset them to `status = 'lead'` (log a `system`
+   event: "reset stuck redesigning → lead"). Never leave a job in `redesigning`
+   at the end of a run.
 1. **Build first** (up to 2 leads, oldest `created_at` first, so human-added
    leads go before auto-prospected ones). For each: set `status=redesigning`
    → **fetch the company's real website** for their services, branding, text
