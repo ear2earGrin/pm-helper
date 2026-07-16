@@ -53,17 +53,19 @@ lead ──▶ redesigning ──▶ review ──▶ sent ──▶ replied ─
 
 ## Order of work each run (humans come first)
 
-1. **BUILD existing leads first.** Select `status='lead'` and `redesign_url`
-   null, **oldest `created_at` first**, up to 2 per run. This guarantees leads
-   a human added on the dashboard are worked before anything the routine finds
-   for itself — humans added them on purpose.
-2. **Then prospect — but only if the backlog is small.** Count unbuilt leads
-   (`status='lead'`, `redesign_url` null). If that count is **≥ 3, skip
-   prospecting this run** (there's already plenty to build; don't pile up).
-   Otherwise add exactly 1 new lead per "Daily prospecting" below.
+Cadence: the engine runs **~5× per day, building exactly 1 redesign each run**
+(not one bulk batch) — smaller runs are far more robust than one long one.
 
-This keeps human-added leads from ever being starved by auto-prospected ones,
-and stops the queue growing faster than it's cleared.
+1. **BUILD one lead.** Select `status='lead'` and `redesign_url` null, **oldest
+   `created_at` first**, and build exactly **1** per run. Human-added leads
+   (older) are worked before anything the engine prospects for itself. If the
+   lead queue is empty, prospect one first (step 2) and build it this run.
+2. **Top up the queue.** If **0** unbuilt leads remain after building, prospect
+   1 new lead per "Daily prospecting" below so the next run has work. Skip
+   prospecting if **≥ 3** unbuilt leads are already queued.
+
+This keeps human-added leads from being starved, keeps every run productive, and
+stops the queue growing faster than it's cleared.
 
 ## Daily prospecting (find 1 new company per run)
 
@@ -236,15 +238,15 @@ You are the daily Redesign Routine for pm-brief. Follow docs/REDESIGN-ROUTINE.md
 in the ear2earGrin/pm-helper repo exactly. Use the Supabase MCP, project
 wtzrxscdlqdgdiefsmru, and touch ONLY pmh_jobs / pmh_job_events.
 
-Each run (see "Order of work each run" — humans first):
-1. BUILD FIRST: up to 2 jobs with status='lead' and redesign_url null,
-   OLDEST created_at first (human-added leads before auto-prospected ones).
-   Score first if unscored; if ≥ 7, set status='passed' with a note instead.
-2. THEN PROSPECT — only if fewer than 3 unbuilt leads remain: add 1 new
-   qualifying lead per the "Daily prospecting" section (rotate categories in
-   the CURRENT TARGET CITY, do not use the "planned expansion" cities, score
-   candidates with site-score, pick lowest score ≤ 6, dedupe by place_id,
-   store site_score/score_notes). If the backlog is ≥ 3, skip prospecting.
+Each run (runs ~5×/day; see "Order of work each run" — humans first):
+1. BUILD exactly ONE job with status='lead' and redesign_url null, OLDEST
+   created_at first (human-added leads before auto-prospected ones). If the
+   queue is empty, prospect one (step 2) and build it this run. Score first if
+   unscored; if ≥ 7, set status='passed' with a note instead of building.
+2. TOP UP: if 0 unbuilt leads remain, add 1 new qualifying lead per the "Daily
+   prospecting" section (DEPTH-FIRST category order in the CURRENT TARGET CITY,
+   score with site-score, pick lowest ≤ 6, dedupe by place_id, store
+   site_score/score_notes). Skip if ≥ 3 unbuilt leads are already queued.
 
 For each built job:
    a. Set status='redesigning', log a 'status' event (author 'claude-redesign').

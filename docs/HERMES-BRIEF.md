@@ -94,16 +94,19 @@ CSS/JS, images inlined or in the same folder. It goes live at
    `redesign_url IS NULL` and reset them to `status = 'lead'` (log a `system`
    event: "reset stuck redesigning → lead"). Never leave a job in `redesigning`
    at the end of a run.
-1. **Build first** (up to 2 leads, oldest `created_at` first, so human-added
-   leads go before auto-prospected ones). For each: set `status=redesigning`
-   → **fetch the company's real website** for their services, branding, text
-   and images → build a modern self-contained redesign → commit + push →
-   set `redesign_url` and `status=review` → find their contact email on their
-   site and set `pmh_jobs.email` → log a `redesign` event.
+1. **Build exactly ONE redesign per run.** This job runs ~5× per day — one
+   redesign each time, never a bulk batch. Pick the **oldest** `status=lead`
+   with `redesign_url` null (human-added leads first). If the lead queue is
+   empty, prospect the next qualifying business (step 2) and build that one.
+   For the chosen lead: set `status=redesigning` → **fetch the company's real
+   website** for services, branding, text and images → build a modern self-
+   contained redesign → commit + push → set `redesign_url` and `status=review`
+   → find their contact email and set `pmh_jobs.email` → log a `redesign` event.
    Skip anything already scoring ≥ 7 (site already good) → `status=passed` + note.
-2. **Then prospect** only if fewer than 3 unbuilt leads remain: add 1 new lead
-   in the current target city (**Thessaloniki, GR** for now), scored worst-first
-   (pick lowest ≤ 6), deduped by `place_id`.
+2. **Then top up the queue** so the next run has work ready: if **0** unbuilt
+   leads remain, prospect 1 new lead in the current target city
+   (**Thessaloniki, GR** for now), scored worst-first (pick lowest ≤ 6), deduped
+   by `place_id`. Skip prospecting if **≥ 3** unbuilt leads are already queued.
 
    **Category order — DEPTH-FIRST, not rotating.** Work one category to
    exhaustion before moving to the next, in this exact order:
