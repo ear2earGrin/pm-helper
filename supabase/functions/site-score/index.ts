@@ -129,7 +129,22 @@ async function scoreItem(item: { website_url?: string; company?: string; city?: 
   if (!url) {
     return { url: "", score: 1, label: "No website", reasons: ["No website on Google, and none found via search — prime candidate"], resolved_url: null };
   }
-  const base = await scoreUrl(url);
+  let base = await scoreUrl(url);
+  // A 404/unreachable on a deep link is often just a broken sub-page while the
+  // homepage is fine — retry the root domain before declaring the site weak.
+  if (base.label === "Broken" || base.label === "Unreachable") {
+    try {
+      const u = new URL(/^https?:\/\//i.test(url) ? url : "https://" + url);
+      if (u.pathname && u.pathname !== "/") {
+        const root = await scoreUrl(u.origin);
+        if (typeof root.score === "number" && (root.score as number) > (base.score as number)) {
+          root.resolved_url = u.origin;
+          root.reasons = [`⚠ Listing URL 404’d — scored the homepage (${u.origin}) instead`, ...(root.reasons as string[])];
+          base = root;
+        }
+      }
+    } catch (_) { /* keep original */ }
+  }
   if (resolved) {
     base.resolved_url = resolved;
     base.reasons = ["⚠ Site found via web search — not on their Google listing (verify)", ...(base.reasons as string[])];
