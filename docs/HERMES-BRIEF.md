@@ -102,8 +102,22 @@ CSS/JS, images inlined or in the same folder. It goes live at
    site and set `pmh_jobs.email` → log a `redesign` event.
    Skip anything already scoring ≥ 7 (site already good) → `status=passed` + note.
 2. **Then prospect** only if fewer than 3 unbuilt leads remain: add 1 new lead
-   in the current target city (**Thessaloniki, GR** for now), rotating business
-   categories, scored worst-first (pick lowest ≤ 6), deduped by `place_id`.
+   in the current target city (**Thessaloniki, GR** for now), scored worst-first
+   (pick lowest ≤ 6), deduped by `place_id`.
+
+   **Category order — DEPTH-FIRST, not rotating.** Work one category to
+   exhaustion before moving to the next, in this exact order:
+   1. **Dentists**  2. Lawyers  3. Accountants  4. Notaries
+   5. Physiotherapists  6. Dermatology / aesthetic clinics  7. Veterinarians
+   8. Opticians  9. Real estate agencies  10. Gyms *(later)*
+
+   Each run, start at the **top** category and pick the first one that still has
+   a qualifying candidate: search Places for it in Thessaloniki, paginate (up to
+   60), and add the worst-scoring business (score ≤ 6) whose `place_id` isn't
+   already in `pmh_jobs`. A category is **exhausted** when every candidate it
+   returns is already on the board or scores ≥ 7 — only then advance to the next
+   category. In practice: keep prospecting **Dentists** until Thessaloniki
+   dentists run dry, then Lawyers, and so on.
 
 ## Data-quality check before building (important)
 

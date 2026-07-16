@@ -67,10 +67,19 @@ and stops the queue growing faster than it's cleared.
 
 ## Daily prospecting (find 1 new company per run)
 
-Rotate deterministically through the categories (e.g. index by day-of-year):
+**Depth-first by category — exhaust one before moving to the next** (do NOT
+rotate). Order:
 
-- **Categories:** Dentists, Accountants, Lawyers, Hair salons, Auto repair
-  shops, Restaurants, Veterinarians, Gyms, Real estate agencies, Bakeries.
+1. **Dentists**  2. Lawyers  3. Accountants  4. Notaries  5. Physiotherapists
+6. Dermatology / aesthetic clinics  7. Veterinarians  8. Opticians
+9. Real estate agencies  10. Gyms *(later)*
+
+Each run, start at the top and use the first category that still has a
+qualifying candidate. A category is **exhausted** when every business it returns
+(paginated up to 60) is already on the board (`place_id`) or scores ≥ 7 — only
+then advance to the next. Keep prospecting **Dentists** until Thessaloniki
+dentists run dry, then Lawyers, and so on.
+
 - **Target city — current goal: Thessaloniki, Greece** (`region=GR`).
   This is the only city to prospect for now. Planned expansion (do NOT use
   yet, humans will move them up when ready): Athens (GR), then Sofia,
