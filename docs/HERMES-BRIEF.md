@@ -100,6 +100,20 @@ CSS/JS, images inlined or in the same folder. It goes live at
    in the current target city (**Thessaloniki, GR** for now), rotating business
    categories, scored worst-first (pick lowest ≤ 6), deduped by `place_id`.
 
+## Data-quality check before building (important)
+
+A `site_score` of 1 labelled **"Broken / 404 / Unreachable"** is often a false
+signal: Google listings frequently point to a **deep link or removed sub-page**
+that 404s while the business's real homepage is perfectly fine. Before you build:
+
+1. Fetch the lead's `website_url`. If it 404s or errors, **try the root domain**
+   (e.g. `https://alterlife.gr` instead of `https://alterlife.gr/limani-…`), and
+   search the web for "`<company> <city>`" to find their real site.
+2. If a real, working site exists and it's actually decent (modern, mobile,
+   HTTPS), **don't build** — set `status = passed` with a note and update
+   `website_url` to the real one. Only build when the business genuinely has a
+   weak, broken, or missing site.
+
 ## Guardrails (hard rules)
 
 - **NEVER send email, never set `status=sent`.** A human reviews on the
