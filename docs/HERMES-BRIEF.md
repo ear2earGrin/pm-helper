@@ -14,7 +14,10 @@ Everything else is below.
 ## 1) Supabase (the shared board + tools)
 
 - Base URL: `https://wtzrxscdlqdgdiefsmru.supabase.co`
-- anon apikey (public, safe): provided by operator as `SUPABASE_ANON`
+- anon apikey (public, safe): if `SUPABASE_ANON` isn't in your env, **read it
+  from the repo you cloned** — it's the `SUPABASE_ANON` constant in
+  `js/pmh-supabase.js`. It's a public key by design (it's shipped in the
+  website's client JS), so reading it from the repo is fine.
 - Bot login: `claude-redesign@pm-helper.app` / `SUPABASE_BOT_PASSWORD`
 
 **Sign in** (once per run) to get an access token:
