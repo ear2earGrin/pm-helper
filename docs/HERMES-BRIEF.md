@@ -87,6 +87,32 @@ CSS/JS, images inlined or in the same folder. It goes live at
 
 ---
 
+## FAST PATH — use the helper scripts (do this; it saves tool calls)
+
+Your per-run tool budget is small, so do NOT hand-run auth/curl/git steps. Two
+scripts in the repo do all the deterministic work in one execution each. A whole
+run is ~5 tool calls:
+
+```bash
+# 1. clone (token from your env)
+git clone https://$GITHUB_TOKEN@github.com/ear2earGrin/pm-helper.git && cd pm-helper
+# 2. pick or prospect ONE lead, mark it redesigning, print the job as JSON
+python3 scripts/hermes_pick.py        # → {"action":"build","job":{id,company,website_url,slug,...}}
+#    (if action != "build", there's nothing to do — stop and report)
+# 3. FETCH the job.website_url, then WRITE redesigns/<slug>/index.html
+#    (this is your only creative step — a modern, self-contained page)
+# 4. publish: commit+push, set redesign_url + status=review + email, log event
+python3 scripts/hermes_finish.py <job_id> <slug> [contact_email] "one-line summary"
+```
+
+The scripts read `SUPABASE_ANON` (from env or `js/pmh-supabase.js`),
+`SUPABASE_BOT_PASSWORD`, and `GITHUB_TOKEN` from your environment — you never
+type or eyeball the anon key. `hermes_pick.py` already handles stuck-job
+recovery, depth-first dentist-first prospecting, scoring, dedupe, and the
+`redesigning` status. You only fetch the site and write the page. Everything in
+"## 3) A run" below is what those scripts implement — read it for intent, but
+run the scripts rather than doing it by hand.
+
 ## 3) A run
 
 0. **Recover stuck jobs first.** A previous run may have been interrupted mid-
