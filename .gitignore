@@ -1,3 +1,7 @@
 node_modules/
 .vitest/
 *.log
+
+# Python
+__pycache__/
+*.pyc
