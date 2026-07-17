@@ -47,6 +47,64 @@
 
     @media(max-width:900px){.hero-grid,.calm,.bio,.bio-rich,.review-feature,.contact{grid-template-columns:1fr}.hero-card,.hero-art{min-height:500px}.services,.reviews{grid-template-columns:repeat(2,1fr)}.navlinks{display:none}.section-head{display:block}.gallery{grid-template-columns:1fr}.foot{display:block}.contact{padding:28px}}
     @media(max-width:560px){.services,.reviews{grid-template-columns:1fr}.hero{padding-top:42px}.float,.tree-caption{grid-template-columns:1fr}.wrap{width:min(100% - 28px,1180px)}.nav-actions .cta{display:none}}
+  
+
+    /* Final hero polish: blend the tooth-tree asset into the mint background, no visible image rectangle */
+    .hero-art{
+      position:relative!important;
+      min-height:610px!important;
+      border-radius:42px!important;
+      overflow:visible!important;
+      background:radial-gradient(ellipse at 64% 48%, rgba(255,255,255,.70) 0%, rgba(246,253,249,.42) 43%, rgba(235,248,242,.18) 62%, rgba(235,248,242,0) 78%)!important;
+      box-shadow:none!important;
+      border:0!important;
+      padding:0!important;
+      isolation:isolate!important;
+    }
+    .hero-art:before{
+      content:""!important;
+      position:absolute!important;
+      inset:34px -28px 26px -52px!important;
+      border-radius:999px!important;
+      background:radial-gradient(ellipse at 62% 52%, rgba(255,255,255,.58), rgba(239,250,245,.22) 58%, transparent 78%)!important;
+      filter:blur(20px)!important;
+      z-index:-1!important;
+    }
+    .hero-art .hero-photo,
+    .hero-art .tree-caption{display:none!important;visibility:hidden!important;opacity:0!important}
+    .hero-art .brand-illustration{
+      position:absolute!important;
+      inset:-70px -138px -80px -126px!important;
+      display:grid!important;
+      place-items:center!important;
+      overflow:hidden!important;
+      background:transparent!important;
+      border:0!important;
+      box-shadow:none!important;
+      border-radius:0!important;
+      -webkit-mask-image:radial-gradient(ellipse 58% 52% at 62% 52%, #000 0%, #000 48%, rgba(0,0,0,.78) 61%, rgba(0,0,0,.28) 73%, transparent 88%)!important;
+      mask-image:radial-gradient(ellipse 58% 52% at 62% 52%, #000 0%, #000 48%, rgba(0,0,0,.78) 61%, rgba(0,0,0,.28) 73%, transparent 88%)!important;
+    }
+    .hero-art .brand-illustration img{
+      width:min(124%,860px)!important;
+      height:100%!important;
+      object-fit:contain!important;
+      transform:translate(30px,16px)!important;
+      filter:drop-shadow(0 34px 54px rgba(45,77,54,.10))!important;
+      mix-blend-mode:multiply!important;
+    }
+    .hero-art .brand-illustration:after{
+      content:""!important;
+      position:absolute!important;
+      inset:0!important;
+      pointer-events:none!important;
+      background:
+        linear-gradient(90deg, #eef9f5 0%, rgba(238,249,245,.94) 10%, rgba(238,249,245,0) 25%, rgba(238,249,245,0) 76%, rgba(238,249,245,.90) 91%, #eef9f5 100%),
+        linear-gradient(180deg, #eef9f5 0%, rgba(238,249,245,.86) 12%, rgba(238,249,245,0) 28%, rgba(238,249,245,0) 73%, rgba(238,249,245,.86) 90%, #eef9f5 100%);
+      mix-blend-mode:normal!important;
+    }
+    @media(max-width:900px){.hero-art .brand-illustration{inset:-58px -120px -72px -110px!important}.hero-art .brand-illustration img{width:min(130%,760px)!important;transform:translate(22px,18px)!important}}
+
   </style>
 </head>
 <body>
