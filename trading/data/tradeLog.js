@@ -196,7 +196,7 @@ function formatYamlValue(v) {
   if (typeof v === "number") return Number.isFinite(v) ? String(v) : "null";
   if (Array.isArray(v)) return `[${v.map((x) => formatYamlValue(x)).join(", ")}]`;
   const s = String(v);
-  if (/[:#\-?,&*!|>'"%@`{}\[\]]/.test(s) || s.includes("\n")) {
+  if (/[:#\-?,&*!|>'"%@`{}[\]]/.test(s) || s.includes("\n")) {
     return JSON.stringify(s);
   }
   return s;

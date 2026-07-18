@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { adx } from "../adx.js";
+import { adx } from "../dmi.js";
 
 const c = (h, l, cl) => ({ high: h, low: l, close: cl, open: cl });
 

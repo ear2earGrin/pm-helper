@@ -14,6 +14,18 @@ export const SIGNAL_PARAMS = {
   rsiShortMin: 25,
   atrPeriod: 14,
   atrStopMult: 2.5,
+  // Ablation switches. The anti-chase filters (RSI gate, BB-extension veto) are the
+  // most suspect rules: they reject the strongest breakouts, which may be the very
+  // right-tail trends the system needs. Turn them off to measure their real effect.
+  useRsiVeto: true,
+  useBbVeto: true,
+  // When true, breakouts fire regardless of weekly regime — the bare-Donchian
+  // baseline for ablation. Production keeps this false.
+  ignoreRegime: false,
+  // Direction switches. The predeclared long/short decision rule says: if one
+  // book fails after costs, cut it rather than keep it for symmetry.
+  allowLong: true,
+  allowShort: true,
 };
 
 function bbExtensionVeto(close, basis, upper, lower, sigmas) {
@@ -71,11 +83,14 @@ export function computeSignal(dailyCandles, regimeState, params = SIGNAL_PARAMS)
     let reason = "no breakout";
     let stop = null;
 
-    if (breakoutUp && stateAt(i) === "LONG_OK") {
-      if (veto && veto.extendedUp) {
+    const longAllowed = params.allowLong !== false && (params.ignoreRegime || stateAt(i) === "LONG_OK");
+    const shortAllowed = params.allowShort !== false && (params.ignoreRegime || stateAt(i) === "SHORT_OK");
+
+    if (breakoutUp && longAllowed) {
+      if (params.useBbVeto && veto && veto.extendedUp) {
         action = "VETO";
         reason = "long breakout but price extended above upper BB band";
-      } else if (rsiV >= params.rsiLongMax) {
+      } else if (params.useRsiVeto && rsiV >= params.rsiLongMax) {
         action = "VETO";
         reason = `daily RSI ${rsiV.toFixed(1)} >= ${params.rsiLongMax} (overbought)`;
       } else {
@@ -84,11 +99,11 @@ export function computeSignal(dailyCandles, regimeState, params = SIGNAL_PARAMS)
         action = "LONG";
         reason = `daily close ${close} broke 20-day high ${prevEntryUpper.toFixed(2)}`;
       }
-    } else if (breakoutDown && stateAt(i) === "SHORT_OK") {
-      if (veto && veto.extendedDown) {
+    } else if (breakoutDown && shortAllowed) {
+      if (params.useBbVeto && veto && veto.extendedDown) {
         action = "VETO";
         reason = "short breakout but price extended below lower BB band";
-      } else if (rsiV <= params.rsiShortMin) {
+      } else if (params.useRsiVeto && rsiV <= params.rsiShortMin) {
         action = "VETO";
         reason = `daily RSI ${rsiV.toFixed(1)} <= ${params.rsiShortMin} (oversold)`;
       } else {

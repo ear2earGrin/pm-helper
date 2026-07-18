@@ -88,3 +88,18 @@ describe("backtestPortfolio", () => {
     }
   });
 });
+
+describe("exitOnRegimeFlip passthrough", () => {
+  it("with the flip exit disabled, no trade exits on regime flip", () => {
+    const a = trendFixture(0), b = trendFixture(2);
+    const res = backtestPortfolio({
+      dailyByAsset: { BTC: a.daily, SOL: b.daily },
+      weeklyByAsset: { BTC: a.weekly, SOL: b.weekly },
+      startEquity: 100000, riskPct: 1, feePct: 0,
+      exitOnRegimeFlip: false,
+    });
+    res.trades.forEach((t) => {
+      expect(t.exitReason.startsWith("regime flipped")).toBe(false);
+    });
+  });
+});

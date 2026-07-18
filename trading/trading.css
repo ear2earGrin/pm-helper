@@ -189,6 +189,19 @@
 .tr-badge--short_ok, .tr-badge--short { background: var(--danger-dim); color: var(--high-color); border-color: rgba(248, 113, 113, 0.25); }
 .tr-badge--veto { background: var(--amber-dim); color: var(--med-color); border-color: var(--amber-border); }
 .tr-badge--flat, .tr-badge--none, .tr-badge--warmup, .tr-badge--wait { color: var(--text-muted); }
+/* Derivatives grade badges (Scanner "Derivs" column) */
+.tr-badge--confirmed { background: var(--accent-dim); color: var(--low-color); border-color: var(--accent-border); }
+.tr-badge--neutral { color: var(--text-muted); }
+.tr-badge--caution { background: var(--amber-dim); color: var(--med-color); border-color: var(--amber-border); }
+.tr-badge--crowded { background: var(--danger-dim); color: var(--high-color); border-color: rgba(248, 113, 113, 0.25); }
+
+/* Trade Log lane badges + labels (SYSTEM vs DISCRETIONARY) */
+.tr-lane-badge { display: inline-block; padding: 2px 7px; border-radius: var(--r-sm); font-size: 10px; font-weight: 700; letter-spacing: 0.08em; }
+.tr-lane-badge--sys { background: rgba(96, 165, 250, 0.12); color: #9CC3FF; }
+.tr-lane-badge--disc { background: rgba(167, 139, 250, 0.14); color: #C9B6FF; }
+.tr-lanes { margin-top: var(--space-md); }
+.tr-lane-label { margin-top: var(--space-md); margin-bottom: 6px; font-size: 11px; letter-spacing: 0.12em; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; }
+.tr-lane-label:first-child { margin-top: 0; }
 
 /* ── Cards / chart / metrics ──────────────────────────────── */
 .tr-card {

@@ -4,7 +4,7 @@ import { sma, ema, rma } from "../sma.js";
 import { rsi } from "../rsi.js";
 import { macd } from "../macd.js";
 import { atr, trueRange } from "../atr.js";
-import { adx } from "../adx.js";
+import { adx } from "../dmi.js";
 import { donchian, donchianCloses } from "../donchian.js";
 import { bollinger } from "../bollinger.js";
 

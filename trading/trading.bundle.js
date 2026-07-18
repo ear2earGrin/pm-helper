@@ -1,6 +1,7 @@
 (() => {
   // trading/data/binance.js
   var SPOT = typeof window !== "undefined" && window.__BINANCE_PROXY_BASE__ || "/binance-spot";
+  var FUT = typeof window !== "undefined" && window.__BINANCE_FUT_BASE__ || "/binance-fut";
   function tfToBinanceInterval(tf) {
     const map = {
       "5m": "5m",
@@ -42,7 +43,10 @@
       low: Number(k[3]),
       close: Number(k[4]),
       volume: Number(k[5]),
-      closeTime: Math.floor(Number(k[6]) / 1e3)
+      closeTime: Math.floor(Number(k[6]) / 1e3),
+      // field 9 = taker buy base volume (aggressor market buys). Kept so the
+      // CVD / volume-delta indicator can read flow without extra requests.
+      takerBuyBase: Number(k[9])
     })).filter(
       (c) => Number.isFinite(c.time) && Number.isFinite(c.open) && Number.isFinite(c.high) && Number.isFinite(c.low) && Number.isFinite(c.close)
     );
@@ -75,6 +79,47 @@
       seen.add(c.time);
       return true;
     });
+  }
+  function num(v) {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+  }
+  async function fetchDerivsContext(asset) {
+    const symbol = binanceSymbol(asset, "USDT");
+    const out = {
+      asset,
+      fundingRate: null,
+      openInterest: null,
+      oiChange24hPct: null,
+      longShortRatio: null,
+      updatedAt: (/* @__PURE__ */ new Date()).toISOString()
+    };
+    try {
+      const f = await fetchJson(`${FUT}/fapi/v1/fundingRate?symbol=${symbol}&limit=1`);
+      out.fundingRate = num(f?.[0]?.fundingRate);
+    } catch {
+    }
+    try {
+      const oi = await fetchJson(`${FUT}/fapi/v1/openInterest?symbol=${symbol}`);
+      out.openInterest = num(oi?.openInterest);
+    } catch {
+    }
+    try {
+      const hist = await fetchJson(`${FUT}/futures/data/openInterestHist?symbol=${symbol}&period=1d&limit=2`);
+      let a = num(hist?.[0]?.sumOpenInterest);
+      let b = num(hist?.[1]?.sumOpenInterest);
+      if (hist?.[0]?.timestamp && hist?.[1]?.timestamp && Number(hist[0].timestamp) < Number(hist[1].timestamp)) {
+        [a, b] = [b, a];
+      }
+      if (a !== null && b !== null && b > 0) out.oiChange24hPct = (a - b) / b * 100;
+    } catch {
+    }
+    try {
+      const ls = await fetchJson(`${FUT}/futures/data/globalLongShortAccountRatio?symbol=${symbol}&period=4h&limit=1`);
+      out.longShortRatio = num(ls?.[0]?.longShortRatio);
+    } catch {
+    }
+    return out;
   }
   function dropUnclosedCandle(candles) {
     if (candles.length === 0) return candles;
@@ -197,7 +242,7 @@
     return out;
   }
 
-  // trading/indicators/adx.js
+  // trading/indicators/dmi.js
   function adx(candles, period = 14) {
     const len = candles.length;
     const empty = () => new Array(len).fill(null);
@@ -245,7 +290,11 @@
     macdSignal: 9,
     rsiPeriod: 14,
     adxPeriod: 14,
-    adxMin: 20
+    adxMin: 20,
+    // Ablation switches: turn individual regime conditions on/off to test whether
+    // each actually contributes out-of-sample edge (see scripts/ablation.mjs). All
+    // true = the v1.1 spec regime.
+    use: { sma: true, macd: true, rsi: true, adx: true }
   };
   function computeRegime(weeklyCandles, params = REGIME_PARAMS) {
     const len = weeklyCandles.length;
@@ -265,12 +314,14 @@
         series[i] = { state: "WARMUP", close, sma: smaV, hist: histV, rsi: rsiV, adx: adxV };
         continue;
       }
-      const trending = adxV >= params.adxMin;
-      const bullChecks = close > smaV && histV > 0 && rsiV > 50;
-      const bearChecks = close < smaV && histV < 0 && rsiV < 50;
+      const use = params.use || { sma: true, macd: true, rsi: true, adx: true };
+      const trending = use.adx ? adxV >= params.adxMin : true;
+      const directionalEnabled = use.sma || use.macd || use.rsi;
+      const bullChecks = (!use.sma || close > smaV) && (!use.macd || histV > 0) && (!use.rsi || rsiV > 50);
+      const bearChecks = (!use.sma || close < smaV) && (!use.macd || histV < 0) && (!use.rsi || rsiV < 50);
       let state = "FLAT";
-      if (trending && bullChecks) state = "LONG_OK";
-      else if (trending && bearChecks) state = "SHORT_OK";
+      if (directionalEnabled && trending && bullChecks && !bearChecks) state = "LONG_OK";
+      else if (directionalEnabled && trending && bearChecks && !bullChecks) state = "SHORT_OK";
       series[i] = { state, close, sma: smaV, hist: histV, rsi: rsiV, adx: adxV };
     }
     return { series, latest: series[len - 1] };
@@ -324,7 +375,19 @@
     rsiLongMax: 75,
     rsiShortMin: 25,
     atrPeriod: 14,
-    atrStopMult: 2.5
+    atrStopMult: 2.5,
+    // Ablation switches. The anti-chase filters (RSI gate, BB-extension veto) are the
+    // most suspect rules: they reject the strongest breakouts, which may be the very
+    // right-tail trends the system needs. Turn them off to measure their real effect.
+    useRsiVeto: true,
+    useBbVeto: true,
+    // When true, breakouts fire regardless of weekly regime — the bare-Donchian
+    // baseline for ablation. Production keeps this false.
+    ignoreRegime: false,
+    // Direction switches. The predeclared long/short decision rule says: if one
+    // book fails after costs, cut it rather than keep it for symmetry.
+    allowLong: true,
+    allowShort: true
   };
   function bbExtensionVeto(close, basis, upper, lower, sigmas) {
     if ([basis, upper, lower].some((v) => v === null || v === void 0)) return false;
@@ -363,11 +426,13 @@
       let action = "NONE";
       let reason = "no breakout";
       let stop = null;
-      if (breakoutUp && stateAt(i) === "LONG_OK") {
-        if (veto && veto.extendedUp) {
+      const longAllowed = params.allowLong !== false && (params.ignoreRegime || stateAt(i) === "LONG_OK");
+      const shortAllowed = params.allowShort !== false && (params.ignoreRegime || stateAt(i) === "SHORT_OK");
+      if (breakoutUp && longAllowed) {
+        if (params.useBbVeto && veto && veto.extendedUp) {
           action = "VETO";
           reason = "long breakout but price extended above upper BB band";
-        } else if (rsiV >= params.rsiLongMax) {
+        } else if (params.useRsiVeto && rsiV >= params.rsiLongMax) {
           action = "VETO";
           reason = `daily RSI ${rsiV.toFixed(1)} >= ${params.rsiLongMax} (overbought)`;
         } else {
@@ -376,11 +441,11 @@
           action = "LONG";
           reason = `daily close ${close} broke 20-day high ${prevEntryUpper.toFixed(2)}`;
         }
-      } else if (breakoutDown && stateAt(i) === "SHORT_OK") {
-        if (veto && veto.extendedDown) {
+      } else if (breakoutDown && shortAllowed) {
+        if (params.useBbVeto && veto && veto.extendedDown) {
           action = "VETO";
           reason = "short breakout but price extended below lower BB band";
-        } else if (rsiV <= params.rsiShortMin) {
+        } else if (params.useRsiVeto && rsiV <= params.rsiShortMin) {
           action = "VETO";
           reason = `daily RSI ${rsiV.toFixed(1)} <= ${params.rsiShortMin} (oversold)`;
         } else {
@@ -446,13 +511,132 @@
     };
   }
 
+  // trading/strategy/derivatives.js
+  var DERIVATIVES_PARAMS = {
+    fundingElevated: 5e-4,
+    // 0.05% per interval — crowded
+    fundingExtreme: 1e-3,
+    // 0.10% — very crowded, squeeze risk high
+    oiConfirmPct: 3,
+    // OI up >3% over window = conviction
+    oiFadePct: -3
+    // OI down >3% = unwinding / weaker move
+  };
+  function assessDerivatives({ direction, fundingRate, oiChangePct, cvdSlope: cvdSlope2 }, params = DERIVATIVES_PARAMS) {
+    const reasons = [];
+    let crowding = 0;
+    let confirm2 = 0;
+    if (Number.isFinite(fundingRate)) {
+      const f = fundingRate;
+      const crowdedDir = f > 0 ? "LONG" : "SHORT";
+      const mag = Math.abs(f);
+      const pct = (f * 100).toFixed(4);
+      if (mag >= params.fundingExtreme && crowdedDir === direction) {
+        crowding += 2;
+        reasons.push(`funding ${pct}% extreme \u2014 ${direction.toLowerCase()}s very crowded`);
+      } else if (mag >= params.fundingElevated && crowdedDir === direction) {
+        crowding += 1;
+        reasons.push(`funding ${pct}% elevated \u2014 ${direction.toLowerCase()}s crowded`);
+      } else if (mag >= params.fundingElevated && crowdedDir !== direction) {
+        confirm2 += 1;
+        reasons.push(`funding ${pct}% favors us \u2014 crowd is ${crowdedDir.toLowerCase()}`);
+      }
+    }
+    if (Number.isFinite(oiChangePct)) {
+      if (oiChangePct >= params.oiConfirmPct) {
+        confirm2 += 1;
+        reasons.push(`OI +${oiChangePct.toFixed(1)}% \u2014 rising conviction`);
+      } else if (oiChangePct <= params.oiFadePct) {
+        crowding += 1;
+        reasons.push(`OI ${oiChangePct.toFixed(1)}% \u2014 positions unwinding, weaker move`);
+      }
+    }
+    if (Number.isFinite(cvdSlope2) && cvdSlope2 !== 0) {
+      const flowDir = cvdSlope2 > 0 ? "LONG" : "SHORT";
+      if (flowDir === direction) {
+        confirm2 += 1;
+        reasons.push("aggressor flow confirms direction");
+      } else {
+        crowding += 1;
+        reasons.push("aggressor flow diverges from price");
+      }
+    }
+    let grade = "NEUTRAL";
+    let standDown = false;
+    if (crowding >= 2 && crowding > confirm2) {
+      grade = "CROWDED";
+      standDown = true;
+    } else if (confirm2 >= 2 && confirm2 > crowding) {
+      grade = "CONFIRMED";
+    } else if (crowding > confirm2) {
+      grade = "CAUTION";
+    }
+    return { grade, standDown, crowding, confirm: confirm2, reasons };
+  }
+
+  // trading/indicators/cvd.js
+  function volumeDelta(candles) {
+    return candles.map((c) => {
+      const v = c.volume;
+      const tb = c.takerBuyBase;
+      if (!Number.isFinite(v) || !Number.isFinite(tb)) return null;
+      return 2 * tb - v;
+    });
+  }
+  function cvd(candles) {
+    const delta = volumeDelta(candles);
+    const out = new Array(candles.length).fill(null);
+    let run = 0;
+    let started = false;
+    for (let i = 0; i < candles.length; i++) {
+      if (delta[i] === null) {
+        out[i] = started ? run : null;
+        continue;
+      }
+      run += delta[i];
+      started = true;
+      out[i] = run;
+    }
+    return { delta, cvd: out };
+  }
+  function cvdSlope(candles, lookback = 10) {
+    const { cvd: c } = cvd(candles);
+    const out = new Array(candles.length).fill(null);
+    for (let i = lookback; i < candles.length; i++) {
+      if (c[i] === null || c[i - lookback] === null) continue;
+      let vol = 0;
+      for (let j = i - lookback + 1; j <= i; j++) vol += candles[j].volume || 0;
+      if (vol <= 0) continue;
+      out[i] = (c[i] - c[i - lookback]) / vol;
+    }
+    return out;
+  }
+
+  // trading/strategy/presets.js
+  var PRESET_V1 = {
+    name: "v1",
+    signalParams: { ...SIGNAL_PARAMS, useRsiVeto: true, useBbVeto: true, allowLong: true, allowShort: true },
+    regimeParams: { ...REGIME_PARAMS, use: { sma: true, macd: true, rsi: true, adx: true } },
+    exitOnRegimeFlip: true
+  };
+  var PRESET_V2 = {
+    name: "v2",
+    signalParams: { ...SIGNAL_PARAMS, useRsiVeto: false, useBbVeto: false, allowLong: true, allowShort: false },
+    regimeParams: { ...REGIME_PARAMS, use: { sma: true, macd: false, rsi: false, adx: false } },
+    exitOnRegimeFlip: false
+  };
+  var PRODUCTION_PRESET = PRESET_V2;
+
   // trading/strategy/runOne.js
-  function runOne({ asset, weekly, daily, equity, riskPct }) {
-    const regime = computeRegime(weekly);
+  function runOne({ asset, weekly, daily, equity, riskPct, derivs = null, preset = PRODUCTION_PRESET }) {
+    const regime = computeRegime(weekly, preset.regimeParams);
     const regimeState = regime.latest?.state || "WARMUP";
-    const signal = computeSignal(daily, regimeState);
+    const signal = computeSignal(daily, regimeState, preset.signalParams);
     const latestSignal = signal.latest;
+    const cvdSlopeArr = cvdSlope(daily, 10);
+    const flowSlope = cvdSlopeArr.length ? cvdSlopeArr[cvdSlopeArr.length - 1] : null;
     let sizing = null;
+    let derivsAssessment = null;
     if (latestSignal && (latestSignal.action === "LONG" || latestSignal.action === "SHORT")) {
       sizing = sizePosition({
         equity,
@@ -461,14 +645,45 @@
         stop: latestSignal.stop,
         direction: latestSignal.action
       });
+      derivsAssessment = assessDerivatives({
+        direction: latestSignal.action,
+        fundingRate: derivs?.fundingRate ?? null,
+        oiChangePct: derivs?.oiChange24hPct ?? null,
+        cvdSlope: flowSlope
+      });
     }
     return {
       asset,
       regimeState,
       regimeLatest: regime.latest,
       signal: latestSignal,
-      sizing
+      sizing,
+      flowSlope,
+      derivs,
+      derivsAssessment
     };
+  }
+
+  // trading/strategy/liquidation.js
+  function estimateLiquidation({ entry, direction, leverage, mmrPct = 0.5 }) {
+    if (!Number.isFinite(entry) || entry <= 0) return null;
+    if (!Number.isFinite(leverage) || leverage <= 0) return null;
+    const mmr = mmrPct / 100;
+    const invLev = 1 / leverage;
+    return direction === "LONG" ? entry * (1 - invLev + mmr) : entry * (1 + invLev - mmr);
+  }
+  function stopToLiqBufferPct({ entry, stop, direction, leverage, mmrPct = 0.5 }) {
+    const liq = estimateLiquidation({ entry, direction, leverage, mmrPct });
+    if (liq === null || !Number.isFinite(stop) || !Number.isFinite(entry) || entry <= 0) return null;
+    return direction === "LONG" ? (stop - liq) / entry * 100 : (liq - stop) / entry * 100;
+  }
+  function maxSafeLeverage({ entry, stop, direction, mmrPct = 0.5, minBufferPct = 2, buckets = [1, 2, 3, 5, 8, 10, 15, 20, 25] }) {
+    let best = null;
+    for (const lev of buckets) {
+      const buf = stopToLiqBufferPct({ entry, stop, direction, leverage: lev, mmrPct });
+      if (buf !== null && buf >= minBufferPct) best = lev;
+    }
+    return best;
   }
 
   // trading/ui/dom.js
@@ -533,8 +748,9 @@
   var QUOTE = "USDT";
   var WEEKLY_LIMIT = 200;
   var DAILY_LIMIT = 200;
+  var LEVERAGE_BUCKETS = [1, 2, 3, 5, 8, 10, 15, 20, 25];
   var LS_KEY = "scanner.config.v1";
-  var DEFAULT_CFG = { equity: 1e5, riskPct: 1 };
+  var DEFAULT_CFG = { equity: 1e5, riskPct: 1, fetchDerivs: false, leverage: 5, mmrPct: 0.5 };
   function loadCfg() {
     try {
       const raw = localStorage.getItem(LS_KEY);
@@ -550,58 +766,40 @@
     } catch {
     }
   }
-  async function scanAsset(asset, equity, riskPct) {
+  async function scanAsset(asset, equity, riskPct, fetchDerivs) {
     const [weekly, daily] = await Promise.all([
       fetchKlines({ asset, quote: QUOTE, timeframe: "1W", limit: WEEKLY_LIMIT }),
       fetchKlines({ asset, quote: QUOTE, timeframe: "1D", limit: DAILY_LIMIT })
     ]);
+    let derivs = null;
+    if (fetchDerivs) {
+      try {
+        derivs = await fetchDerivsContext(asset);
+      } catch {
+        derivs = null;
+      }
+    }
     return runOne({
       asset,
       weekly: dropUnclosedCandle(weekly),
       daily: dropUnclosedCandle(daily),
       equity,
-      riskPct
+      riskPct,
+      derivs
     });
   }
-  function badge(text, kind) {
-    return el("span", { class: `tr-badge tr-badge--${String(kind || "flat").toLowerCase()}` }, text);
+  function badge(text, kind, title) {
+    return el("span", { class: `tr-badge tr-badge--${String(kind || "flat").toLowerCase()}`, title: title || null }, text);
+  }
+  function regimeBadge(state) {
+    const label = state === "SHORT_OK" ? "BEAR \u2014 NO LONGS" : state === "LONG_OK" ? "BULL \u2014 LONGS OK" : state;
+    const title = state === "SHORT_OK" ? "Price is below the 50W SMA. System is long-only: DO NOT buy, DO NOT short. Stand aside." : state === "LONG_OK" ? "Price is above the 50W SMA. Breakout signals may fire." : "";
+    return badge(label, state, title);
   }
   function entryTrigger(sig) {
     if (sig.action === "LONG") return `> ${fmt(sig.entryUpper, 4)}`;
     if (sig.action === "SHORT") return `< ${fmt(sig.entryLower, 4)}`;
     return "-";
-  }
-  function dataRow(r2) {
-    if (!r2.ok) {
-      return el(
-        "tr",
-        null,
-        el("td", { class: "tr-td" }, r2.asset),
-        el("td", { class: "tr-td tr-err", colspan: 13 }, `error: ${r2.error}`)
-      );
-    }
-    const sig = r2.signal || {};
-    const rl = r2.regimeLatest || {};
-    const sz = r2.sizing;
-    const histClass = rl.hist > 0 ? "tr-pos" : rl.hist < 0 ? "tr-neg" : "tr-mut";
-    return el(
-      "tr",
-      null,
-      el("td", { class: "tr-td tr-strong" }, binanceSymbol(r2.asset)),
-      el("td", { class: "tr-td" }, badge(r2.regimeState, r2.regimeState)),
-      el("td", { class: "tr-td", title: sig.reason || "" }, badge(sig.action || "WAIT", sig.action || "WAIT")),
-      el("td", { class: "tr-td" }, fmt(sig.close, 4)),
-      el("td", { class: "tr-td" }, entryTrigger(sig)),
-      el("td", { class: "tr-td" }, fmt(sig.stop, 4)),
-      el("td", { class: "tr-td" }, sz?.ok ? `${fmt(sz.stopDistPct, 2)}%` : "-"),
-      el("td", { class: "tr-td" }, sz?.ok ? fmt(sz.qty, 6) : "-"),
-      el("td", { class: "tr-td" }, sz?.ok ? fmt(sz.notional, 0) : "-"),
-      el("td", { class: "tr-td" }, fmt(rl.sma, 2)),
-      el("td", { class: `tr-td ${histClass}` }, fmt(rl.hist, 3)),
-      el("td", { class: "tr-td" }, fmt(rl.adx, 1)),
-      el("td", { class: "tr-td" }, fmt(rl.rsi, 1)),
-      el("td", { class: "tr-td" }, fmt(sig.rsi, 1))
-    );
   }
   var COLS = [
     "Asset",
@@ -610,21 +808,30 @@
     "Close",
     "Entry trigger",
     "Stop",
+    "D10 exit",
     "Stop dist",
     "Qty",
     "Notional",
+    "Margin",
+    "Liq \u2248",
+    "Stop\u2192Liq",
+    "Max lev",
     "50W SMA",
     "W MACD hist",
     "W ADX",
     "W RSI",
-    "D RSI"
+    "D RSI",
+    "Flow",
+    "Funding",
+    "OI 24h",
+    "Derivs"
   ];
   function mount(root) {
     let cfg = loadCfg();
     let rows = [];
     let lastScan = null;
     let loading = false;
-    const subtitle = "Mechanical swing: weekly regime (50W SMA \xB7 MACD hist \xB7 ADX\u226520 \xB7 RSI vs 50) \u2192 daily Donchian-20 breakout \u2192 1% risk per trade, Donchian-10 trailing exit.";
+    const subtitle = "Mechanical swing v2.0 (validated 2026-07-18): weekly 50W-SMA regime \u2192 daily Donchian-20 breakout, LONG-ONLY \u2192 fixed-risk sizing, Donchian-10 trailing exit. No vetoes, no shorts \u2014 the ablation showed they subtract.";
     const runBtn = el("button", { class: "btn btn-primary", type: "button", onClick: runScan }, "RUN SCAN");
     const lastEl = el("div", { class: "tr-last" });
     const equityInput = el("input", { class: "tr-input", value: cfg.equity, onInput: (e) => {
@@ -638,11 +845,102 @@
       updateRiskReadout();
     } });
     const riskReadout = el("div", { class: "tr-readonly" });
+    const levSelect = el("select", {
+      class: "tr-input",
+      onChange: (e) => {
+        cfg.leverage = Number(e.target.value);
+        saveCfg(cfg);
+        renderTable();
+      }
+    }, ...LEVERAGE_BUCKETS.map((l) => el("option", { value: l, selected: Number(cfg.leverage) === l ? true : null }, `${l}x`)));
+    const derivsBox = el("input", {
+      type: "checkbox",
+      checked: cfg.fetchDerivs ? true : null,
+      onChange: (e) => {
+        cfg.fetchDerivs = e.target.checked;
+        saveCfg(cfg);
+        derivsLabel.textContent = derivsText();
+      }
+    });
+    const derivsLabel = el("span", { class: "tr-mut", style: "font-size:12px" });
     const summary = el("div", { class: "tr-summary" });
     const tableHost = el("div", { class: "tr-table-host" });
+    function derivsText() {
+      return cfg.fetchDerivs ? "On \u2014 fetches positioning per asset (slower)" : "Off \u2014 price/flow only";
+    }
     function updateRiskReadout() {
       const v = (Number(cfg.equity) || 0) * (Number(cfg.riskPct) || 0) / 100;
       riskReadout.textContent = `${fmt(v, 2)} USDT`;
+    }
+    function dataRow(r2) {
+      if (!r2.ok) {
+        return el(
+          "tr",
+          null,
+          el("td", { class: "tr-td" }, r2.asset),
+          el("td", { class: "tr-td tr-err", colspan: 22 }, `error: ${r2.error}`)
+        );
+      }
+      const sig = r2.signal || {};
+      const rl = r2.regimeLatest || {};
+      const sz = r2.sizing;
+      const d = r2.derivs || {};
+      const flow = r2.flowSlope;
+      const da = r2.derivsAssessment;
+      const leverage = Number(cfg.leverage) || 5;
+      const mmrPct = Number(cfg.mmrPct) || 0.5;
+      const hasSignal = sig.action === "LONG" || sig.action === "SHORT";
+      const liq = hasSignal ? estimateLiquidation({ entry: sig.close, direction: sig.action, leverage, mmrPct }) : null;
+      const liqBuf = hasSignal ? stopToLiqBufferPct({ entry: sig.close, stop: sig.stop, direction: sig.action, leverage, mmrPct }) : null;
+      const safeLev = hasSignal ? maxSafeLeverage({ entry: sig.close, stop: sig.stop, direction: sig.action, mmrPct }) : null;
+      const margin = hasSignal && sz?.ok ? sz.notional / leverage : null;
+      const liqDanger = liqBuf !== null && liqBuf < 2;
+      const histClass = rl.hist > 0 ? "tr-pos" : rl.hist < 0 ? "tr-neg" : "tr-mut";
+      const flowClass = flow > 0 ? "tr-pos" : flow < 0 ? "tr-neg" : "tr-mut";
+      const fundClass = d.fundingRate > 0 ? "tr-neg" : d.fundingRate < 0 ? "tr-pos" : "tr-mut";
+      const oiClass = d.oiChange24hPct > 0 ? "tr-pos" : d.oiChange24hPct < 0 ? "tr-neg" : "tr-mut";
+      return el(
+        "tr",
+        null,
+        el("td", { class: "tr-td tr-strong" }, binanceSymbol(r2.asset)),
+        el("td", { class: "tr-td" }, regimeBadge(r2.regimeState)),
+        el("td", { class: "tr-td" }, badge(sig.action || "WAIT", sig.action || "WAIT", sig.reason || "")),
+        el("td", { class: "tr-td" }, fmt(sig.close, 4)),
+        el("td", { class: "tr-td" }, entryTrigger(sig)),
+        el("td", { class: "tr-td" }, fmt(sig.stop, 4)),
+        el("td", { class: "tr-td", title: "10-day trailing exit line. If you HOLD: exit when the daily close is below this. Ratchet your stop up to it daily \u2014 never down." }, fmt(sig.exitLower, 4)),
+        el("td", { class: "tr-td" }, sz?.ok ? `${fmt(sz.stopDistPct, 2)}%` : "-"),
+        el("td", { class: "tr-td" }, sz?.ok ? fmt(sz.qty, 6) : "-"),
+        el("td", { class: "tr-td" }, sz?.ok ? fmt(sz.notional, 0) : "-"),
+        el("td", { class: "tr-td" }, margin !== null ? fmt(margin, 0) : "-"),
+        el("td", { class: "tr-td" }, liq !== null ? fmt(liq, 4) : "-"),
+        el(
+          "td",
+          {
+            class: `tr-td ${liqDanger ? "tr-neg tr-strong" : liqBuf !== null ? "tr-pos" : "tr-mut"}`,
+            title: "Distance from stop to estimated liquidation. Below 2% = a wick can liquidate you before your stop fires \u2014 lower the leverage."
+          },
+          liqBuf !== null ? `${fmt(liqBuf, 1)}%${liqDanger ? " \u26A0" : ""}` : "-"
+        ),
+        el(
+          "td",
+          { class: "tr-td", title: "Largest leverage that keeps the stop \u22652% inside liquidation" },
+          safeLev !== null ? `${safeLev}x` : hasSignal ? "none" : "-"
+        ),
+        el("td", { class: "tr-td" }, fmt(rl.sma, 2)),
+        el("td", { class: `tr-td ${histClass}` }, fmt(rl.hist, 3)),
+        el("td", { class: "tr-td" }, fmt(rl.adx, 1)),
+        el("td", { class: "tr-td" }, fmt(rl.rsi, 1)),
+        el("td", { class: "tr-td" }, fmt(sig.rsi, 1)),
+        el(
+          "td",
+          { class: `tr-td ${flowClass}`, title: "CVD slope over last 10 days (aggressor flow)" },
+          flow === null || flow === void 0 ? "-" : `${flow > 0 ? "\u25B2" : "\u25BC"} ${fmt(Math.abs(flow) * 100, 1)}`
+        ),
+        el("td", { class: `tr-td ${fundClass}` }, Number.isFinite(d.fundingRate) ? `${fmt(d.fundingRate * 100, 4)}%` : "-"),
+        el("td", { class: `tr-td ${oiClass}` }, Number.isFinite(d.oiChange24hPct) ? `${fmt(d.oiChange24hPct, 1)}%` : "-"),
+        el("td", { class: "tr-td" }, da ? badge(da.grade, da.grade, (da.reasons || []).join("\n")) : "-")
+      );
     }
     function renderSummary(message, kind) {
       clear(summary);
@@ -652,8 +950,8 @@
       const entries = rows.filter((r2) => r2.ok && (r2.signal?.action === "LONG" || r2.signal?.action === "SHORT")).length;
       const vetoes = rows.filter((r2) => r2.ok && r2.signal?.action === "VETO").length;
       append(summary, [
-        el("span", { class: "tr-pill tr-pill--longok" }, `LONG-OK: ${longOk}`),
-        el("span", { class: "tr-pill tr-pill--shortok" }, `SHORT-OK: ${shortOk}`),
+        el("span", { class: "tr-pill tr-pill--longok" }, `BULL (longs allowed): ${longOk}`),
+        el("span", { class: "tr-pill tr-pill--shortok" }, `BEAR (stand aside): ${shortOk}`),
         el("span", { class: "tr-pill tr-pill--flat" }, `FLAT: ${flat}`),
         el("span", { class: "tr-pill tr-pill--signal" }, `SIGNALS: ${entries}`),
         el("span", { class: "tr-pill tr-pill--veto" }, `VETOES: ${vetoes}`),
@@ -686,7 +984,7 @@
       renderSummary(`Scanning ${UNIVERSE.length} assets...`, "info");
       const equity = Number(cfg.equity) || 0;
       const riskPct = Number(cfg.riskPct) || 0;
-      const results = await Promise.allSettled(UNIVERSE.map((a) => scanAsset(a, equity, riskPct)));
+      const results = await Promise.allSettled(UNIVERSE.map((a) => scanAsset(a, equity, riskPct, cfg.fetchDerivs)));
       rows = results.map((res, i) => res.status === "fulfilled" ? { ok: true, ...res.value } : { ok: false, asset: UNIVERSE[i], error: res.reason?.message || "fetch failed" });
       lastScan = /* @__PURE__ */ new Date();
       lastEl.textContent = `Last: ${lastScan.toLocaleTimeString()}`;
@@ -715,10 +1013,17 @@
         ),
         el(
           "div",
-          { class: "tr-controls tr-controls--3" },
+          { class: "tr-controls tr-controls--5" },
           el("div", { class: "tr-field" }, el("label", { class: "tr-label" }, "EQUITY (USDT)"), equityInput),
           el("div", { class: "tr-field" }, el("label", { class: "tr-label" }, "RISK % PER TRADE"), riskInput),
-          el("div", { class: "tr-field" }, el("label", { class: "tr-label" }, "RISK $ (LOSS @ STOP)"), riskReadout)
+          el("div", { class: "tr-field" }, el("label", { class: "tr-label" }, "RISK $ (LOSS @ STOP)"), riskReadout),
+          el("div", { class: "tr-field" }, el("label", { class: "tr-label" }, "LEVERAGE (ISOLATED)"), levSelect),
+          el(
+            "div",
+            { class: "tr-field" },
+            el("label", { class: "tr-label" }, "DERIVATIVES (FUNDING / OI)"),
+            el("label", { class: "tr-readonly", style: "display:flex;align-items:center;gap:8px;cursor:pointer" }, derivsBox, derivsLabel)
+          )
         ),
         summary,
         tableHost,
@@ -729,12 +1034,37 @@
         )
       )
     );
+    derivsLabel.textContent = derivsText();
     updateRiskReadout();
     renderSummary("", "ok");
     renderTable();
   }
 
+  // trading/backtest/funding.js
+  function dayKey(unixSecs) {
+    return Math.floor(unixSecs / 86400);
+  }
+  function buildDailyFundingMap(funding) {
+    const map = /* @__PURE__ */ new Map();
+    if (!Array.isArray(funding)) return map;
+    for (const r2 of funding) {
+      if (!Number.isFinite(r2?.time) || !Number.isFinite(r2?.fundingRate)) continue;
+      const k = dayKey(r2.time);
+      map.set(k, (map.get(k) || 0) + r2.fundingRate);
+    }
+    return map;
+  }
+  function accrueFunding({ direction, qty, markPrice, rateSum }) {
+    if (!rateSum) return 0;
+    const dir = direction === "LONG" ? 1 : -1;
+    return dir * rateSum * qty * markPrice;
+  }
+
   // trading/backtest/engine.js
+  function slip(price, side, slippagePct) {
+    const s = (slippagePct || 0) / 100;
+    return side === "buy" ? price * (1 + s) : price * (1 - s);
+  }
   function findLastClosedWeeklyIdx(weekly, t) {
     let lo = 0;
     let hi = weekly.length - 1;
@@ -758,13 +1088,22 @@
     startEquity = 1e5,
     riskPct = 1,
     feePct = 0.08,
-    signalParams = SIGNAL_PARAMS
+    slippagePct = 0,
+    funding = null,
+    // Ablation switch: the regime-flip exit force-closes on any weekly regime change.
+    // Weekly MACD histogram can flicker mid-trend, so this rule may repeatedly eject
+    // us from trades the Donchian-10 trail would have ridden. false = trail-only exits.
+    exitOnRegimeFlip = true,
+    signalParams = SIGNAL_PARAMS,
+    regimeParams = REGIME_PARAMS
   }) {
-    const regime = computeRegime(weekly);
+    const regime = computeRegime(weekly, regimeParams);
+    const fundingByDay = buildDailyFundingMap(funding);
     const closes = daily.map((c) => c.close);
     const trail10 = donchianCloses(closes, signalParams.donchianExit);
     let equity = startEquity;
     let pos = null;
+    let pendingEntry = null;
     const trades = [];
     const equityCurve = [];
     let dailyRegime = new Array(daily.length).fill("WARMUP");
@@ -776,6 +1115,31 @@
     for (let i = 0; i < daily.length; i++) {
       const bar = daily[i];
       const regimeState = dailyRegime[i];
+      if (!pos && pendingEntry) {
+        const side = pendingEntry.action === "LONG" ? "buy" : "sell";
+        const entryFill = slip(bar.open, side, slippagePct);
+        const sz = sizePosition({
+          equity,
+          riskPct,
+          entry: entryFill,
+          stop: pendingEntry.stop,
+          direction: pendingEntry.action
+        });
+        if (sz.ok && Number.isFinite(sz.qty) && sz.qty > 0) {
+          pos = {
+            asset,
+            direction: pendingEntry.action,
+            entry: entryFill,
+            initialStop: pendingEntry.stop,
+            stop: pendingEntry.stop,
+            qty: sz.qty,
+            riskAmount: sz.riskDollar,
+            entryTime: bar.time,
+            entryIdx: i
+          };
+        }
+        pendingEntry = null;
+      }
       if (pos) {
         if (i > 0) {
           if (pos.direction === "LONG") {
@@ -790,19 +1154,21 @@
         let exitPrice = null;
         let exitReason = null;
         if (pos.direction === "LONG" && bar.low <= pos.stop) {
-          exitPrice = pos.stop;
+          const raw = bar.open < pos.stop ? bar.open : pos.stop;
+          exitPrice = slip(raw, "sell", slippagePct);
           exitReason = "trailing stop hit";
           exited = true;
         } else if (pos.direction === "SHORT" && bar.high >= pos.stop) {
-          exitPrice = pos.stop;
+          const raw = bar.open > pos.stop ? bar.open : pos.stop;
+          exitPrice = slip(raw, "buy", slippagePct);
           exitReason = "trailing stop hit";
           exited = true;
         }
-        if (!exited) {
+        if (!exited && exitOnRegimeFlip) {
           const flipLong = pos.direction === "LONG" && regimeState !== "LONG_OK";
           const flipShort = pos.direction === "SHORT" && regimeState !== "SHORT_OK";
           if (flipLong || flipShort) {
-            exitPrice = bar.close;
+            exitPrice = slip(bar.close, pos.direction === "LONG" ? "sell" : "buy", slippagePct);
             exitReason = `regime flipped to ${regimeState}`;
             exited = true;
           }
@@ -811,7 +1177,8 @@
           const dir = pos.direction === "LONG" ? 1 : -1;
           const gross = dir * pos.qty * (exitPrice - pos.entry);
           const fees = (Math.abs(pos.entry) + Math.abs(exitPrice)) * pos.qty * (feePct / 100);
-          const net = gross - fees;
+          const fundingCost = pos.fundingCost || 0;
+          const net = gross - fees - fundingCost;
           equity += net;
           trades.push({
             asset: pos.asset,
@@ -824,6 +1191,7 @@
             exitReason,
             qty: pos.qty,
             pnl: net,
+            fundingCost,
             pnlPct: net / startEquity * 100,
             rMultiple: net / pos.riskAmount,
             barsHeld: i - pos.entryIdx
@@ -831,44 +1199,29 @@
           pos = null;
         }
       }
-      if (!pos) {
+      if (!pos && !pendingEntry) {
         const sig = signalSeries[i];
         if (sig && (sig.action === "LONG" || sig.action === "SHORT")) {
-          const sz = sizePosition({
-            equity,
-            riskPct,
-            entry: sig.close,
-            stop: sig.stop,
-            direction: sig.action
-          });
-          if (sz.ok && Number.isFinite(sz.qty) && sz.qty > 0) {
-            pos = {
-              asset,
-              direction: sig.action,
-              entry: sig.close,
-              initialStop: sig.stop,
-              stop: sig.stop,
-              qty: sz.qty,
-              riskAmount: sz.riskDollar,
-              entryTime: bar.time,
-              entryIdx: i
-            };
-          }
+          pendingEntry = { action: sig.action, stop: sig.stop, signalIdx: i };
         }
       }
       let unrealized = 0;
       if (pos) {
+        const rateSum = fundingByDay.get(dayKey(bar.time)) || 0;
+        pos.fundingCost = (pos.fundingCost || 0) + accrueFunding({ direction: pos.direction, qty: pos.qty, markPrice: bar.close, rateSum });
         const dir = pos.direction === "LONG" ? 1 : -1;
-        unrealized = dir * pos.qty * (bar.close - pos.entry);
+        unrealized = dir * pos.qty * (bar.close - pos.entry) - pos.fundingCost;
       }
       equityCurve.push({ time: bar.time, equity: equity + unrealized, hasPosition: !!pos });
     }
     if (pos) {
       const last = daily[daily.length - 1];
       const dir = pos.direction === "LONG" ? 1 : -1;
-      const gross = dir * pos.qty * (last.close - pos.entry);
-      const fees = (Math.abs(pos.entry) + Math.abs(last.close)) * pos.qty * (feePct / 100);
-      const net = gross - fees;
+      const exitFill = slip(last.close, pos.direction === "LONG" ? "sell" : "buy", slippagePct);
+      const gross = dir * pos.qty * (exitFill - pos.entry);
+      const fees = (Math.abs(pos.entry) + Math.abs(exitFill)) * pos.qty * (feePct / 100);
+      const fundingCost = pos.fundingCost || 0;
+      const net = gross - fees - fundingCost;
       equity += net;
       trades.push({
         asset: pos.asset,
@@ -877,10 +1230,11 @@
         entry: pos.entry,
         initialStop: pos.initialStop,
         exitTime: last.time,
-        exit: last.close,
+        exit: exitFill,
         exitReason: "end of data",
         qty: pos.qty,
         pnl: net,
+        fundingCost,
         pnlPct: net / startEquity * 100,
         rMultiple: net / pos.riskAmount,
         barsHeld: daily.length - 1 - pos.entryIdx
@@ -1399,7 +1753,7 @@
     if (typeof v === "number") return Number.isFinite(v) ? String(v) : "null";
     if (Array.isArray(v)) return `[${v.map((x) => formatYamlValue(x)).join(", ")}]`;
     const s = String(v);
-    if (/[:#\-?,&*!|>'"%@`{}\[\]]/.test(s) || s.includes("\n")) {
+    if (/[:#\-?,&*!|>'"%@`{}[\]]/.test(s) || s.includes("\n")) {
       return JSON.stringify(s);
     }
     return s;
@@ -1411,12 +1765,27 @@
     if (!t.exit) return null;
     return (t.direction === "LONG" ? 1 : -1) * t.entry.qty * (t.exit.price - t.entry.price);
   }
-  function num(v) {
+  function num2(v) {
     const n = Number(v);
     return Number.isFinite(n) ? n : null;
   }
   function today() {
     return (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
+  }
+  function laneOf(t) {
+    const s = (t.systemSource || "").toLowerCase();
+    return s === "manual" || s === "discretionary" ? "DISCRETIONARY" : "SYSTEM";
+  }
+  function laneStats(trades) {
+    let pnl = 0, wins = 0, losses = 0, rSum = 0;
+    for (const t of trades) {
+      const p = tradePnl(t) || 0;
+      pnl += p;
+      if (p > 0) wins++;
+      else losses++;
+      if (t.entry?.riskDollar) rSum += p / t.entry.riskDollar;
+    }
+    return { count: trades.length, wins, losses, pnl, avgR: trades.length ? rSum / trades.length : 0 };
   }
   function downloadBlob(filename, text, type) {
     const blob = new Blob([text], { type });
@@ -1427,7 +1796,7 @@
   }
   function mount3(root) {
     const noticeEl = el("div");
-    const statsEl = el("div", { class: "tr-stats" });
+    const statsEl = el("div", { class: "tr-lanes" });
     const openHost = el("div");
     const closedHost = el("div");
     let modalEl = null;
@@ -1484,16 +1853,28 @@
         title: title || label
       }, label);
     }
+    function laneCards(s, openCount) {
+      return [
+        statCard("Open", String(openCount)),
+        statCard("Closed", String(s.count)),
+        statCard("Wins / Losses", `${s.wins} / ${s.losses}`),
+        statCard("Win rate", s.count ? `${(s.wins / s.count * 100).toFixed(1)}%` : "-"),
+        statCard("Realized PnL", `${fmt(s.pnl, 2)} USDT`, s.pnl > 0 ? "pos" : s.pnl < 0 ? "neg" : null),
+        statCard("Avg R", fmt(s.avgR, 2))
+      ];
+    }
     function tradeTable(trades, showClose) {
-      const head = ["Date", "Asset", "Dir", "Entry", "Stop", "Qty", "Risk $", "Exit", "PnL", "R", "Actions"];
+      const head = ["Date", "Lane", "Asset", "Dir", "Entry", "Stop", "Qty", "Risk $", "Exit", "PnL", "R", "Actions"];
       const body = el("tbody", null, ...trades.map((t) => {
         const pnl = tradePnl(t);
         const r2 = pnl !== null && t.entry?.riskDollar ? pnl / t.entry.riskDollar : null;
         const pnlTone = pnl > 0 ? "tr-pos" : pnl < 0 ? "tr-neg" : "tr-mut";
+        const lane = laneOf(t);
         return el(
           "tr",
           null,
           el("td", { class: "tr-td" }, ymd(t.entry?.time)),
+          el("td", { class: "tr-td" }, el("span", { class: `tr-lane-badge tr-lane-badge--${lane === "SYSTEM" ? "sys" : "disc"}` }, lane === "SYSTEM" ? "SYS" : "DISC")),
           el("td", { class: "tr-td tr-strong" }, t.asset),
           el("td", { class: `tr-td tr-strong ${t.direction === "LONG" ? "tr-pos" : "tr-neg"}` }, t.direction),
           el("td", { class: "tr-td" }, fmt(t.entry?.price, 4)),
@@ -1567,7 +1948,7 @@
       ], () => {
         closeTrade(t.id, {
           time: Math.floor((/* @__PURE__ */ new Date(exitDate.value + "T12:00:00Z")).getTime() / 1e3),
-          price: num(exitPrice.value),
+          price: num2(exitPrice.value),
           reason: reason.value
         });
         closeModal();
@@ -1587,6 +1968,12 @@
       const f = {
         asset: el("select", { class: "tr-input" }, ...ASSETS.map((a) => el("option", { value: a }, a))),
         direction: el("select", { class: "tr-input" }, el("option", { value: "LONG" }, "LONG"), el("option", { value: "SHORT" }, "SHORT")),
+        lane: el(
+          "select",
+          { class: "tr-input" },
+          el("option", { value: "system" }, "SYSTEM (scanner signal)"),
+          el("option", { value: "discretionary" }, "DISCRETIONARY (Cipher / judgment)")
+        ),
         entryDate: el("input", { class: "tr-input", type: "date", value: today() }),
         price: el("input", { class: "tr-input" }),
         stop: el("input", { class: "tr-input" }),
@@ -1610,6 +1997,7 @@
           { class: "tr-grid-2" },
           field("Asset", f.asset),
           field("Direction", f.direction),
+          field("Lane", f.lane),
           field("Entry date", f.entryDate),
           field("Entry price", f.price),
           field("Stop price", f.stop),
@@ -1644,28 +2032,28 @@
           direction: f.direction.value,
           entry: {
             time: entryTime,
-            price: num(f.price.value),
-            stop: num(f.stop.value),
-            qty: num(f.qty.value),
-            riskDollar: num(f.riskDollar.value),
-            leverage: num(f.leverage.value)
+            price: num2(f.price.value),
+            stop: num2(f.stop.value),
+            qty: num2(f.qty.value),
+            riskDollar: num2(f.riskDollar.value),
+            leverage: num2(f.leverage.value)
           },
           regimeSnapshot: {
             state: f.regimeState.value,
-            sma: num(f.weeklySma.value),
-            hist: num(f.weeklyHist.value),
-            adx: num(f.weeklyAdx.value),
-            rsi: num(f.weeklyRsi.value)
+            sma: num2(f.weeklySma.value),
+            hist: num2(f.weeklyHist.value),
+            adx: num2(f.weeklyAdx.value),
+            rsi: num2(f.weeklyRsi.value)
           },
           signalSnapshot: {
             action: f.direction.value,
             reason: f.signalReason.value,
-            close: num(f.dailyClose.value),
-            rsi: num(f.dailyRsi.value),
-            atr: num(f.dailyAtr.value)
+            close: num2(f.dailyClose.value),
+            rsi: num2(f.dailyRsi.value),
+            atr: num2(f.dailyAtr.value)
           },
           notes: f.notes.value,
-          systemSource: "manual"
+          systemSource: f.lane.value
         });
         closeModal();
         render();
@@ -1675,23 +2063,16 @@
       const trades = loadTrades();
       const open = trades.filter((t) => t.status === "OPEN");
       const closed = trades.filter((t) => t.status === "CLOSED");
-      let pnl = 0, wins = 0, losses = 0, rSum = 0;
-      for (const t of closed) {
-        const p = tradePnl(t) || 0;
-        pnl += p;
-        if (p > 0) wins++;
-        else losses++;
-        if (t.entry?.riskDollar) rSum += p / t.entry.riskDollar;
-      }
-      const avgR = closed.length ? rSum / closed.length : 0;
+      const sys = laneStats(closed.filter((t) => laneOf(t) === "SYSTEM"));
+      const disc = laneStats(closed.filter((t) => laneOf(t) === "DISCRETIONARY"));
+      const openSys = open.filter((t) => laneOf(t) === "SYSTEM").length;
+      const openDisc = open.filter((t) => laneOf(t) === "DISCRETIONARY").length;
       clear(statsEl);
       append(statsEl, [
-        statCard("Open", String(open.length)),
-        statCard("Closed", String(closed.length)),
-        statCard("Wins / Losses", `${wins} / ${losses}`),
-        statCard("Win rate", closed.length ? `${(wins / closed.length * 100).toFixed(1)}%` : "-"),
-        statCard("Realized PnL", `${fmt(pnl, 2)} USDT`, pnl > 0 ? "pos" : pnl < 0 ? "neg" : null),
-        statCard("Avg R (closed)", fmt(avgR, 2))
+        el("div", { class: "tr-lane-label" }, "SYSTEM LANE (mechanical v2.0 \u2014 followed to the dot)"),
+        el("div", { class: "tr-stats" }, ...laneCards(sys, openSys)),
+        el("div", { class: "tr-lane-label" }, "DISCRETIONARY LANE (Market Cipher / your judgment)"),
+        el("div", { class: "tr-stats" }, ...laneCards(disc, openDisc))
       ]);
       clear(openHost);
       openHost.appendChild(section(
@@ -1981,7 +2362,7 @@ ${tradeToObsidianMarkdown(t)}`).join("\n");
   }
 
   // trading/ui/options.js
-  var num2 = (v) => {
+  var num3 = (v) => {
     const n = Number(v);
     return Number.isFinite(n) ? n : 0;
   };
@@ -2005,7 +2386,7 @@ ${tradeToObsidianMarkdown(t)}`).join("\n");
     const m = { left: 62, right: 20, top: 22, bottom: 34 };
     const plotW = W - m.left - m.right;
     const plotH = H - m.top - m.bottom;
-    const strikes = legs.map((l) => num2(l.strike));
+    const strikes = legs.map((l) => num3(l.strike));
     const refLo = Math.min(spot, ...strikes);
     const refHi = Math.max(spot, ...strikes);
     const pad = Math.max((refHi - refLo) * 0.6, spot * 0.25, 1);
@@ -2108,7 +2489,7 @@ ${tradeToObsidianMarkdown(t)}`).join("\n");
       );
     }
     function numInput(value, onInput) {
-      return el("input", { class: "tr-input", value, inputmode: "decimal", onInput: (e) => onInput(num2(e.target.value)) });
+      return el("input", { class: "tr-input", value, inputmode: "decimal", onInput: (e) => onInput(num3(e.target.value)) });
     }
     function renderLegs() {
       clear(legsHost);
@@ -2166,14 +2547,14 @@ ${tradeToObsidianMarkdown(t)}`).join("\n");
         diagramHost.appendChild(el("div", { class: "tr-empty" }, "Add at least one leg to see a payoff."));
         return;
       }
-      diagramHost.appendChild(buildChart(legs, num2(spot)));
-      append(summaryHost, summaryCards(legs, num2(spot)));
+      diagramHost.appendChild(buildChart(legs, num3(spot)));
+      append(summaryHost, summaryCards(legs, num3(spot)));
     }
     function setStrategy(id) {
       const strat = strategyById(id);
       if (!strat) return;
       strategyId = id;
-      legs = strat.build(num2(spot) || DEFAULT_SPOT);
+      legs = strat.build(num3(spot) || DEFAULT_SPOT);
       clear(blurbEl);
       blurbEl.appendChild(el("div", { class: "tr-opt-blurb-what" }, strat.blurb));
       blurbEl.appendChild(el(
@@ -2195,7 +2576,7 @@ ${tradeToObsidianMarkdown(t)}`).join("\n");
       value: spot,
       inputmode: "decimal",
       onInput: (e) => {
-        spot = num2(e.target.value);
+        spot = num3(e.target.value);
         renderDiagram();
       }
     });
@@ -2232,7 +2613,7 @@ ${tradeToObsidianMarkdown(t)}`).join("\n");
           class: "btn btn-ghost btn-sm",
           type: "button",
           onClick: () => {
-            legs.push({ type: "call", side: "long", strike: num2(spot), premium: round2(num2(spot) * 0.05), qty: 1 });
+            legs.push({ type: "call", side: "long", strike: num3(spot), premium: round2(num3(spot) * 0.05), qty: 1 });
             renderLegs();
             renderDiagram();
           }
@@ -2257,12 +2638,14 @@ ${tradeToObsidianMarkdown(t)}`).join("\n");
   // trading/ui/app.js
   function mountLattice(root) {
     root.innerHTML = "";
-    var f = document.createElement("iframe");
+    const f = document.createElement("iframe");
     f.src = "../lattice.html?embed=1";
-    f.title = "Lattice — options pricer";
+    f.title = "Lattice \u2014 options pricer";
     f.style.cssText = "width:100%;border:0;display:block;min-height:calc(100vh - 120px);background:#05080F;";
     root.appendChild(f);
-    return function() { root.innerHTML = ""; };
+    return () => {
+      root.innerHTML = "";
+    };
   }
   var ROUTES = {
     scanner: mount,

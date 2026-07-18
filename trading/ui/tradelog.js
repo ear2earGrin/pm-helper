@@ -19,6 +19,24 @@ function tradePnl(t) {
 function num(v) { const n = Number(v); return Number.isFinite(n) ? n : null; }
 function today() { return new Date().toISOString().slice(0, 10); }
 
+// Two lanes, two scorecards. "system" = mechanical v2.0 signals followed to the
+// dot; "discretionary" = Market Cipher / judgment trades. Legacy values map:
+// scanner->SYSTEM, manual->DISCRETIONARY.
+function laneOf(t) {
+  const s = (t.systemSource || "").toLowerCase();
+  return s === "manual" || s === "discretionary" ? "DISCRETIONARY" : "SYSTEM";
+}
+function laneStats(trades) {
+  let pnl = 0, wins = 0, losses = 0, rSum = 0;
+  for (const t of trades) {
+    const p = tradePnl(t) || 0;
+    pnl += p;
+    if (p > 0) wins++; else losses++;
+    if (t.entry?.riskDollar) rSum += p / t.entry.riskDollar;
+  }
+  return { count: trades.length, wins, losses, pnl, avgR: trades.length ? rSum / trades.length : 0 };
+}
+
 function downloadBlob(filename, text, type) {
   const blob = new Blob([text], { type });
   const url = URL.createObjectURL(blob);
@@ -29,7 +47,7 @@ function downloadBlob(filename, text, type) {
 
 export function mount(root) {
   const noticeEl = el("div");
-  const statsEl = el("div", { class: "tr-stats" });
+  const statsEl = el("div", { class: "tr-lanes" });
   const openHost = el("div");
   const closedHost = el("div");
   let modalEl = null;
@@ -75,14 +93,27 @@ export function mount(root) {
     }, label);
   }
 
+  function laneCards(s, openCount) {
+    return [
+      statCard("Open", String(openCount)),
+      statCard("Closed", String(s.count)),
+      statCard("Wins / Losses", `${s.wins} / ${s.losses}`),
+      statCard("Win rate", s.count ? `${((s.wins / s.count) * 100).toFixed(1)}%` : "-"),
+      statCard("Realized PnL", `${fmt(s.pnl, 2)} USDT`, s.pnl > 0 ? "pos" : s.pnl < 0 ? "neg" : null),
+      statCard("Avg R", fmt(s.avgR, 2)),
+    ];
+  }
+
   function tradeTable(trades, showClose) {
-    const head = ["Date", "Asset", "Dir", "Entry", "Stop", "Qty", "Risk $", "Exit", "PnL", "R", "Actions"];
+    const head = ["Date", "Lane", "Asset", "Dir", "Entry", "Stop", "Qty", "Risk $", "Exit", "PnL", "R", "Actions"];
     const body = el("tbody", null, ...trades.map((t) => {
       const pnl = tradePnl(t);
       const r = pnl !== null && t.entry?.riskDollar ? pnl / t.entry.riskDollar : null;
       const pnlTone = pnl > 0 ? "tr-pos" : pnl < 0 ? "tr-neg" : "tr-mut";
+      const lane = laneOf(t);
       return el("tr", null,
         el("td", { class: "tr-td" }, ymd(t.entry?.time)),
+        el("td", { class: "tr-td" }, el("span", { class: `tr-lane-badge tr-lane-badge--${lane === "SYSTEM" ? "sys" : "disc"}` }, lane === "SYSTEM" ? "SYS" : "DISC")),
         el("td", { class: "tr-td tr-strong" }, t.asset),
         el("td", { class: `tr-td tr-strong ${t.direction === "LONG" ? "tr-pos" : "tr-neg"}` }, t.direction),
         el("td", { class: "tr-td" }, fmt(t.entry?.price, 4)),
@@ -167,6 +198,9 @@ export function mount(root) {
     const f = {
       asset: el("select", { class: "tr-input" }, ...ASSETS.map((a) => el("option", { value: a }, a))),
       direction: el("select", { class: "tr-input" }, el("option", { value: "LONG" }, "LONG"), el("option", { value: "SHORT" }, "SHORT")),
+      lane: el("select", { class: "tr-input" },
+        el("option", { value: "system" }, "SYSTEM (scanner signal)"),
+        el("option", { value: "discretionary" }, "DISCRETIONARY (Cipher / judgment)")),
       entryDate: el("input", { class: "tr-input", type: "date", value: today() }),
       price: el("input", { class: "tr-input" }),
       stop: el("input", { class: "tr-input" }),
@@ -187,9 +221,10 @@ export function mount(root) {
     openModal("NEW TRADE", [
       el("div", { class: "tr-grid-2" },
         field("Asset", f.asset), field("Direction", f.direction),
-        field("Entry date", f.entryDate), field("Entry price", f.price),
-        field("Stop price", f.stop), field("Quantity", f.qty),
-        field("Risk $", f.riskDollar), field("Leverage", f.leverage)),
+        field("Lane", f.lane), field("Entry date", f.entryDate),
+        field("Entry price", f.price), field("Stop price", f.stop),
+        field("Quantity", f.qty), field("Risk $", f.riskDollar),
+        field("Leverage", f.leverage)),
       el("div", { class: "tr-section-title tr-section-title--sub" }, "WEEKLY REGIME (at entry)"),
       el("div", { class: "tr-grid-4" },
         field("State", f.regimeState), field("50W SMA", f.weeklySma),
@@ -217,7 +252,7 @@ export function mount(root) {
           close: num(f.dailyClose.value), rsi: num(f.dailyRsi.value), atr: num(f.dailyAtr.value),
         },
         notes: f.notes.value,
-        systemSource: "manual",
+        systemSource: f.lane.value,
       });
       closeModal(); render();
     });
@@ -229,23 +264,17 @@ export function mount(root) {
     const open = trades.filter((t) => t.status === "OPEN");
     const closed = trades.filter((t) => t.status === "CLOSED");
 
-    let pnl = 0, wins = 0, losses = 0, rSum = 0;
-    for (const t of closed) {
-      const p = tradePnl(t) || 0;
-      pnl += p;
-      if (p > 0) wins++; else losses++;
-      if (t.entry?.riskDollar) rSum += p / t.entry.riskDollar;
-    }
-    const avgR = closed.length ? rSum / closed.length : 0;
+    const sys = laneStats(closed.filter((t) => laneOf(t) === "SYSTEM"));
+    const disc = laneStats(closed.filter((t) => laneOf(t) === "DISCRETIONARY"));
+    const openSys = open.filter((t) => laneOf(t) === "SYSTEM").length;
+    const openDisc = open.filter((t) => laneOf(t) === "DISCRETIONARY").length;
 
     clear(statsEl);
     append(statsEl, [
-      statCard("Open", String(open.length)),
-      statCard("Closed", String(closed.length)),
-      statCard("Wins / Losses", `${wins} / ${losses}`),
-      statCard("Win rate", closed.length ? `${((wins / closed.length) * 100).toFixed(1)}%` : "-"),
-      statCard("Realized PnL", `${fmt(pnl, 2)} USDT`, pnl > 0 ? "pos" : pnl < 0 ? "neg" : null),
-      statCard("Avg R (closed)", fmt(avgR, 2)),
+      el("div", { class: "tr-lane-label" }, "SYSTEM LANE (mechanical v2.0 — followed to the dot)"),
+      el("div", { class: "tr-stats" }, ...laneCards(sys, openSys)),
+      el("div", { class: "tr-lane-label" }, "DISCRETIONARY LANE (Market Cipher / your judgment)"),
+      el("div", { class: "tr-stats" }, ...laneCards(disc, openDisc)),
     ]);
 
     clear(openHost);

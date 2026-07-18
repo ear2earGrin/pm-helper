@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { walkForward, paramGrid } from "../walkforward.js";
+import { SIGNAL_PARAMS } from "../../strategy/signal.js";
 
 const ONE_DAY = 86400, ONE_WEEK = ONE_DAY * 7;
 
@@ -100,5 +101,29 @@ describe("walkForward", () => {
       expect([15, 20]).toContain(f.params.donchianEntry);
       expect([8, 10]).toContain(f.params.donchianExit);
     });
+  });
+});
+
+describe("walkForward base-signalParams passthrough (regression)", () => {
+  // The 2026-07-18 long-only report exposed that walkForward silently ignored a
+  // signalParams base, so its table was computed with the wrong configuration.
+  // Disabling both directions must yield ZERO out-of-sample trades; if the base
+  // were ignored again, default params would produce trades and this fails.
+  it("honors the signalParams base instead of silently using defaults", () => {
+    const dailyCloses = Array.from({ length: 5 * 365 }, (_, i) => {
+      const trend = 100 + i * 0.15;
+      return Math.max(20, trend + Math.sin(i / 80) * 25 + Math.sin(i / 13) * 8);
+    });
+    const weeklyCloses = Array.from({ length: 5 * 52 + 60 }, (_, i) =>
+      Math.max(20, 100 + i * 0.9 + Math.sin(i / 15) * 60),
+    );
+    const res = walkForward({
+      weekly: makeWeekly(weeklyCloses),
+      daily: makeDaily(dailyCloses),
+      startEquity: 100000, riskPct: 1, feePct: 0,
+      signalParams: { ...SIGNAL_PARAMS, allowLong: false, allowShort: false },
+    });
+    const oosTrades = res.folds.flatMap((f) => f.oosTrades);
+    expect(oosTrades.length).toBe(0);
   });
 });

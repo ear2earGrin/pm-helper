@@ -1,8 +1,9 @@
-import { computeRegime } from "../strategy/regime.js";
+import { computeRegime, REGIME_PARAMS } from "../strategy/regime.js";
 import { computeSignal, SIGNAL_PARAMS } from "../strategy/signal.js";
 import { donchianCloses } from "../indicators/donchian.js";
 import { sizePosition } from "../strategy/sizing.js";
 import { checkPortfolioAllows, PORTFOLIO_PARAMS } from "../strategy/portfolio.js";
+import { buildDailyFundingMap, accrueFunding, dayKey } from "./funding.js";
 
 /**
  * Multi-asset portfolio backtest.
@@ -30,16 +31,29 @@ import { checkPortfolioAllows, PORTFOLIO_PARAMS } from "../strategy/portfolio.js
  * @param {object} [opts.signalParams=SIGNAL_PARAMS]
  * @returns {{ trades, equityCurve, finalEquity, startEquity, perAsset }}
  */
+function slip(price, side, slippagePct) {
+  const s = (slippagePct || 0) / 100;
+  return side === "buy" ? price * (1 + s) : price * (1 - s);
+}
+
 export function backtestPortfolio({
   dailyByAsset,
   weeklyByAsset,
   startEquity = 100000,
   riskPct = 1,
   feePct = 0.08,
+  slippagePct = 0,
+  fundingByAsset = null,
   portfolioParams = PORTFOLIO_PARAMS,
   signalParams = SIGNAL_PARAMS,
+  regimeParams = REGIME_PARAMS,
+  exitOnRegimeFlip = true,
 }) {
   const assets = Object.keys(dailyByAsset);
+  const fundingMaps = {};
+  for (const a of assets) {
+    fundingMaps[a] = buildDailyFundingMap(fundingByAsset?.[a] || null);
+  }
 
   // Pre-compute regimes, signals, trail series per asset.
   const perAsset = {};
@@ -48,7 +62,7 @@ export function backtestPortfolio({
     const weekly = weeklyByAsset[asset];
     if (!daily?.length || !weekly?.length) continue;
 
-    const regime = computeRegime(weekly);
+    const regime = computeRegime(weekly, regimeParams);
     const dailyRegime = new Array(daily.length).fill("WARMUP");
     for (let i = 0; i < daily.length; i++) {
       const wIdx = findLastClosedWeeklyIdx(weekly, daily[i].time);
@@ -74,6 +88,7 @@ export function backtestPortfolio({
 
   let equity = startEquity;
   let openPositions = {};            // asset -> position
+  const pendingEntries = {};          // asset -> { action, stop } armed for next bar's open
   const trades = [];
   const recentlyStopped = [];         // [{ asset, time }]
   const equityCurve = [];
@@ -86,6 +101,30 @@ export function backtestPortfolio({
     if (t !== lastDay) {
       entriesToday = 0;
       lastDay = t;
+    }
+
+    // --- 0. Fill pending entries (armed by the PREVIOUS bar's signal) at this
+    // bar's open. A signal is only known at its close, so the fill happens on the
+    // next bar — never at the signal bar's own close.
+    for (const asset of Object.keys(pendingEntries)) {
+      if (openPositions[asset]) { delete pendingEntries[asset]; continue; }
+      const ps = perAsset[asset];
+      const idx = ps.barIdx.get(t);
+      if (idx === undefined) continue; // asset has no bar today; keep pending
+      const pe = pendingEntries[asset];
+      const bar = ps.daily[idx];
+      const side = pe.action === "LONG" ? "buy" : "sell";
+      const entryFill = slip(bar.open, side, slippagePct);
+      const sz = sizePosition({ equity, riskPct, entry: entryFill, stop: pe.stop, direction: pe.action });
+      if (sz.ok && Number.isFinite(sz.qty) && sz.qty > 0) {
+        openPositions[asset] = {
+          asset, direction: pe.action,
+          entry: entryFill, initialStop: pe.stop, stop: pe.stop,
+          qty: sz.qty, riskAmount: sz.riskDollar, riskPct,
+          entryTime: bar.time, entryIdx: idx,
+        };
+      }
+      delete pendingEntries[asset];
     }
 
     // --- 1. Update + check exits on open positions ---
@@ -110,19 +149,21 @@ export function backtestPortfolio({
 
       let exited = false, exitPrice = null, exitReason = null;
       if (pos.direction === "LONG" && bar.low <= pos.stop) {
-        exitPrice = pos.stop;
+        const raw = bar.open < pos.stop ? bar.open : pos.stop;
+        exitPrice = slip(raw, "sell", slippagePct);
         exitReason = "trailing stop hit";
         exited = true;
       } else if (pos.direction === "SHORT" && bar.high >= pos.stop) {
-        exitPrice = pos.stop;
+        const raw = bar.open > pos.stop ? bar.open : pos.stop;
+        exitPrice = slip(raw, "buy", slippagePct);
         exitReason = "trailing stop hit";
         exited = true;
       }
-      if (!exited) {
+      if (!exited && exitOnRegimeFlip) {
         const flipLong = pos.direction === "LONG" && regimeState !== "LONG_OK";
         const flipShort = pos.direction === "SHORT" && regimeState !== "SHORT_OK";
         if (flipLong || flipShort) {
-          exitPrice = bar.close;
+          exitPrice = slip(bar.close, pos.direction === "LONG" ? "sell" : "buy", slippagePct);
           exitReason = `regime flipped to ${regimeState}`;
           exited = true;
         }
@@ -137,13 +178,14 @@ export function backtestPortfolio({
       const dir = pos.direction === "LONG" ? 1 : -1;
       const gross = dir * pos.qty * (exitPrice - pos.entry);
       const fees = (Math.abs(pos.entry) + Math.abs(exitPrice)) * pos.qty * (feePct / 100);
-      const net = gross - fees;
+      const fundingCost = pos.fundingCost || 0;
+      const net = gross - fees - fundingCost;
       equity += net;
       trades.push({
         asset, direction: pos.direction,
         entryTime: pos.entryTime, entry: pos.entry, initialStop: pos.initialStop,
         exitTime: bar.time, exit: exitPrice, exitReason,
-        qty: pos.qty, pnl: net, pnlPct: (net / startEquity) * 100,
+        qty: pos.qty, pnl: net, fundingCost, pnlPct: (net / startEquity) * 100,
         rMultiple: net / pos.riskAmount,
         barsHeld: idx - pos.entryIdx,
       });
@@ -151,10 +193,11 @@ export function backtestPortfolio({
       recentlyStopped.push({ asset, time: bar.time });
     }
 
-    // --- 2. Look for new entries (only if portfolio rules allow) ---
+    // --- 2. Arm new entries from THIS bar's signals (filled at next bar's open).
+    // Gating is applied now, at decision time; the fill happens on the next bar.
     const candidates = [];
     for (const asset of Object.keys(perAsset)) {
-      if (openPositions[asset]) continue;
+      if (openPositions[asset] || pendingEntries[asset]) continue;
       const ps = perAsset[asset];
       const idx = ps.barIdx.get(t);
       if (idx === undefined) continue;
@@ -176,38 +219,30 @@ export function backtestPortfolio({
     for (const cand of candidates) {
       if (entriesToday >= portfolioParams.maxEntriesPerDay) break;
 
-      const sz = sizePosition({
-        equity, riskPct,
-        entry: cand.sig.close, stop: cand.sig.stop, direction: cand.sig.action,
-      });
-      if (!sz.ok || !Number.isFinite(sz.qty) || sz.qty <= 0) continue;
-
-      const openList = Object.entries(openPositions).map(([asset, p]) => ({
-        asset, direction: p.direction, riskPct: p.riskPct,
-      }));
+      // Concurrency/correlation gating counts both open positions AND already-armed
+      // pendings, so we never over-commit between arm and fill.
+      const committed = [
+        ...Object.entries(openPositions).map(([asset, p]) => ({ asset, direction: p.direction, riskPct: p.riskPct })),
+        ...Object.entries(pendingEntries).map(([asset, p]) => ({ asset, direction: p.action, riskPct })),
+      ];
       const stoppedRecent = recentlyStopped
         .filter((r) => (t - r.time) / 86400 < portfolioParams.reentryCooldownDays + 1)
         .map((r) => ({ asset: r.asset, daysSince: (t - r.time) / 86400 }));
 
       const allow = checkPortfolioAllows({
         candidate: { asset: cand.asset, direction: cand.sig.action, riskPct },
-        openPositions: openList,
+        openPositions: committed,
         recentlyStopped: stoppedRecent,
         todayEntries: entriesToday,
         params: portfolioParams,
       });
       if (!allow.allowed) continue;
 
-      openPositions[cand.asset] = {
-        asset: cand.asset, direction: cand.sig.action,
-        entry: cand.sig.close, initialStop: cand.sig.stop, stop: cand.sig.stop,
-        qty: sz.qty, riskAmount: sz.riskDollar, riskPct,
-        entryTime: cand.bar.time, entryIdx: cand.idx,
-      };
+      pendingEntries[cand.asset] = { action: cand.sig.action, stop: cand.sig.stop };
       entriesToday++;
     }
 
-    // --- 3. Mark-to-market equity ---
+    // --- 3. Accrue funding on held positions, then mark to market ---
     let unrealized = 0;
     for (const asset of Object.keys(openPositions)) {
       const ps = perAsset[asset];
@@ -215,11 +250,18 @@ export function backtestPortfolio({
       if (idx === undefined) continue;
       const close = ps.daily[idx].close;
       const pos = openPositions[asset];
+      const rateSum = fundingMaps[asset]?.get(dayKey(t)) || 0;
+      pos.fundingCost = (pos.fundingCost || 0) +
+        accrueFunding({ direction: pos.direction, qty: pos.qty, markPrice: close, rateSum });
       const dir = pos.direction === "LONG" ? 1 : -1;
-      unrealized += dir * pos.qty * (close - pos.entry);
+      unrealized += dir * pos.qty * (close - pos.entry) - pos.fundingCost;
     }
     equityCurve.push({ time: t, equity: equity + unrealized, openCount: Object.keys(openPositions).length });
   }
+
+  // Snapshot live open positions (with their CURRENT trailing stops) before the
+  // end-of-data force-close — the paper-trading daemon needs them as real state.
+  const openAtEnd = Object.values(openPositions).map((p) => ({ ...p }));
 
   // Close any remaining positions at the last bar's close.
   for (const asset of Object.keys(openPositions)) {
@@ -227,21 +269,23 @@ export function backtestPortfolio({
     const pos = openPositions[asset];
     const last = ps.daily[ps.daily.length - 1];
     const dir = pos.direction === "LONG" ? 1 : -1;
-    const gross = dir * pos.qty * (last.close - pos.entry);
-    const fees = (Math.abs(pos.entry) + Math.abs(last.close)) * pos.qty * (feePct / 100);
-    const net = gross - fees;
+    const exitFill = slip(last.close, pos.direction === "LONG" ? "sell" : "buy", slippagePct);
+    const gross = dir * pos.qty * (exitFill - pos.entry);
+    const fees = (Math.abs(pos.entry) + Math.abs(exitFill)) * pos.qty * (feePct / 100);
+    const fundingCost = pos.fundingCost || 0;
+    const net = gross - fees - fundingCost;
     equity += net;
     trades.push({
       asset, direction: pos.direction,
       entryTime: pos.entryTime, entry: pos.entry, initialStop: pos.initialStop,
-      exitTime: last.time, exit: last.close, exitReason: "end of data",
-      qty: pos.qty, pnl: net, pnlPct: (net / startEquity) * 100,
+      exitTime: last.time, exit: exitFill, exitReason: "end of data",
+      qty: pos.qty, pnl: net, fundingCost, pnlPct: (net / startEquity) * 100,
       rMultiple: net / pos.riskAmount,
       barsHeld: ps.daily.length - 1 - pos.entryIdx,
     });
   }
 
-  return { trades, equityCurve, finalEquity: equity, startEquity, perAsset: Object.keys(perAsset) };
+  return { trades, equityCurve, finalEquity: equity, startEquity, perAsset: Object.keys(perAsset), openPositions: openAtEnd };
 }
 
 function findLastClosedWeeklyIdx(weekly, t) {

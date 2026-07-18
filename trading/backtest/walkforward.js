@@ -81,6 +81,13 @@ export function walkForward({
   startEquity = 100000,
   riskPct = 1,
   feePct = 0.08,
+  slippagePct = 0,
+  funding = null,
+  // Base strategy configuration. Grid entries in paramGrid override on top of
+  // signalParams, so e.g. a long-only base stays long-only across the sweep.
+  signalParams = SIGNAL_PARAMS,
+  regimeParams = undefined,
+  exitOnRegimeFlip = true,
   asset = "ASSET",
 }) {
   if (!daily?.length || !weekly?.length) {
@@ -114,20 +121,22 @@ export function walkForward({
 
     let best = { params: {}, score: -Infinity, metrics: null };
     for (const p of params) {
-      const sp = { ...SIGNAL_PARAMS, ...p };
+      const sp = { ...signalParams, ...p };
       const bt = backtestOne({
         asset, weekly: weeklyIS, daily: dailyIS,
-        startEquity: equity, riskPct, feePct, signalParams: sp,
+        startEquity: equity, riskPct, feePct, slippagePct, funding, signalParams: sp,
+        regimeParams, exitOnRegimeFlip,
       });
       const m = computeMetrics(bt);
       const score = objective(m, objKind);
       if (score > best.score) best = { params: p, score, metrics: m };
     }
 
-    const oosSp = { ...SIGNAL_PARAMS, ...best.params };
+    const oosSp = { ...signalParams, ...best.params };
     const oosBt = backtestOne({
       asset, weekly: weeklyOOS, daily: dailyOOS,
-      startEquity: equity, riskPct, feePct, signalParams: oosSp,
+      startEquity: equity, riskPct, feePct, slippagePct, funding, signalParams: oosSp,
+      regimeParams, exitOnRegimeFlip,
     });
     const oosMetrics = computeMetrics(oosBt);
 
@@ -154,9 +163,12 @@ export function walkForward({
   const validFolds = folds.filter((f) => f.isMetrics && f.oosMetrics && f.isMetrics.numTrades > 0);
   let degradation = null;
   if (validFolds.length) {
-    const avgIs = validFolds.reduce((s, f) => s + objective(f.isMetrics, objKind), 0) / validFolds.length;
-    const avgOos = validFolds.reduce((s, f) => s + objective(f.oosMetrics, objKind), 0) / validFolds.length;
-    if (Number.isFinite(avgIs) && avgIs !== 0) {
+    // A fold with zero trades expressed no edge — score it 0, not -Infinity,
+    // or one empty OOS window poisons the whole average.
+    const objOrZero = (m) => (m && m.numTrades > 0 ? objective(m, objKind) : 0);
+    const avgIs = validFolds.reduce((s, f) => s + objOrZero(f.isMetrics), 0) / validFolds.length;
+    const avgOos = validFolds.reduce((s, f) => s + objOrZero(f.oosMetrics), 0) / validFolds.length;
+    if (Number.isFinite(avgIs) && Number.isFinite(avgOos) && avgIs !== 0) {
       degradation = ((avgIs - avgOos) / Math.abs(avgIs)) * 100;
     }
   }
