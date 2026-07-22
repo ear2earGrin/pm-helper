@@ -23,6 +23,8 @@ Env:
   PMBRIEF_LLM_MODEL   (default "gpt-4o")
   PMBRIEF_LLM_CMD     (optional: a shell command that reads the prompt on stdin
                        and prints the HTML on stdout — use your own model CLI)
+  PMBRIEF_MAX_PAGES   (default 6 — homepage + useful subpages to crawl)
+  PMBRIEF_MAX_IMAGES  (default 12 — real content photos passed to the model)
 
 Cron (system crontab, the robust path — NOT an LLM agent):
   0 9,12,15,18,21 * * *  bash -lc 'set -a; . ~/.hermes/.env; set +a; cd /tmp && rm -rf pm-helper && \
@@ -56,27 +58,62 @@ def run(cmd, timeout, inp=None):
 
 
 # ── site content extraction (stdlib only) ───────────────────────────────────
-class _Extract(HTMLParser):
+MAX_PAGES = int(os.environ.get("PMBRIEF_MAX_PAGES", "6"))
+MAX_IMAGES = int(os.environ.get("PMBRIEF_MAX_IMAGES", "12"))
+
+# Same-domain subpages worth crawling (EN + Greek). Homepage rarely has it all.
+GOOD_PATH = re.compile(
+    r"about|service|treatment|procedure|gallery|photo|team|staff|doctor|contact|"
+    r"review|testimonial|price|hour|clinic|practice|"
+    # Greek (script)
+    r"υπηρεσ|θεραπ|ιατρ|οδοντ|γαλερ|φωτο|ομαδ|προσωπ|επικοιν|τιμ|σχετικ|ωραρ|"
+    # Greek (Latin transliteration — common in .gr URLs)
+    r"ypiresi|therap|iatri|odont|galer|photo|omad|proswp|epikoin|tim|sxetik|orari", re.I)
+# Prefer real content photos; reject chrome/tracking/icons.
+IMG_GOOD = re.compile(
+    r"upload|wp-content|media|gallery|photo|image|hero|banner|slide|team|staff|"
+    r"doctor|clinic|office|practice|dental|service|interior|building", re.I)
+IMG_BAD = re.compile(
+    r"logo|icon|sprite|favicon|placeholder|pixel|spacer|blank|loading|lazy-?load|"
+    r"1x1|badge|flag|payment|whatsapp|facebook|instagram|twitter|avatar-default|"
+    r"cookie|captcha|\.svg(\?|$)|\.gif(\?|$)", re.I)
+
+
+class _Page(HTMLParser):
     def __init__(self):
         super().__init__()
-        self.text, self.imgs, self.title = [], [], ""
+        self.text, self.imgs, self.links, self.title = [], [], [], ""
         self._skip = 0
         self._in_title = False
 
     def handle_starttag(self, tag, attrs):
+        a = dict(attrs)
         if tag in ("script", "style", "noscript", "svg"):
             self._skip += 1
-        if tag == "title":
+        elif tag == "title":
             self._in_title = True
-        if tag == "img":
-            for k, v in attrs:
-                if k == "src" and v:
-                    self.imgs.append(v)
+        elif tag == "a" and a.get("href"):
+            self.links.append(a["href"])
+        elif tag in ("img", "source"):
+            for key in ("src", "data-src", "data-lazy-src", "data-original", "data-image"):
+                if a.get(key):
+                    self.imgs.append(a[key])
+            for key in ("srcset", "data-srcset"):
+                if a.get(key):
+                    # take the largest candidate (last entry)
+                    parts = [c.strip().split()[0] for c in a[key].split(",") if c.strip()]
+                    if parts:
+                        self.imgs.append(parts[-1])
+        # inline background-image on any tag
+        style = a.get("style")
+        if style and "background" in style:
+            for m in re.findall(r"url\(([^)]+)\)", style):
+                self.imgs.append(m.strip("'\" "))
 
     def handle_endtag(self, tag):
         if tag in ("script", "style", "noscript", "svg") and self._skip:
             self._skip -= 1
-        if tag == "title":
+        elif tag == "title":
             self._in_title = False
 
     def handle_data(self, data):
@@ -91,58 +128,133 @@ class _Extract(HTMLParser):
 def fetch(url, timeout=15):
     req = urllib.request.Request(url, headers={"User-Agent": UA})
     with urllib.request.urlopen(req, timeout=timeout) as r:
-        final = r.geturl()
-        raw = r.read(600_000).decode("utf-8", "replace")
-        return final, raw
+        return r.geturl(), r.read(900_000).decode("utf-8", "replace")
 
 
-def site_content(url):
-    """Return {title, description, text, images[], final_url} or None."""
+def _raw_images(raw, base):
+    """og:image + css background-image URLs straight from the raw HTML."""
+    urls = []
+    for m in re.findall(r'<meta[^>]+property=["\']og:image["\'][^>]+content=["\']([^"\']+)', raw, re.I):
+        urls.append(("og", urljoin(base, html.unescape(m))))
+    for m in re.findall(r"background-image\s*:\s*url\(([^)]+)\)", raw, re.I):
+        urls.append(("bg", urljoin(base, m.strip("'\" "))))
+    return urls
+
+
+def curate_images(candidates):
+    """candidates: list of (source_tag, url). Return best content-photo URLs."""
+    scored = {}
+    for src, u in candidates:
+        if not u or u.startswith("data:"):
+            continue
+        u = u.split("#")[0]
+        if IMG_BAD.search(u):
+            continue
+        if not re.search(r"\.(jpe?g|png|webp|avif)(\?|$)", u, re.I) and src != "og":
+            continue
+        score = 0
+        if src == "og":
+            score += 6
+        if IMG_GOOD.search(u):
+            score += 3
+        if re.search(r"\b(20\d\d|\d{3,4}x\d{3,4})\b", u):
+            score += 1
+        scored[u] = max(scored.get(u, -99), score)
+    ranked = sorted(scored, key=lambda k: (-scored[k], len(k)))
+    return ranked[:MAX_IMAGES]
+
+
+def dedup_text(parts):
+    seen, out = set(), []
+    for chunk in parts:
+        for seg in re.split(r"(?<=[.!?·;:])\s+|\s{2,}|\s\|\s", chunk):
+            seg = seg.strip()
+            key = seg.lower()
+            if len(seg) < 3 or key in seen:
+                continue
+            seen.add(key)
+            out.append(seg)
+    return " ".join(out)[:6000]
+
+
+def crawl_site(url):
+    """Bounded same-domain crawl. Returns aggregated content dict or None."""
     if not url:
         return None
     if not re.match(r"^https?://", url, re.I):
         url = "https://" + url
-    for candidate in (url, f"{urlparse(url).scheme}://{urlparse(url).netloc}/"):
+    origin = urlparse(url).netloc
+    start_candidates = [url, f"{urlparse(url).scheme}://{origin}/"]
+    to_visit, seen, seen_final = list(dict.fromkeys(start_candidates)), set(), set()
+    pages, texts, imgs, title, desc = [], [], [], "", ""
+
+    while to_visit and len(pages) < MAX_PAGES:
+        u = to_visit.pop(0)
+        if u in seen:
+            continue
+        seen.add(u)
         try:
-            final, raw = fetch(candidate)
+            final, raw = fetch(u)
         except Exception:
             continue
-        p = _Extract()
+        if final in seen_final:   # the two start candidates often resolve to the same page
+            continue
+        seen_final.add(final)
+        pages.append(final)
+        p = _Page()
         try:
             p.feed(raw)
         except Exception:
             pass
-        desc = ""
-        m = re.search(r'<meta[^>]+name=["\']description["\'][^>]+content=["\']([^"\']+)', raw, re.I)
-        if m:
-            desc = html.unescape(m.group(1))
-        imgs = []
-        for s in p.imgs:
-            if s.startswith("data:"):
-                continue
-            absu = urljoin(final, s)
-            if absu not in imgs:
-                imgs.append(absu)
-            if len(imgs) >= 8:
-                break
-        text = " ".join(p.text)
-        text = re.sub(r"\s+", " ", text)[:3500]
-        if text or p.title:
-            return {"title": html.unescape(p.title.strip()), "description": desc,
-                    "text": text, "images": imgs, "final_url": final}
-    return None
+        if not title and p.title.strip():
+            title = html.unescape(p.title.strip())
+        if not desc:
+            m = re.search(r'<meta[^>]+name=["\']description["\'][^>]+content=["\']([^"\']+)', raw, re.I)
+            if m:
+                desc = html.unescape(m.group(1))
+        texts.append(re.sub(r"\s+", " ", " ".join(p.text)))
+        imgs += [("img", urljoin(final, s)) for s in p.imgs] + _raw_images(raw, final)
+        # queue useful same-domain subpages
+        for href in p.links:
+            lu = urljoin(final, href).split("#")[0]
+            pu = urlparse(lu)
+            if pu.netloc == origin and lu not in seen and lu not in to_visit \
+                    and GOOD_PATH.search(pu.path) and not re.search(r"\.(pdf|jpg|png|zip)$", pu.path, re.I):
+                to_visit.append(lu)
+
+    if not pages:
+        return None
+    return {"title": title, "description": desc, "text": dedup_text(texts),
+            "images": curate_images(imgs), "pages": pages, "final_url": pages[0]}
 
 
 # ── the ONE bounded LLM call ────────────────────────────────────────────────
 def build_prompt(job, content):
     lines = [
-        "Build a COMPLETE, modern, self-contained redesign of a small business's website "
-        "as a single index.html file. Requirements:",
-        "- One file: inline CSS (and inline JS only if needed). No external build, no frameworks.",
-        "- Responsive, clean, professional; a hero, services/about, and a contact section with a "
-        "Google-Maps embed and click-to-call. Use the business's REAL details below.",
-        "- Match the site's original language (e.g. Greek stays Greek). Keep any real content/tone.",
-        "- Output ONLY the raw HTML document (start with <!DOCTYPE html>). No markdown fences, no commentary.",
+        "Redesign this small business's website as ONE complete, modern, self-contained "
+        "index.html. This is a pitch preview — it must look like a real, premium site.",
+        "",
+        "STRUCTURE — at least 6 visually distinct, full-width sections, in this spirit:",
+        "  1. sticky top nav (business name + anchor links + a call button)",
+        "  2. hero using a REAL photo from the image URLs below (CSS background or <img>)",
+        "  3. short intro / trust band",
+        "  4. services or treatments — from the scraped content, as cards",
+        "  5. why-choose-us OR about/team (include team/about only if found below)",
+        "  6. a photo gallery strip using the supplied images",
+        "  7. contact: address, click-to-call phone, opening hours (only if found), "
+        "and a Google-Maps <iframe> embed",
+        "  + a sticky mobile call/CTA bar.",
+        "",
+        "RULES:",
+        "- One file: inline CSS (and minimal inline JS). No frameworks, no external CSS/JS. "
+        "Google Fonts via <link> is allowed. Reference the supplied image URLs directly.",
+        "- Use at least 3 of the supplied real images if any are given.",
+        "- DO NOT invent services, doctors, staff names, reviews, ratings, awards, prices, or "
+        "years of experience. Use ONLY what's in the scraped content + the details below. If "
+        "something is missing, write polished but conservative copy from the business category.",
+        "- Preserve the original language (Greek stays Greek). Give a real <title> and "
+        "<meta name=description>. Responsive and accessible.",
+        "- Output ONLY the raw HTML document, starting with <!DOCTYPE html>. No markdown, no commentary.",
         "",
         f"Business: {job.get('company','')}",
         f"Address: {job.get('address','') or '(unknown)'}",
@@ -151,12 +263,19 @@ def build_prompt(job, content):
         f"Current site: {job.get('website_url','') or '(none)'}",
     ]
     if content:
+        imgs = content.get("images") or []
         lines += [
-            "", "--- content scraped from their current site (use it, improve the presentation) ---",
-            f"Title: {content['title']}", f"Description: {content['description']}",
-            f"Images (you may reference by URL): {', '.join(content['images'][:6])}",
+            "",
+            f"--- scraped from their site ({len(content.get('pages', []))} page(s): "
+            f"{', '.join(content.get('pages', [])[:6])}) — use it, present it better ---",
+            f"Title: {content['title']}",
+            f"Description: {content['description']}",
+            f"Real image URLs ({len(imgs)} — reference these directly): " + "\n  ".join([""] + imgs),
             f"Text: {content['text']}",
         ]
+    else:
+        lines += ["", "(No source website was reachable — build a clean, conservative page "
+                  "from the business name, category, address and phone only. Do not invent specifics.)"]
     return "\n".join(lines)
 
 
@@ -287,13 +406,22 @@ def main():
     slug = job["slug"]
     log(f"building: {job.get('company')} [{slug}]  site={job.get('website_url')}")
 
-    # 4) fetch the real site (best-effort)
+    # 4) crawl the real site (homepage + up to MAX_PAGES useful subpages)
     content = None
     try:
-        content = site_content(job.get("website_url"))
-        log(f"site content: {'ok' if content else 'none'}")
+        content = crawl_site(job.get("website_url"))
+        if content:
+            log(f"crawled {len(content['pages'])} page(s), {len(content['images'])} photo(s), "
+                f"{len(content['text'])} chars of text")
+        else:
+            log("no source site reachable — building from company data only")
     except Exception as e:
-        log(f"site fetch error: {e}")
+        log(f"crawl error: {e}")
+
+    have_llm = bool(os.environ.get("OPENAI_API_KEY") or os.environ.get("PMBRIEF_LLM_CMD"))
+    if not have_llm:
+        log("WARNING: no OPENAI_API_KEY / PMBRIEF_LLM_CMD — output will be the basic "
+            "template, NOT a content-rich redesign. Set a model key for real quality.")
 
     # 5) ONE bounded LLM call, else template
     page = clean_html(llm_html(build_prompt(job, content)))
@@ -309,7 +437,11 @@ def main():
 
     # 6) finish (commit/push + move job to review)
     email = job.get("email") or ""
-    summary = f"Redesign built ({used}) from {content['final_url'] if content else 'company data'}."
+    if content:
+        summary = (f"Redesign built ({used}) from {len(content['pages'])} page(s) of "
+                   f"{content['final_url']} — {len(content['images'])} real photos available.")
+    else:
+        summary = f"Redesign built ({used}) from company data only (no source site reachable)."
     args = ["python3", "scripts/hermes_finish.py", job["id"], slug]
     if email:
         args.append(email)
