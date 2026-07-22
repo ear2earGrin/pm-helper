@@ -87,6 +87,35 @@ CSS/JS, images inlined or in the same folder. It goes live at
 
 ---
 
+## CRON-SAFE PATH — one script, no agent loop (use this for the schedule)
+
+An LLM agent is a bad cron worker: the model stream can hang (killed at the
+600s idle limit), the iteration budget runs out before `hermes_finish.py`, and
+the cwd drifts. So the daily schedule should be a **plain system cron** running
+one deterministic script — the LLM is invoked exactly once, bounded, for the
+HTML only:
+
+```
+scripts/pm_brief_redesign_cycle.py
+```
+
+It: chdir's to the repo → runs `hermes_pick.py` → (exit 0 if nothing to build) →
+fetches the company site → makes ONE bounded LLM call for the redesign HTML
+(OpenAI via `OPENAI_API_KEY`, or your own `PMBRIEF_LLM_CMD`, else a clean
+built-in template so it never stalls) → writes the page → runs
+`hermes_finish.py`. Every step has a hard timeout; nonzero exit only on real
+failure. Crontab (system cron, NOT an agent prompt):
+
+```
+0 9,12,15,18,21 * * * bash -lc 'cd /tmp && rm -rf pm-helper && \
+  git clone https://$GITHUB_TOKEN@github.com/ear2earGrin/pm-helper.git pm-helper && \
+  python3 pm-helper/scripts/pm_brief_redesign_cycle.py >> ~/pm-brief-cron.log 2>&1'
+```
+
+Everything below (hermes_pick / hermes_finish, the run steps) is what that
+script calls — read it for intent. Only use the manual agent path if you're
+running a one-off by hand.
+
 ## FAST PATH — use the helper scripts (do this; it saves tool calls)
 
 Your per-run tool budget is small, so do NOT hand-run auth/curl/git steps. Two
