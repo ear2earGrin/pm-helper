@@ -107,7 +107,7 @@ built-in template so it never stalls) → writes the page → runs
 failure. Crontab (system cron, NOT an agent prompt):
 
 ```
-0 9,12,15,18,21 * * * bash -lc 'cd /tmp && rm -rf pm-helper && \
+0 9,12,15,18,21 * * * bash -lc 'set -a; . ~/.hermes/.env; set +a; cd /tmp && rm -rf pm-helper && \
   git clone https://$GITHUB_TOKEN@github.com/ear2earGrin/pm-helper.git pm-helper && \
   python3 pm-helper/scripts/pm_brief_redesign_cycle.py >> ~/pm-brief-cron.log 2>&1'
 ```
