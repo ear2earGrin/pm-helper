@@ -404,6 +404,9 @@ def main():
 
     job = picked["job"]
     slug = job["slug"]
+    if not slug:
+        log(f"invalid empty slug for job {job.get('id')}: {job.get('company')}")
+        return 1
     log(f"building: {job.get('company')} [{slug}]  site={job.get('website_url')}")
 
     # 4) crawl the real site (homepage + up to MAX_PAGES useful subpages)
@@ -448,7 +451,8 @@ def main():
     args.append(summary)
     rc, out, err = run(args, timeout=180)
     if rc != 0:
-        log(f"hermes_finish failed rc={rc}: {err.strip()[:300]}")
+        detail = (err.strip() or out.strip() or "(no output)")
+        log(f"hermes_finish failed rc={rc}: {detail[:1200]}")
         return 1
     log(f"done: https://pm-brief.com/redesigns/{slug}/  ({used})")
     return 0

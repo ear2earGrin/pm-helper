@@ -54,10 +54,11 @@ def sign_in():
             body={"email": BOT_EMAIL, "password": pw})
     return d["access_token"] if d and "access_token" in d else die("auth failed")
 
-def sh(*args):
-    p = subprocess.run(args, capture_output=True, text=True)
+def sh(*args, timeout=120):
+    p = subprocess.run(args, capture_output=True, text=True, timeout=timeout)
     if p.returncode != 0:
-        die(f"cmd failed: {' '.join(args)} :: {p.stderr.strip()}")
+        detail = (p.stderr.strip() or p.stdout.strip() or f"exit {p.returncode}")
+        die(f"cmd failed: {' '.join(args)} :: {detail}")
     return p.stdout.strip()
 
 def main():
@@ -72,11 +73,18 @@ def main():
     if not os.path.exists(path):
         die(f"missing {path} — write the redesign first")
 
-    # git push
+    # git push. Idempotent: if this redesign was already committed/pushed but a
+    # previous run timed out before the Supabase update, skip the empty commit
+    # and still finish the database/event update below.
     sh("git", "add", f"redesigns/{slug}")
-    sh("git", "-c", "user.name=hermes", "-c", "user.email=hermes@pm-brief.local",
-       "commit", "-m", f"Add redesign: {slug}")
-    sh("git", "push", f"https://{token_gh}@{REPO}", "HEAD:main")
+    staged = subprocess.run(["git", "diff", "--cached", "--quiet", "--", f"redesigns/{slug}"],
+                            capture_output=True, text=True)
+    if staged.returncode == 0:
+        print(json.dumps({"ok": True, "note": "no staged redesign changes; continuing to Supabase update"}), flush=True)
+    else:
+        sh("git", "-c", "user.name=hermes", "-c", "user.email=hermes@pm-brief.local",
+           "commit", "-m", f"Add redesign: {slug}")
+        sh("git", "push", f"https://{token_gh}@{REPO}", "HEAD:main", timeout=180)
 
     # supabase update
     token = sign_in()

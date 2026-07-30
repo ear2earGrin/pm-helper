@@ -12,7 +12,8 @@ No secrets are stored here. Reads:
 Run from inside the cloned repo:  python scripts/hermes_pick.py
 Output (stdout, last line): JSON  {"action":"build","job":{...}}  or {"action":"none",...}
 """
-import json, os, re, sys, urllib.request, urllib.parse
+import json, os, re, sys, time, urllib.request, urllib.parse, urllib.error
+from urllib.parse import urlparse
 
 BASE = "https://wtzrxscdlqdgdiefsmru.supabase.co"
 BOT_EMAIL = "claude-redesign@pm-helper.app"
@@ -39,17 +40,32 @@ def anon_key():
 
 ANON = anon_key()
 
-def req(method, url, token=None, body=None, extra=None):
+def req(method, url, token=None, body=None, extra=None, attempts=3):
     headers = {"apikey": ANON, "Content-Type": "application/json"}
     if token:
         headers["Authorization"] = "Bearer " + token
     if extra:
         headers.update(extra)
     data = json.dumps(body).encode() if body is not None else None
-    r = urllib.request.Request(url, data=data, headers=headers, method=method)
-    with urllib.request.urlopen(r, timeout=60) as resp:
-        raw = resp.read().decode()
-        return json.loads(raw) if raw.strip() else None
+    last = None
+    for attempt in range(1, attempts + 1):
+        r = urllib.request.Request(url, data=data, headers=headers, method=method)
+        try:
+            with urllib.request.urlopen(r, timeout=60) as resp:
+                raw = resp.read().decode()
+                return json.loads(raw) if raw.strip() else None
+        except urllib.error.HTTPError as e:
+            raw = e.read().decode("utf-8", "replace")
+            last = f"HTTP {e.code} {e.reason}: {raw[:1000]}"
+            retryable = e.code in (408, 409, 425, 429, 500, 502, 503, 504)
+        except Exception as e:
+            last = f"{type(e).__name__}: {e}"
+            retryable = True
+        print(f"[hermes_pick] {method} {url} attempt {attempt}/{attempts} failed: {last}", file=sys.stderr, flush=True)
+        if attempt < attempts and retryable:
+            time.sleep(2 * attempt)
+            continue
+        raise RuntimeError(f"request failed after {attempt} attempt(s): {method} {url}: {last}")
 
 def sign_in():
     pw = os.environ.get("SUPABASE_BOT_PASSWORD")
@@ -68,6 +84,18 @@ def rest(method, path, token, body=None, prefer=None):
 def log_event(token, job_id, kind, body):
     rest("POST", "pmh_job_events", token,
          body={"job_id": job_id, "author": "hermes", "kind": kind, "body": body})
+
+def slugify(job):
+    """ASCII URL slug with safe fallback for Greek/Cyrillic/etc. names."""
+    base = re.sub(r"[^a-z0-9]+", "-", (job.get("company") or "").lower()).strip("-")[:60]
+    if base:
+        return base
+    host = urlparse(job.get("website_url") or "").netloc.lower()
+    host = re.sub(r"^www\.", "", host).split(":")[0]
+    base = re.sub(r"[^a-z0-9]+", "-", host).strip("-")[:60]
+    if base:
+        return base
+    return f"job-{str(job.get('id', 'company'))[:8]}"
 
 def main():
     token = sign_in()
@@ -122,7 +150,7 @@ def main():
     rest("PATCH", f"pmh_jobs?id=eq.{job['id']}", token, body={"status": "redesigning"})
     log_event(token, job["id"], "status", "Status -> Redesigning (hermes)")
 
-    slug = re.sub(r"[^a-z0-9]+", "-", (job.get("company") or "company").lower()).strip("-")[:60]
+    slug = slugify(job)
     print(json.dumps({"action": "build", "job": {
         "id": job["id"], "company": job.get("company"), "address": job.get("address"),
         "phone": job.get("phone"), "email": job.get("email"), "maps_url": job.get("maps_url"),
