@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lumina · minimal design studio</title>
+  <!-- elegant system font stack, no external requests -->
+  <style>
+    /* ---------- RESET & GLOBAL ---------- */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: #faf9f6;  /* warm off-white */
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      color: #1e1e1e;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      padding: 2rem 1.5rem;
+    }
+
+    /* ---------- LAYOUT CONTAINER ---------- */
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+
+    /* ---------- TYPOGRAPHY & SPACING ---------- */
+    h1, h2, h3 {
+      font-weight: 400;
+      letter-spacing: -0.02em;
+    }
+
+    h1 {
+      font-size: clamp(2.5rem, 8vw, 5rem);
+      line-height: 1.1;
+      max-width: 12ch;
+      margin-bottom: 1.5rem;
+      font-weight: 450;
+    }
+
+    h2 {
+      font-size: 1.8rem;
+      margin-bottom: 2rem;
+      font-weight: 400;
+      border-bottom: 1px solid #d9d4cc;
+      padding-bottom: 0.75rem;
+      letter-spacing: -0.01em;
+    }
+
+    .lead {
+      font-size: 1.25rem;
+      color: #4a4a48;
+      max-width: 60ch;
+      margin-bottom: 3rem;
+      font-weight: 350;
+    }
+
+    /* ---------- HEADER / NAV ---------- */
+    .site-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 0 2.5rem 0;
+      border-bottom: 1px solid #e2ddd6;
+      margin-bottom: 4rem;
+    }
+
+    .brand {
+      font-size: 1.5rem;
+      font-weight: 450;
+      letter-spacing: -0.02em;
+      color: #1e1e1e;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+    }
+
+    .brand-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      background-color: #b8a99a;
+      border-radius: 50%;
+      margin-left: 6px;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2.5rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: #2e2e2c;
+      font-size: 0.95rem;
+      font-weight: 400;
+      transition: color 0.15s ease;
+      letter-spacing: 0.01em;
+    }
+
+    .nav-links a:hover {
+      color: #8a7a6a;
+    }
+
+    /* ---------- HERO SECTION ---------- */
+    .hero {
+      margin-bottom: 6rem;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+      align-items: end;
+    }
+
+    .hero-statement {
+      font-size: 1.1rem;
+      color: #4f4e4b;
+      border-left: 2px solid #c9beb2;
+      padding-left: 1.5rem;
+      margin-bottom: 1rem;
+      max-width: 40ch;
+      font-weight: 350;
+    }
+
+    .hero-meta {
+      display: flex;
+      justify-content: flex-end;
+      font-size: 0.9rem;
+      color: #6b6a66;
+      gap: 3rem;
+    }
+
+    .hero-meta span {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .hero-meta i {
+      font-style: normal;
+      opacity: 0.7;
+    }
+
+    /* ---------- FEATURED WORK (GRID) ---------- */
+    .work-grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 1.5rem;
+      margin-bottom: 5rem;
+    }
+
+    .work-item {
+      grid-column: span 4;
+      background-color: #ffffff;
+      border: 1px solid #ebe6df;
+      border-radius: 2px;
+      padding: 0;
+      transition: box-shadow 0.2s ease, transform 0.2s ease;
+      overflow: hidden;
+    }
+
+    .work-item:hover {
+      box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.08);
+      transform: translateY(-2px);
+    }
+
+    .work-image {
+      aspect-ratio: 4 / 3;
+      background-color: #eae5de;
+      background-size: cover;
+      background-position: center;
+      border-bottom: 1px solid #e2ddd6;
+    }
+
+    .work-info {
+      padding: 1.5rem 1.2rem 1.8rem 1.2rem;
+    }
+
+    .work-title {
+      font-size: 1.2rem;
+      font-weight: 450;
+      margin-bottom: 0.3rem;
+      letter-spacing: -0.01em;
+    }
+
+    .work-category {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #8a7f72;
+      margin-bottom: 0.8rem;
+    }
+
+    .work-description {
+      font-size: 0.9rem;
+      color: #5c5a57;
+      line-height: 1.5;
+    }
+
+    /* ---------- PHILOSOPHY / TEXT SECTION ---------- */
+    .philosophy {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      margin: 5rem 0 6rem 0;
+      border-top: 1px solid #e2ddd6;
+      padding-top: 3rem;
+    }
+
+    .philosophy-text {
+      font-size: 1.5rem;
+      font-weight: 330;
+      line-height: 1.6;
+      letter-spacing: -0.01em;
+      color: #242422;
+      max-width: 30ch;
+    }
+
+    .philosophy-detail {
+      font-size: 1rem;
+      color: #5a5855;
+      max-width: 45ch;
+      align-self: end;
+    }
+
+    .philosophy-detail p {
+      margin-bottom: 1.5rem;
+    }
+
+    /* ---------- STUDIO INFO / FOOTER ---------- */
+    .studio-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-top: 1px solid #d9d4cc;
+      padding-top: 2.5rem;
+      margin-top: 3rem;
+      flex-wrap: wrap;
+      gap: 2rem;
+    }
+
+    .footer-left {
+      max-width: 300px;
+    }
+
+    .footer-left h3 {
+      font-size: 1.2rem;
+      font-weight: 450;
+      margin-bottom: 0.5rem;
+    }
+
+    .footer-left p {
+      font-size: 0.9rem;
+      color: #6b6a66;
+    }
+
+    .footer-right {
+      display: flex;
+      gap: 4rem;
+      flex-wrap: wrap;
+    }
+
+    .footer-col p {
+      font-size: 0.85rem;
+      margin-bottom: 0.4rem;
+      color: #4e4d4a;
+    }
+
+    .footer-col .label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #9a9188;
+      margin-bottom: 1rem;
+    }
+
+    .footer-col a {
+      display: block;
+      text-decoration: none;
+      color: #2e2e2c;
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+      transition: color 0.15s;
+    }
+
+    .footer-col a:hover {
+      color: #8a7a6a;
+    }
+
+    /* ---------- RESPONSIVE ---------- */
+    @media (max-width: 900px) {
+      .hero-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+      }
+      .hero-meta {
+        justify-content: flex-start;
+      }
+      .work-item {
+        grid-column: span 6;
+      }
+      .philosophy {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+      }
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 1.5rem 1rem;
+      }
+      .site-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1.2rem;
+      }
+      .nav-links {
+        gap: 1.8rem;
+        flex-wrap: wrap;
+      }
+      .work-item {
+        grid-column: span 12;
+      }
+      .work-grid {
+        gap: 1.2rem;
+      }
+      .studio-footer {
+        flex-direction: column;
+      }
+    }
+
+    /* ---------- PLACEHOLDER IMAGES (abstract gradients) ---------- */
+    .img-1 {
+      background-image: radial-gradient(circle at 20% 30%, #d8d0c5 0%, #b7aa9a 80%);
+    }
+    .img-2 {
+      background-image: linear-gradient(145deg, #cfc6bb 0%, #a99a8a 100%);
+    }
+    .img-3 {
+      background-image: radial-gradient(circle at 70% 20%, #e0d9cf 0%, #b3a494 90%);
+    }
+    .img-4 {
+      background-image: linear-gradient(20deg, #c9beb0, #a18f7e);
+    }
+    .img-5 {
+      background-image: radial-gradient(circle at 40% 40%, #dbd2c7, #ad9e8d);
+    }
+    .img-6 {
+      background-image: linear-gradient(200deg, #d1c6b8, #b3a290);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- HEADER -->
+    <header class="site-header">
+      <a href="#" class="brand">
+        Lumina<span class="brand-dot"></span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="#">Studio</a></li>
+        <li><a href="#">Work</a></li>
+        <li><a href="#">Journal</a></li>
+        <li><a href="#">Contact</a></li>
+      </ul>
+    </header>
+
+    <!-- HERO -->
+    <section class="hero">
+      <h1>Design that breathes with silence.</h1>
+      <p class="lead">Lumina is a minimal design studio crafting quiet identities, digital experiences, and spatial narratives for thoughtful brands.</p>
+      <div class="hero-grid">
+        <div class="hero-statement">
+          We believe restraint is a language. Every element earns its place — nothing more, nothing less.
+        </div>
+        <div class="hero-meta">
+          <span><i>EST.</i> 2016</span>
+          <span><i>ST.</i> Copenhagen</span>
+          <span><i>©</i> 2025</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- FEATURED WORK -->
+    <h2>Selected work</h2>
+    <div class="work-grid">
+      <!-- item 1 -->
+      <article class="work-item">
+        <div class="work-image img-1"></div>
+        <div class="work-info">
+          <div class="work-category">Brand identity</div>
+          <div class="work-title">Atlas & Bone</div>
+          <div class="work-description">Quiet luxury for a modern apothecary — typography, packaging, art direction.</div>
+        </div>
+      </article>
+      <!-- item 2 -->
+      <article class="work-item">
+        <div class="work-image img-2"></div>
+        <div class="work-info">
+          <div class="work-category">Digital experience</div>
+          <div class="work-title">Morrow Archive</div>
+          <div class="work-description">A digital reading room with a focus on editorial clarity and slow navigation.</div>
+        </div>
+      </article>
+      <!-- item 3 -->
+      <article class="work-item">
+        <div class="work-image img-3"></div>
+        <div class="work-info">
+          <div class="work-category">Spatial design</div>
+          <div class="work-title">Gallery Nº</div>
+          <div class="work-description">Minimal exhibition system for a contemporary art space in Berlin.</div>
+        </div>
+      </article>
+      <!-- item 4 -->
+      <article class="work-item">
+        <div class="work-image img-4"></div>
+        <div class="work-info">
+          <div class="work-category">Art direction</div>
+          <div class="work-title">Field Notes</div>
+          <div class="work-description">Seasonal visual language for a sustainable agriculture collective.</div>
+        </div>
+      </article>
+      <!-- item 5 -->
+      <article class="work-item">
+        <div class="work-image img-5"></div>
+        <div class="work-info">
+          <div class="work-category">Web design</div>
+          <div class="work-title">Maison Claire</div>
+          <div class="work-description">Elegant e‑commerce for a Parisian ceramic atelier — calm, tactile, precise.</div>
+        </div>
+      </article>
+      <!-- item 6 -->
+      <article class="work-item">
+        <div class="work-image img-6"></div>
+        <div class="work-info">
+          <div class="work-category">Editorial</div>
+          <div class="work-title">The Shape of Things</div>
+          <div class="work-description">A print publication exploring form, negative space, and material honesty.</div>
+        </div>
+      </article>
+    </div>
+
+    <!-- PHILOSOPHY / MANIFESTO -->
+    <section class="philosophy">
+      <div class="philosophy-text">
+        “The most powerful statements are often the ones left unspoken. Our work is a study in what remains.”
+      </div>
+      <div class="philosophy-detail">
+        <p>We are a small team of designers, strategists, and writers working with independent brands and cultural institutions. Our approach is slow, deliberate, and deeply considered.</p>
+        <p>We avoid trends and ornamentation, focusing instead on structure, typography, and the quiet rhythm of whitespace. Every project begins with listening — and ends with something essential.</p>
+      </div>
+    </section>
+
+    <!-- FOOTER / STUDIO INFO -->
+    <footer class="studio-footer">
+      <div class="footer-left">
+        <h3>Lumina Studio</h3>
+        <p>Bredgade 22<br>1260 Copenhagen K<br>Denmark</p>
+        <p style="margin-top: 1.2rem;">hello@lumina.studio</p>
+      </div>
+      <div class="footer-right">
+        <div class="footer-col">
+          <p class="label">Social</p>
+          <a href="#">Instagram</a>
+          <a href="#">Are.na</a>
+          <a href="#">LinkedIn</a>
+        </div>
+        <div class="footer-col">
+          <p class="label">Index</p>
+          <a href="#">Studio</a>
+          <a href="#">Work</a>
+          <a href="#">Journal</a>
+          <a href="#">Contact</a>
+        </div>
+        <div class="footer-col">
+          <p class="label">Newsletter</p>
+          <p style="font-size: 0.85rem; max-width: 18ch;">Occasional notes on design and slowness. No noise.</p>
+          <a href="#" style="margin-top: 0.8rem;">Subscribe ↗</a>
+        </div>
+      </div>
+    </footer>
+
+    <!-- tiny bottom line -->
+    <div style="margin-top: 3rem; font-size: 0.7rem; color: #9a9188; letter-spacing: 0.08rem; text-transform: uppercase;">
+      © 2025 Lumina — minimal design studio
+    </div>
+  </div>
+</body>
+</html>
