@@ -24,7 +24,7 @@
   <array>
     <string>/bin/bash</string>
     <string>-lc</string>
-    <string>set -a; . ~/.hermes/.env; set +a; cd /tmp &amp;&amp; rm -rf pm-helper &amp;&amp; git clone https://$GITHUB_TOKEN@github.com/ear2earGrin/pm-helper.git pm-helper &amp;&amp; python3 pm-helper/scripts/pm_brief_redesign_cycle.py</string>
+    <string>set -a; . ~/.hermes/.env; set +a; export PMBRIEF_LLM_CMD="bash ~/.hermes/scripts/pmbrief-llm.sh"; cd /tmp &amp;&amp; rm -rf pm-helper &amp;&amp; git clone https://$GITHUB_TOKEN@github.com/ear2earGrin/pm-helper.git pm-helper &amp;&amp; python3 pm-helper/scripts/pm_brief_redesign_cycle.py</string>
   </array>
 
   <key>StartCalendarInterval</key>

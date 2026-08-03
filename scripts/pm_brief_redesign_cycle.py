@@ -246,6 +246,10 @@ def build_prompt(job, content):
         "  + a sticky mobile call/CTA bar.",
         "",
         "RULES:",
+        "- DESIGN DIRECTION: do NOT use a generic light-background + teal/navy SaaS template look. "
+        "Pick ONE distinctive, premium direction that fits the business category (e.g. warm cream + deep "
+        "green, charcoal + gold, editorial serif, soft clay + ink) and commit to it consistently across "
+        "palette, typography, spacing, buttons and motion. It must look art-directed, not templated.",
         "- One file: inline CSS (and minimal inline JS). No frameworks, no external CSS/JS. "
         "Google Fonts via <link> is allowed. Reference the supplied image URLs directly.",
         "- Use at least 3 of the supplied real images if any are given.",
@@ -445,6 +449,8 @@ def main():
                    f"{content['final_url']} — {len(content['images'])} real photos available.")
     else:
         summary = f"Redesign built ({used}) from company data only (no source site reachable)."
+    if used == "llm":
+        summary = "⭐ " + summary
     args = ["python3", "scripts/hermes_finish.py", job["id"], slug]
     if email:
         args.append(email)
