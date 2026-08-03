@@ -1,496 +1,212 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="el">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lumina · minimal design studio</title>
-  <!-- elegant system font stack, no external requests -->
-  <style>
-    /* ---------- RESET & GLOBAL ---------- */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Ειρήνη Κανατάκη — Συμβολαιογράφος Θεσσαλονίκη | Μητροπόλεως 6</title>
+<meta name="description" content="Συμβολαιογραφικές πράξεις στη Θεσσαλονίκη: μεταβιβάσεις ακινήτων, διαθήκες, πληρεξούσια, συστάσεις εταιρειών. Εχεμύθεια, ακρίβεια και άμεση εξυπηρέτηση στο κέντρο της πόλης."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --ink:#1d2b25;          /* deep forest ink */
+  --forest:#24463a;       /* primary deep green */
+  --forest-2:#183227;
+  --cream:#faf6ee;        /* warm paper */
+  --cream-2:#f3ecdf;
+  --gold:#b9925a;         /* restrained gold */
+  --gold-soft:#d8c39b;
+  --line:#e4dccb;
+  --muted:#5f6b64;
+  --white:#fffdf8;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--ink);background:var(--cream);line-height:1.7;-webkit-font-smoothing:antialiased}
+h1,h2,h3,.serif{font-family:'Cormorant Garamond',Georgia,serif}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px}
 
-    body {
-      background-color: #faf9f6;  /* warm off-white */
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      color: #1e1e1e;
-      line-height: 1.5;
-      -webkit-font-smoothing: antialiased;
-      padding: 2rem 1.5rem;
-    }
+/* ---------- NAV ---------- */
+header{position:sticky;top:0;z-index:50;background:rgba(250,246,238,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.nav{display:flex;align-items:center;justify-content:space-between;height:68px}
+.brand{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:21px;letter-spacing:.3px;color:var(--forest)}
+.brand small{display:block;font-family:'Inter',sans-serif;font-size:10.5px;font-weight:500;letter-spacing:.22em;text-transform:uppercase;color:var(--gold)}
+.nav-links{display:flex;gap:34px;align-items:center}
+.nav-links a{font-size:13.5px;font-weight:500;letter-spacing:.04em;color:var(--forest);border-bottom:1px solid transparent;padding:4px 0;transition:border-color .2s}
+.nav-links a:hover{border-color:var(--gold)}
+.nav-cta{background:var(--forest);color:var(--cream)!important;padding:10px 20px!important;border-radius:999px;font-weight:600;transition:background .2s}
+.nav-cta:hover{background:var(--forest-2)}
+@media(max-width:760px){.nav-links a:not(.nav-cta){display:none}}
 
-    /* ---------- LAYOUT CONTAINER ---------- */
-    .container {
-      max-width: 1280px;
-      margin: 0 auto;
-    }
+/* ---------- HERO ---------- */
+.hero{position:relative;background:linear-gradient(160deg,var(--forest-2) 0%,var(--forest) 55%,#2c5a48 100%);color:var(--cream);padding:120px 0 130px;overflow:hidden}
+.hero::before{content:"";position:absolute;inset:0;background:radial-gradient(1200px 500px at 85% -10%,rgba(217,195,155,.14),transparent 60%)}
+.hero::after{content:"";position:absolute;left:0;right:0;bottom:0;height:90px;background:linear-gradient(180deg,transparent,var(--cream))}
+.hero .wrap{position:relative;z-index:2}
+.eyebrow{display:inline-flex;align-items:center;gap:10px;font-size:11.5px;font-weight:600;letter-spacing:.28em;text-transform:uppercase;color:var(--gold-soft);margin-bottom:26px}
+.eyebrow::before{content:"";width:34px;height:1px;background:var(--gold)}
+.hero h1{font-size:clamp(44px,6.5vw,76px);font-weight:500;line-height:1.05;max-width:16ch;margin-bottom:22px}
+.hero h1 em{font-style:italic;color:var(--gold-soft)}
+.hero p{font-size:18.5px;color:#cfe0d7;max-width:46ch;margin-bottom:38px}
+.hero-actions{display:flex;gap:16px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:10px;padding:15px 30px;border-radius:999px;font-weight:600;font-size:15px;transition:all .2s}
+.btn-gold{background:var(--gold);color:var(--forest-2)}
+.btn-gold:hover{background:var(--gold-soft)}
+.btn-ghost{border:1px solid rgba(250,246,238,.45);color:var(--cream)}
+.btn-ghost:hover{border-color:var(--gold-soft);color:var(--gold-soft)}
+.hero-meta{display:flex;gap:34px;margin-top:64px;flex-wrap:wrap}
+.hero-meta div{font-size:13px;color:#a9c4b8;letter-spacing:.02em}
+.hero-meta strong{display:block;font-family:'Cormorant Garamond',serif;font-size:17px;color:var(--cream);font-weight:600;margin-bottom:2px}
 
-    /* ---------- TYPOGRAPHY & SPACING ---------- */
-    h1, h2, h3 {
-      font-weight: 400;
-      letter-spacing: -0.02em;
-    }
+/* ---------- SECTIONS ---------- */
+section{padding:96px 0}
+.sec-head{margin-bottom:52px}
+.sec-head .kicker{font-size:11.5px;font-weight:600;letter-spacing:.26em;text-transform:uppercase;color:var(--gold);margin-bottom:14px}
+.sec-head h2{font-size:clamp(32px,4vw,46px);font-weight:500;color:var(--forest);line-height:1.12;max-width:24ch}
+.sec-head p{color:var(--muted);max-width:52ch;margin-top:14px}
 
-    h1 {
-      font-size: clamp(2.5rem, 8vw, 5rem);
-      line-height: 1.1;
-      max-width: 12ch;
-      margin-bottom: 1.5rem;
-      font-weight: 450;
-    }
+/* ---------- SERVICES ---------- */
+.services{background:var(--white)}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+@media(max-width:900px){.grid{grid-template-columns:1fr 1fr}}
+@media(max-width:620px){.grid{grid-template-columns:1fr}}
+.card{background:var(--cream);border:1px solid var(--line);border-radius:4px;padding:34px 30px;transition:transform .25s,box-shadow .25s,border-color .25s}
+.card:hover{transform:translateY(-4px);box-shadow:0 18px 40px -22px rgba(29,43,37,.35);border-color:var(--gold-soft)}
+.card .num{font-family:'Cormorant Garamond',serif;font-size:15px;color:var(--gold);letter-spacing:.14em;margin-bottom:16px}
+.card h3{font-size:24px;font-weight:600;color:var(--forest);margin-bottom:10px}
+.card p{font-size:14.5px;color:var(--muted)}
 
-    h2 {
-      font-size: 1.8rem;
-      margin-bottom: 2rem;
-      font-weight: 400;
-      border-bottom: 1px solid #d9d4cc;
-      padding-bottom: 0.75rem;
-      letter-spacing: -0.01em;
-    }
+/* ---------- WHY ---------- */
+.why{background:var(--cream-2)}
+.why-list{display:grid;grid-template-columns:1fr 1fr;gap:0}
+@media(max-width:760px){.why-list{grid-template-columns:1fr}}
+.why-item{padding:34px 20px 34px 0;border-bottom:1px solid var(--line);display:flex;gap:22px}
+.why-item:nth-child(odd){padding-right:44px}
+.why-item .mark{flex:none;width:38px;height:38px;border:1px solid var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--gold);font-family:'Cormorant Garamond',serif;font-size:17px}
+.why-item h3{font-size:20px;font-weight:600;color:var(--forest);margin-bottom:6px}
+.why-item p{font-size:14.5px;color:var(--muted)}
 
-    .lead {
-      font-size: 1.25rem;
-      color: #4a4a48;
-      max-width: 60ch;
-      margin-bottom: 3rem;
-      font-weight: 350;
-    }
+/* ---------- CONTACT ---------- */
+.contact{background:var(--forest-2);color:var(--cream)}
+.contact .sec-head h2{color:var(--cream)}
+.contact .sec-head .kicker{color:var(--gold-soft)}
+.contact-grid{display:grid;grid-template-columns:1fr 1.15fr;gap:48px;align-items:start}
+@media(max-width:820px){.contact-grid{grid-template-columns:1fr}}
+.c-line{display:flex;gap:18px;padding:20px 0;border-bottom:1px solid rgba(250,246,238,.14);align-items:flex-start}
+.c-line .ic{flex:none;width:42px;height:42px;border:1px solid rgba(217,195,155,.5);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px}
+.c-line h4{font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:600;margin-bottom:3px}
+.c-line p,.c-line a{font-size:15px;color:#c2d4cb}
+.c-line a:hover{color:var(--gold-soft)}
+iframe{width:100%;min-height:340px;border:0;border-radius:4px;filter:saturate(.85)}
 
-    /* ---------- HEADER / NAV ---------- */
-    .site-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0.5rem 0 2.5rem 0;
-      border-bottom: 1px solid #e2ddd6;
-      margin-bottom: 4rem;
-    }
+/* ---------- FOOTER ---------- */
+footer{background:var(--forest-2);border-top:1px solid rgba(250,246,238,.12);padding:30px 0;color:#93ab9f;font-size:13px}
+.foot{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
 
-    .brand {
-      font-size: 1.5rem;
-      font-weight: 450;
-      letter-spacing: -0.02em;
-      color: #1e1e1e;
-      text-decoration: none;
-      display: flex;
-      align-items: center;
-    }
-
-    .brand-dot {
-      display: inline-block;
-      width: 8px;
-      height: 8px;
-      background-color: #b8a99a;
-      border-radius: 50%;
-      margin-left: 6px;
-    }
-
-    .nav-links {
-      display: flex;
-      gap: 2.5rem;
-      list-style: none;
-    }
-
-    .nav-links a {
-      text-decoration: none;
-      color: #2e2e2c;
-      font-size: 0.95rem;
-      font-weight: 400;
-      transition: color 0.15s ease;
-      letter-spacing: 0.01em;
-    }
-
-    .nav-links a:hover {
-      color: #8a7a6a;
-    }
-
-    /* ---------- HERO SECTION ---------- */
-    .hero {
-      margin-bottom: 6rem;
-    }
-
-    .hero-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 3rem;
-      align-items: end;
-    }
-
-    .hero-statement {
-      font-size: 1.1rem;
-      color: #4f4e4b;
-      border-left: 2px solid #c9beb2;
-      padding-left: 1.5rem;
-      margin-bottom: 1rem;
-      max-width: 40ch;
-      font-weight: 350;
-    }
-
-    .hero-meta {
-      display: flex;
-      justify-content: flex-end;
-      font-size: 0.9rem;
-      color: #6b6a66;
-      gap: 3rem;
-    }
-
-    .hero-meta span {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .hero-meta i {
-      font-style: normal;
-      opacity: 0.7;
-    }
-
-    /* ---------- FEATURED WORK (GRID) ---------- */
-    .work-grid {
-      display: grid;
-      grid-template-columns: repeat(12, 1fr);
-      gap: 1.5rem;
-      margin-bottom: 5rem;
-    }
-
-    .work-item {
-      grid-column: span 4;
-      background-color: #ffffff;
-      border: 1px solid #ebe6df;
-      border-radius: 2px;
-      padding: 0;
-      transition: box-shadow 0.2s ease, transform 0.2s ease;
-      overflow: hidden;
-    }
-
-    .work-item:hover {
-      box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.08);
-      transform: translateY(-2px);
-    }
-
-    .work-image {
-      aspect-ratio: 4 / 3;
-      background-color: #eae5de;
-      background-size: cover;
-      background-position: center;
-      border-bottom: 1px solid #e2ddd6;
-    }
-
-    .work-info {
-      padding: 1.5rem 1.2rem 1.8rem 1.2rem;
-    }
-
-    .work-title {
-      font-size: 1.2rem;
-      font-weight: 450;
-      margin-bottom: 0.3rem;
-      letter-spacing: -0.01em;
-    }
-
-    .work-category {
-      font-size: 0.8rem;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: #8a7f72;
-      margin-bottom: 0.8rem;
-    }
-
-    .work-description {
-      font-size: 0.9rem;
-      color: #5c5a57;
-      line-height: 1.5;
-    }
-
-    /* ---------- PHILOSOPHY / TEXT SECTION ---------- */
-    .philosophy {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 4rem;
-      margin: 5rem 0 6rem 0;
-      border-top: 1px solid #e2ddd6;
-      padding-top: 3rem;
-    }
-
-    .philosophy-text {
-      font-size: 1.5rem;
-      font-weight: 330;
-      line-height: 1.6;
-      letter-spacing: -0.01em;
-      color: #242422;
-      max-width: 30ch;
-    }
-
-    .philosophy-detail {
-      font-size: 1rem;
-      color: #5a5855;
-      max-width: 45ch;
-      align-self: end;
-    }
-
-    .philosophy-detail p {
-      margin-bottom: 1.5rem;
-    }
-
-    /* ---------- STUDIO INFO / FOOTER ---------- */
-    .studio-footer {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      border-top: 1px solid #d9d4cc;
-      padding-top: 2.5rem;
-      margin-top: 3rem;
-      flex-wrap: wrap;
-      gap: 2rem;
-    }
-
-    .footer-left {
-      max-width: 300px;
-    }
-
-    .footer-left h3 {
-      font-size: 1.2rem;
-      font-weight: 450;
-      margin-bottom: 0.5rem;
-    }
-
-    .footer-left p {
-      font-size: 0.9rem;
-      color: #6b6a66;
-    }
-
-    .footer-right {
-      display: flex;
-      gap: 4rem;
-      flex-wrap: wrap;
-    }
-
-    .footer-col p {
-      font-size: 0.85rem;
-      margin-bottom: 0.4rem;
-      color: #4e4d4a;
-    }
-
-    .footer-col .label {
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: #9a9188;
-      margin-bottom: 1rem;
-    }
-
-    .footer-col a {
-      display: block;
-      text-decoration: none;
-      color: #2e2e2c;
-      font-size: 0.9rem;
-      margin-bottom: 0.5rem;
-      transition: color 0.15s;
-    }
-
-    .footer-col a:hover {
-      color: #8a7a6a;
-    }
-
-    /* ---------- RESPONSIVE ---------- */
-    @media (max-width: 900px) {
-      .hero-grid {
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
-      }
-      .hero-meta {
-        justify-content: flex-start;
-      }
-      .work-item {
-        grid-column: span 6;
-      }
-      .philosophy {
-        grid-template-columns: 1fr;
-        gap: 2rem;
-      }
-    }
-
-    @media (max-width: 640px) {
-      body {
-        padding: 1.5rem 1rem;
-      }
-      .site-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1.2rem;
-      }
-      .nav-links {
-        gap: 1.8rem;
-        flex-wrap: wrap;
-      }
-      .work-item {
-        grid-column: span 12;
-      }
-      .work-grid {
-        gap: 1.2rem;
-      }
-      .studio-footer {
-        flex-direction: column;
-      }
-    }
-
-    /* ---------- PLACEHOLDER IMAGES (abstract gradients) ---------- */
-    .img-1 {
-      background-image: radial-gradient(circle at 20% 30%, #d8d0c5 0%, #b7aa9a 80%);
-    }
-    .img-2 {
-      background-image: linear-gradient(145deg, #cfc6bb 0%, #a99a8a 100%);
-    }
-    .img-3 {
-      background-image: radial-gradient(circle at 70% 20%, #e0d9cf 0%, #b3a494 90%);
-    }
-    .img-4 {
-      background-image: linear-gradient(20deg, #c9beb0, #a18f7e);
-    }
-    .img-5 {
-      background-image: radial-gradient(circle at 40% 40%, #dbd2c7, #ad9e8d);
-    }
-    .img-6 {
-      background-image: linear-gradient(200deg, #d1c6b8, #b3a290);
-    }
-  </style>
+/* ---------- STICKY MOBILE BAR ---------- */
+.mobile-cta{position:fixed;left:0;right:0;bottom:0;z-index:60;display:none;background:var(--cream);border-top:1px solid var(--line);padding:12px 16px calc(12px + env(safe-area-inset-bottom))}
+.mobile-cta a{flex:1;text-align:center;background:var(--forest);color:var(--cream);padding:14px;border-radius:999px;font-weight:600;font-size:15px}
+@media(max-width:760px){.mobile-cta{display:flex;gap:10px}body{padding-bottom:74px}}
+</style>
 </head>
 <body>
-  <div class="container">
-    <!-- HEADER -->
-    <header class="site-header">
-      <a href="#" class="brand">
-        Lumina<span class="brand-dot"></span>
-      </a>
-      <ul class="nav-links">
-        <li><a href="#">Studio</a></li>
-        <li><a href="#">Work</a></li>
-        <li><a href="#">Journal</a></li>
-        <li><a href="#">Contact</a></li>
-      </ul>
-    </header>
 
-    <!-- HERO -->
-    <section class="hero">
-      <h1>Design that breathes with silence.</h1>
-      <p class="lead">Lumina is a minimal design studio crafting quiet identities, digital experiences, and spatial narratives for thoughtful brands.</p>
-      <div class="hero-grid">
-        <div class="hero-statement">
-          We believe restraint is a language. Every element earns its place — nothing more, nothing less.
-        </div>
-        <div class="hero-meta">
-          <span><i>EST.</i> 2016</span>
-          <span><i>ST.</i> Copenhagen</span>
-          <span><i>©</i> 2025</span>
-        </div>
-      </div>
-    </section>
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="#top">Ειρήνη Κανατάκη<small>Συμβολαιογράφος</small></a>
+    <nav class="nav-links">
+      <a href="#services">Υπηρεσίες</a>
+      <a href="#why">Γιατί εμάς</a>
+      <a href="#contact">Επικοινωνία</a>
+      <a class="nav-cta" href="tel:+302310285950">☎ +30 231 028 5950</a>
+    </nav>
+  </div>
+</header>
 
-    <!-- FEATURED WORK -->
-    <h2>Selected work</h2>
-    <div class="work-grid">
-      <!-- item 1 -->
-      <article class="work-item">
-        <div class="work-image img-1"></div>
-        <div class="work-info">
-          <div class="work-category">Brand identity</div>
-          <div class="work-title">Atlas & Bone</div>
-          <div class="work-description">Quiet luxury for a modern apothecary — typography, packaging, art direction.</div>
-        </div>
-      </article>
-      <!-- item 2 -->
-      <article class="work-item">
-        <div class="work-image img-2"></div>
-        <div class="work-info">
-          <div class="work-category">Digital experience</div>
-          <div class="work-title">Morrow Archive</div>
-          <div class="work-description">A digital reading room with a focus on editorial clarity and slow navigation.</div>
-        </div>
-      </article>
-      <!-- item 3 -->
-      <article class="work-item">
-        <div class="work-image img-3"></div>
-        <div class="work-info">
-          <div class="work-category">Spatial design</div>
-          <div class="work-title">Gallery Nº</div>
-          <div class="work-description">Minimal exhibition system for a contemporary art space in Berlin.</div>
-        </div>
-      </article>
-      <!-- item 4 -->
-      <article class="work-item">
-        <div class="work-image img-4"></div>
-        <div class="work-info">
-          <div class="work-category">Art direction</div>
-          <div class="work-title">Field Notes</div>
-          <div class="work-description">Seasonal visual language for a sustainable agriculture collective.</div>
-        </div>
-      </article>
-      <!-- item 5 -->
-      <article class="work-item">
-        <div class="work-image img-5"></div>
-        <div class="work-info">
-          <div class="work-category">Web design</div>
-          <div class="work-title">Maison Claire</div>
-          <div class="work-description">Elegant e‑commerce for a Parisian ceramic atelier — calm, tactile, precise.</div>
-        </div>
-      </article>
-      <!-- item 6 -->
-      <article class="work-item">
-        <div class="work-image img-6"></div>
-        <div class="work-info">
-          <div class="work-category">Editorial</div>
-          <div class="work-title">The Shape of Things</div>
-          <div class="work-description">A print publication exploring form, negative space, and material honesty.</div>
-        </div>
-      </article>
+<section class="hero" id="top">
+  <div class="wrap">
+    <span class="eyebrow">Συμβολαιογραφικό Γραφείο · Θεσσαλονίκη</span>
+    <h1>Η ασφάλεια μιας <em>υπογραφής</em>, η σιγουριά μιας σωστής πράξης.</h1>
+    <p>Συμβολαιογραφικές πράξεις με εχεμύθεια, ακρίβεια και συνέπεια, στο κέντρο της Θεσσαλονίκης. Σας υποδεχόμαστε στη Μητροπόλεως 6 για κάθε νομική σας ανάγκη που απαιτεί συμβολαιογραφική πράξη.</p>
+    <div class="hero-actions">
+      <a class="btn btn-gold" href="tel:+302310285950">Καλέστε μας →</a>
+      <a class="btn btn-ghost" href="#contact">Διεύθυνση & Χάρτης</a>
     </div>
-
-    <!-- PHILOSOPHY / MANIFESTO -->
-    <section class="philosophy">
-      <div class="philosophy-text">
-        “The most powerful statements are often the ones left unspoken. Our work is a study in what remains.”
-      </div>
-      <div class="philosophy-detail">
-        <p>We are a small team of designers, strategists, and writers working with independent brands and cultural institutions. Our approach is slow, deliberate, and deeply considered.</p>
-        <p>We avoid trends and ornamentation, focusing instead on structure, typography, and the quiet rhythm of whitespace. Every project begins with listening — and ends with something essential.</p>
-      </div>
-    </section>
-
-    <!-- FOOTER / STUDIO INFO -->
-    <footer class="studio-footer">
-      <div class="footer-left">
-        <h3>Lumina Studio</h3>
-        <p>Bredgade 22<br>1260 Copenhagen K<br>Denmark</p>
-        <p style="margin-top: 1.2rem;">hello@lumina.studio</p>
-      </div>
-      <div class="footer-right">
-        <div class="footer-col">
-          <p class="label">Social</p>
-          <a href="#">Instagram</a>
-          <a href="#">Are.na</a>
-          <a href="#">LinkedIn</a>
-        </div>
-        <div class="footer-col">
-          <p class="label">Index</p>
-          <a href="#">Studio</a>
-          <a href="#">Work</a>
-          <a href="#">Journal</a>
-          <a href="#">Contact</a>
-        </div>
-        <div class="footer-col">
-          <p class="label">Newsletter</p>
-          <p style="font-size: 0.85rem; max-width: 18ch;">Occasional notes on design and slowness. No noise.</p>
-          <a href="#" style="margin-top: 0.8rem;">Subscribe ↗</a>
-        </div>
-      </div>
-    </footer>
-
-    <!-- tiny bottom line -->
-    <div style="margin-top: 3rem; font-size: 0.7rem; color: #9a9188; letter-spacing: 0.08rem; text-transform: uppercase;">
-      © 2025 Lumina — minimal design studio
+    <div class="hero-meta">
+      <div><strong>Μητροπόλεως 6</strong>Θεσσαλονίκη 546 25</div>
+      <div><strong>+30 231 028 5950</strong>Τηλέφωνο επικοινωνίας</div>
+      <div><strong>Κέντρο πόλης</strong>Εύκολη πρόσβαση</div>
     </div>
   </div>
+</section>
+
+<section class="services" id="services">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Υπηρεσίες</div>
+      <h2>Ποιες πράξεις αναλαμβάνουμε</h2>
+      <p>Κάθε συμβολαιογραφική πράξη διεκπεραιώνεται με προσοχή στη λεπτομέρεια και πλήρη νομική ασφάλεια.</p>
+    </div>
+    <div class="grid">
+      <div class="card"><div class="num">01</div><h3>Μεταβιβάσεις ακινήτων</h3><p>Συμβόλαια αγοραπωλησίας, γονικές παροχές, δωρεές και κάθε πράξη που αφορά ακίνητη περιουσία.</p></div>
+      <div class="card"><div class="num">02</div><h3>Διαθήκες & κληρονομικά</h3><p>Σύνταξη διαθηκών, αποδοχές κληρονομιάς και όλα τα συμβολαιογραφικά έγγραφα που τις συνοδεύουν.</p></div>
+      <div class="card"><div class="num">03</div><h3>Πληρεξούσια</h3><p>Γενικά και ειδικά πληρεξούσια για κάθε περίσταση, εντός και εκτός Ελλάδας, με δυνατότητα ιδιαίτερης μνείας.</p></div>
+      <div class="card"><div class="num">04</div><h3>Συστάσεις εταιρειών</h3><p>Συμβολαιογραφικές πράξεις σύστασης ΙΚΕ, ΑΕ, ΕΕ και ΟΕ, καθώς και τροποποιήσεις καταστατικών.</p></div>
+      <div class="card"><div class="num">05</div><h3>Γαμικά σύμφωνα & δωρεές</h3><p>Σύμφωνα συμβίωσης, γαμικά σύμφωνα και δωρεές με συμβολαιογραφική μορφή.</p></div>
+      <div class="card"><div class="num">06</div><h3>Επικυρώσεις & αντίγραφα</h3><p>Επικύρωση αντιγράφων και υπογραφών, καθώς και έκδοση αντιγράφων συμβολαιογραφικών πράξεων.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="why" id="why">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Γιατί εμάς</div>
+      <h2>Ένα γραφείο που σέβεται τον χρόνο και την εμπιστοσύνη σας</h2>
+    </div>
+    <div class="why-list">
+      <div class="why-item"><span class="mark">✓</span><div><h3>Εχεμύθεια</h3><p>Οι υποθέσεις σας αντιμετωπίζονται με απόλυτη εμπιστευτικότητα.</p></div></div>
+      <div class="why-item"><span class="mark">✓</span><div><h3>Ακρίβεια & συνέπεια</h3><p>Κάθε πράξη ελέγχεται και ολοκληρώνεται στην ώρα της.</p></div></div>
+      <div class="why-item"><span class="mark">✓</span><div><h3>Άμεση εξυπηρέτηση</h3><p>Σας εξυπηρετούμε με ραντεβού αλλά και με ευελιξία για επείγουσες ανάγκες.</p></div></div>
+      <div class="why-item"><span class="mark">✓</span><div><h3>Κεντρική τοποθεσία</h3><p>Στη Μητροπόλεως 6, σε απόσταση αναπνοής από το κέντρο της πόλης.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="contact" id="contact">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">Επικοινωνία</div>
+      <h2>Κλείστε το ραντεβού σας</h2>
+      <p>Επικοινωνήστε μαζί μας τηλεφωνικά ή επισκεφθείτε το γραφείο μας στο κέντρο της Θεσσαλονίκης.</p>
+    </div>
+    <div class="contact-grid">
+      <div>
+        <div class="c-line"><span class="ic">📍</span><div><h4>Διεύθυνση</h4><p>Μητροπόλεως 6, Θεσσαλονίκη 546 25</p></div></div>
+        <div class="c-line"><span class="ic">📞</span><div><h4>Τηλέφωνο</h4><p><a href="tel:+302310285950">+30 231 028 5950</a></p></div></div>
+        <div class="c-line"><span class="ic">🕘</span><div><h4>Ωράριο</h4><p>Δευτέρα – Παρασκευή, κατόπιν ραντεβού</p></div></div>
+        <div class="c-line" style="border-bottom:0"><span class="ic">🗺️</span><div><h4>Χάρτης</h4><p><a href="https://maps.google.com/?cid=11670923137949227836" target="_blank" rel="noopener">Ανοίξτε στο Google Maps ↗</a></p></div></div>
+      </div>
+      <iframe loading="lazy" src="https://www.google.com/maps?q=Mitropoleos%206%2C%20Thessaloniki%20546%2025&output=embed" title="Χάρτης — Μητροπόλεως 6, Θεσσαλονίκη" referrerpolicy="no-referrer-when-downgrade"></iframe>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot">
+    <span>© <span id="yr"></span> Ειρήνη Κανατάκη — Συμβολαιογράφος, Θεσσαλονίκη</span>
+    <span>Μητροπόλεως 6 · 546 25 Θεσσαλονίκη · +30 231 028 5950</span>
+  </div>
+</footer>
+
+<div class="mobile-cta">
+  <a href="tel:+302310285950">☎ Καλέστε +30 231 028 5950</a>
+</div>
+
+<script>
+document.getElementById('yr').textContent = new Date().getFullYear();
+</script>
 </body>
 </html>
