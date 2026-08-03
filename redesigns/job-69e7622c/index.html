@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lumina · Senior Design</title>
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&family=Playfair+Display:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #f9fafc;
+      font-family: 'Inter', sans-serif;
+      color: #1e1e2f;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem 2rem 3rem;
+    }
+
+    /* NAV */
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 0 2rem;
+      border-bottom: 1px solid rgba(0,0,0,0.04);
+      margin-bottom: 2.5rem;
+    }
+
+    .logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.9rem;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+      color: #1e1e2f;
+    }
+    .logo span {
+      color: #B98A5E;
+      font-style: italic;
+      font-weight: 500;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2.2rem;
+      align-items: center;
+    }
+    .nav-links a {
+      text-decoration: none;
+      font-weight: 500;
+      color: #3a3a4a;
+      font-size: 0.95rem;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover {
+      color: #B98A5E;
+    }
+    .nav-cta {
+      background: #1e1e2f;
+      color: white !important;
+      padding: 0.6rem 1.5rem;
+      border-radius: 40px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: background 0.2s;
+    }
+    .nav-cta:hover {
+      background: #B98A5E;
+    }
+
+    /* HERO */
+    .hero {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 3rem;
+      margin-bottom: 4.5rem;
+    }
+
+    .hero-text {
+      flex: 1 1 400px;
+    }
+
+    .hero-text h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 3.5rem;
+      font-weight: 600;
+      line-height: 1.1;
+      letter-spacing: -1px;
+      margin-bottom: 1.5rem;
+      color: #1e1e2f;
+    }
+    .hero-text h1 em {
+      color: #B98A5E;
+      font-style: italic;
+    }
+
+    .hero-text p {
+      font-size: 1.1rem;
+      color: #4a4a5a;
+      max-width: 500px;
+      margin-bottom: 2rem;
+      font-weight: 300;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-block;
+      padding: 0.9rem 2rem;
+      border-radius: 60px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      text-decoration: none;
+      transition: all 0.2s;
+      border: 1px solid transparent;
+    }
+    .btn-primary {
+      background: #1e1e2f;
+      color: white;
+    }
+    .btn-primary:hover {
+      background: #B98A5E;
+      border-color: #B98A5E;
+    }
+    .btn-outline {
+      border: 1px solid #1e1e2f;
+      color: #1e1e2f;
+    }
+    .btn-outline:hover {
+      background: #1e1e2f;
+      color: white;
+    }
+
+    .hero-visual {
+      flex: 1 1 380px;
+      background: linear-gradient(145deg, #f0ebe4, #e6dfd6);
+      border-radius: 40px;
+      padding: 1.2rem;
+      box-shadow: 0 30px 40px -20px rgba(0,0,0,0.15);
+      transform: rotate(1deg);
+    }
+    .hero-card {
+      background: white;
+      border-radius: 30px;
+      padding: 2rem 1.8rem;
+      box-shadow: 0 10px 20px -8px rgba(0,0,0,0.1);
+    }
+    .hero-card i {
+      color: #B98A5E;
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+    .hero-card h3 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+    .hero-card p {
+      color: #5a5a6a;
+      font-size: 0.95rem;
+      margin-bottom: 1.5rem;
+    }
+    .mini-stats {
+      display: flex;
+      gap: 1.5rem;
+      border-top: 1px solid #eaeaea;
+      padding-top: 1.2rem;
+    }
+    .mini-stats div {
+      flex: 1;
+    }
+    .mini-stats .stat-num {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #1e1e2f;
+    }
+    .mini-stats .stat-label {
+      font-size: 0.8rem;
+      color: #7a7a8a;
+      letter-spacing: 0.3px;
+    }
+
+    /* FEATURES / SERVICES */
+    .section-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.2rem;
+      font-weight: 600;
+      margin-bottom: 2.5rem;
+      letter-spacing: -0.5px;
+    }
+    .section-title span {
+      color: #B98A5E;
+      font-style: italic;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2rem;
+      margin-bottom: 4rem;
+    }
+
+    .feature-card {
+      background: white;
+      border-radius: 24px;
+      padding: 2rem 1.8rem;
+      box-shadow: 0 6px 18px -6px rgba(0,0,0,0.05);
+      transition: transform 0.2s, box-shadow 0.2s;
+      border: 1px solid rgba(0,0,0,0.02);
+    }
+    .feature-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 30px -12px rgba(0,0,0,0.12);
+    }
+    .feature-icon {
+      background: #f6f2ec;
+      width: 56px;
+      height: 56px;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+    }
+    .feature-icon i {
+      font-size: 1.8rem;
+      color: #B98A5E;
+    }
+    .feature-card h3 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+    }
+    .feature-card p {
+      color: #5a5a6a;
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    /* QUOTE / TESTIMONIAL */
+    .testimonial {
+      background: #1e1e2f;
+      border-radius: 40px;
+      padding: 3rem 3rem 2.5rem;
+      margin: 3rem 0 4rem;
+      color: white;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2rem;
+      align-items: center;
+    }
+    .testimonial-text {
+      flex: 2 1 300px;
+    }
+    .testimonial-text i {
+      color: #B98A5E;
+      font-size: 2.2rem;
+      margin-bottom: 1rem;
+      display: block;
+    }
+    .testimonial-text p {
+      font-size: 1.4rem;
+      font-weight: 300;
+      line-height: 1.5;
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      letter-spacing: -0.3px;
+    }
+    .testimonial-author {
+      margin-top: 1.5rem;
+      font-style: normal;
+      font-family: 'Inter', sans-serif;
+      font-weight: 500;
+      color: #cfcfdf;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+    }
+    .testimonial-author i {
+      font-size: 1.2rem;
+      margin: 0;
+      color: #B98A5E;
+    }
+    .testimonial-stats {
+      flex: 1 1 200px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 30px;
+      padding: 1.8rem;
+      backdrop-filter: blur(4px);
+    }
+    .testimonial-stats .big-number {
+      font-size: 2.8rem;
+      font-weight: 700;
+      color: #B98A5E;
+      line-height: 1;
+    }
+    .testimonial-stats p {
+      font-size: 0.9rem;
+      color: #b0b0c0;
+      margin-top: 0.3rem;
+    }
+
+    /* FOOTER */
+    .footer {
+      border-top: 1px solid rgba(0,0,0,0.06);
+      margin-top: 3rem;
+      padding-top: 2rem;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 2rem;
+      color: #5a5a6a;
+      font-size: 0.9rem;
+    }
+    .footer-left {
+      display: flex;
+      gap: 1.8rem;
+    }
+    .footer-left a {
+      text-decoration: none;
+      color: #5a5a6a;
+      transition: color 0.2s;
+    }
+    .footer-left a:hover {
+      color: #B98A5E;
+    }
+    .footer-social i {
+      font-size: 1.2rem;
+      margin-left: 1rem;
+      color: #5a5a6a;
+      transition: color 0.2s;
+    }
+    .footer-social i:hover {
+      color: #B98A5E;
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .features-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+      .hero-text h1 {
+        font-size: 2.8rem;
+      }
+    }
+    @media (max-width: 600px) {
+      .features-grid {
+        grid-template-columns: 1fr;
+      }
+      .navbar {
+        flex-direction: column;
+        gap: 1rem;
+      }
+      .nav-links {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 1.2rem;
+      }
+      .hero {
+        flex-direction: column-reverse;
+      }
+      .testimonial {
+        padding: 2rem 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- NAVBAR -->
+    <nav class="navbar">
+      <div class="logo">Lumina<span>.</span></div>
+      <div class="nav-links">
+        <a href="#">Studio</a>
+        <a href="#">Work</a>
+        <a href="#">Journal</a>
+        <a href="#" class="nav-cta">Start a project</a>
+      </div>
+    </nav>
+
+    <!-- HERO -->
+    <header class="hero">
+      <div class="hero-text">
+        <h1>Design that<br>feels <em>inevitable</em>.</h1>
+        <p>We craft digital experiences with quiet confidence — where every pixel has a purpose and every interaction feels natural.</p>
+        <div class="btn-group">
+          <a href="#" class="btn btn-primary">View our work</a>
+          <a href="#" class="btn btn-outline">Get in touch</a>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="hero-card">
+          <i class="fas fa-arrow-trend-up"></i>
+          <h3>+214%</h3>
+          <p>Average engagement lift for our partners in 2024</p>
+          <div class="mini-stats">
+            <div>
+              <div class="stat-num">38</div>
+              <div class="stat-label">Awards</div>
+            </div>
+            <div>
+              <div class="stat-num">120+</div>
+              <div class="stat-label">Products</div>
+            </div>
+            <div>
+              <div class="stat-num">12y</div>
+              <div class="stat-label">Experience</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- FEATURES -->
+    <div class="section-title">What we do <span>best</span></div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fas fa-pen-nib"></i></div>
+        <h3>Art direction</h3>
+        <p>Bold, cohesive visual narratives that make your brand unmistakable. We blend strategy with aesthetics.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fas fa-code"></i></div>
+        <h3>Design engineering</h3>
+        <p>Pixel-perfect, accessible, and performant. We build interfaces that feel invisible and work flawlessly.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fas fa-lightbulb"></i></div>
+        <h3>Design strategy</h3>
+        <p>Research-driven direction that aligns business goals with user needs. Clarity before creativity.</p>
+      </div>
+    </div>
+
+    <!-- TESTIMONIAL / QUOTE -->
+    <div class="testimonial">
+      <div class="testimonial-text">
+        <i class="fas fa-quote-right"></i>
+        <p>“Lumina didn't just redesign our platform — they redefined how we think about our users. The result is both elegant and measurable.”</p>
+        <div class="testimonial-author">
+          <i class="fas fa-circle"></i> 
+          <span>Mara Voss · CEO, Northwind</span>
+        </div>
+      </div>
+      <div class="testimonial-stats">
+        <div class="big-number">98%</div>
+        <p>client satisfaction rate</p>
+        <div style="margin-top: 1.2rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1rem;">
+          <div class="big-number" style="font-size: 2rem;">4.9/5</div>
+          <p>average rating from 50+ partners</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+      <div class="footer-left">
+        <a href="#">Instagram</a>
+        <a href="#">LinkedIn</a>
+        <a href="#">Dribbble</a>
+      </div>
+      <div style="display: flex; align-items: center; gap: 1.5rem;">
+        <span>© 2025 Lumina Studio</span>
+        <div class="footer-social">
+          <i class="fab fa-x-twitter"></i>
+          <i class="fab fa-behance"></i>
+        </div>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>
