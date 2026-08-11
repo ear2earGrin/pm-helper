@@ -62,6 +62,7 @@ const TABS = [
 // ── State ───────────────────────────────────────────────────
 let jobs = [];
 let eventsByJob = {};   // job_id -> [events]
+let redesignsBySlug = {}; // redesign slug -> manifest entry
 let activeTab = 'all';
 let me = null;
 
@@ -75,6 +76,14 @@ function mapsUrl(job) {
   if (job.maps_url) return job.maps_url;
   if (job.address) return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(job.address);
   return null;
+}
+function redesignSlugFromUrl(url) {
+  const m = String(url || '').match(/\/redesigns\/([^/?#]+)\/?/);
+  return m ? m[1] : '';
+}
+function redesignQuality(job) {
+  const slug = redesignSlugFromUrl(job.redesign_url);
+  return slug && redesignsBySlug[slug] ? redesignsBySlug[slug].quality : null;
 }
 function timeAgo(iso) {
   const d = new Date(iso), now = new Date();
@@ -106,13 +115,29 @@ function buildStatusSelect() {
 }
 
 // ── Data loading ────────────────────────────────────────────
+async function loadRedesignManifest() {
+  try {
+    const res = await fetch('/redesigns/manifest.json', { cache: 'no-store' });
+    if (!res.ok) return {};
+    const data = await res.json();
+    const map = {};
+    (data.redesigns || []).forEach((r) => { if (r.slug) map[r.slug] = r; });
+    return map;
+  } catch (err) {
+    console.warn('Redesign manifest unavailable.', err);
+    return {};
+  }
+}
+
 async function loadAll() {
-  const [jobsRes, evRes] = await Promise.all([
+  const [jobsRes, evRes, manifest] = await Promise.all([
     supabase.from('pmh_jobs').select('*').order('updated_at', { ascending: false }),
     supabase.from('pmh_job_events').select('*').order('created_at', { ascending: false }),
+    loadRedesignManifest(),
   ]);
   if (jobsRes.error) { console.error(jobsRes.error); }
   jobs = jobsRes.data || [];
+  redesignsBySlug = manifest;
   eventsByJob = {};
   (evRes.data || []).forEach((e) => {
     (eventsByJob[e.job_id] = eventsByJob[e.job_id] || []).push(e);
@@ -183,8 +208,11 @@ function jobCard(j) {
   if (j.phone) metaRows.push(`<span class="row"><span class="ic">📞</span><span class="val">${esc(j.phone)}</span></span>`);
   if (j.website_url) metaRows.push(`<a href="${esc(j.website_url)}" target="_blank" rel="noopener"><span class="ic">🌐</span><span class="val">${esc(j.website_url.replace(/^https?:\/\//, ''))}</span></a>`);
 
+  const quality = redesignQuality(j);
+  const isBespoke = quality === 'bespoke';
+  const redesignedStar = isBespoke ? ' <span title="Bespoke redesign" aria-label="Bespoke redesign">⭐</span>' : '';
   const redesign = j.redesign_url
-    ? `<div class="job-redesign"><span>🎨</span><a href="${esc(j.redesign_url)}" target="_blank" rel="noopener">View redesign →</a></div>`
+    ? `<div class="job-redesign"><span>${isBespoke ? '⭐' : '🎨'}</span><a href="${esc(j.redesign_url)}" target="_blank" rel="noopener">${isBespoke ? 'View bespoke redesign' : 'View redesign'} →</a></div>`
     : `<div class="job-redesign"><span>🎨</span><span class="muted">No redesign linked yet</span></div>`;
 
   const notes = j.notes ? `<div class="job-meta"><span class="row"><span class="ic">📝</span><span class="val" style="white-space:normal;color:var(--text-secondary)">${esc(j.notes)}</span></span></div>` : '';
@@ -203,7 +231,7 @@ function jobCard(j) {
   return `<article class="job">
     <div class="job-top">
       <div>
-        <div class="job-company">${esc(j.company)}</div>
+        <div class="job-company">${esc(j.company)}${redesignedStar}</div>
         ${j.owner || j.site_score != null ? `<div class="job-owner">${j.owner ? '@' + esc(j.owner) : ''}${j.owner && j.site_score != null ? ' · ' : ''}${j.site_score != null ? `<span title="${esc(j.score_notes || '')}">site ${j.site_score}/10</span>` : ''}</div>` : ''}
       </div>
       ${statusSelect}

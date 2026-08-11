@@ -1,0 +1,1833 @@
+{
+  "generated_by": "scripts/list_redesigns.py",
+  "count": 77,
+  "redesigns": [
+    {
+      "slug": "2310223332-thessaloniki-odontiatroi",
+      "company": "2310223332 THESSALONIKI ODONTIATROI",
+      "path": "redesigns/2310223332-thessaloniki-odontiatroi/index.html",
+      "url": "https://pm-brief.com/redesigns/2310223332-thessaloniki-odontiatroi/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "2310223332 THESSALONIKI ODONTIATROI",
+        "h1": "2310223332 THESSALONIKI ODONTIATROI",
+        "company_guess": "2310223332 THESSALONIKI ODONTIATROI",
+        "bytes": 3413,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "_example",
+      "company": "This is where a redesign lives.",
+      "path": "redesigns/_example/index.html",
+      "url": "https://pm-brief.com/redesigns/_example/",
+      "quality": "bespoke",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "Example Redesign — pm-brief",
+        "h1": "This is where a redesign lives.",
+        "company_guess": "This is where a redesign lives.",
+        "bytes": 1862,
+        "quality": "bespoke",
+        "failures": [],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "aa-physio",
+      "company": "AA physio+",
+      "path": "redesigns/aa-physio/index.html",
+      "url": "https://pm-brief.com/redesigns/aa-physio/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "AA physio+",
+        "h1": "AA physio+",
+        "company_guess": "AA physio+",
+        "bytes": 3309,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "active-life-physiotherapy",
+      "company": "Active Life Physiotherapy",
+      "path": "redesigns/active-life-physiotherapy/index.html",
+      "url": "https://pm-brief.com/redesigns/active-life-physiotherapy/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "Active Life Physiotherapy | Χατζηαγγελίδου & Πέτρου – Φυσικοθεραπεία Θεσσαλονίκη",
+        "h1": "Active Life Physiotherapy | Χατζηαγγελίδου & Πέτρου – Φυσικοθεραπεία Θεσσαλονίκη",
+        "company_guess": "Active Life Physiotherapy",
+        "bytes": 3808,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "adlaw-gr",
+      "company": "ΑΗΔΟΝΑ & ΔΑΡΝΑΚΑ adlaw.gr",
+      "path": "redesigns/adlaw-gr/index.html",
+      "url": "https://pm-brief.com/redesigns/adlaw-gr/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "ΑΗΔΟΝΑ & ΔΑΡΝΑΚΑ adlaw.gr",
+        "h1": "ΑΗΔΟΝΑ & ΔΑΡΝΑΚΑ adlaw.gr",
+        "company_guess": "ΑΗΔΟΝΑ & ΔΑΡΝΑΚΑ adlaw.gr",
+        "bytes": 3469,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "aeterna-legal-group",
+      "company": "Aeterna Legal Group",
+      "path": "redesigns/aeterna-legal-group/index.html",
+      "url": "https://pm-brief.com/redesigns/aeterna-legal-group/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "Aeterna Legal Group",
+        "h1": "Aeterna Legal Group",
+        "company_guess": "Aeterna Legal Group",
+        "bytes": 3334,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "ananiadis-dionysis",
+      "company": "Ananiadis Dionysis",
+      "path": "redesigns/ananiadis-dionysis/index.html",
+      "url": "https://pm-brief.com/redesigns/ananiadis-dionysis/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "Ananiadis Dionysis",
+        "h1": "Ananiadis Dionysis",
+        "company_guess": "Ananiadis Dionysis",
+        "bytes": 3335,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "anna-ioannidou",
+      "company": "Anna Ioannidou",
+      "path": "redesigns/anna-ioannidou/index.html",
+      "url": "https://pm-brief.com/redesigns/anna-ioannidou/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "Anna Ioannidou",
+        "h1": "Anna Ioannidou",
+        "company_guess": "Anna Ioannidou",
+        "bytes": 3378,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "av-dermatology",
+      "company": "Βασιλειάδου Αναστασία Δερματολόγος-Αφροδισιολόγος AV Dermatology",
+      "path": "redesigns/av-dermatology/index.html",
+      "url": "https://pm-brief.com/redesigns/av-dermatology/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "Βασιλειάδου Αναστασία Δερματολόγος-Αφροδισιολόγος AV Dermatology",
+        "h1": "Βασιλειάδου Αναστασία Δερματολόγος-Αφροδισιολόγος AV Dermatology",
+        "company_guess": "Βασιλειάδου Αναστασία Δερματολόγος-Αφροδισιολόγος AV Dermatology",
+        "bytes": 3710,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "biodent-konstantopoulos-oral-surgery-and-aesthetic-dental-cl",
+      "company": "Biodent.Konstantopoulos",
+      "path": "redesigns/biodent-konstantopoulos-oral-surgery-and-aesthetic-dental-cl/index.html",
+      "url": "https://pm-brief.com/redesigns/biodent-konstantopoulos-oral-surgery-and-aesthetic-dental-cl/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "Biodent.Konstantopoulos - Oral Surgery and Aesthetic Dental Clinic ( Thessaloniki )",
+        "h1": "Biodent.Konstantopoulos - Oral Surgery and Aesthetic Dental Clinic ( Thessaloniki )",
+        "company_guess": "Biodent.Konstantopoulos",
+        "bytes": 3591,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "business-accounting",
+      "company": "BUSINESS ACCOUNTING ΚΑΙ ΣΥΝΕΡΓΑΤΕΣ ΙΔΙΩΤΙΚΗ ΚΕΦΑΛΑΙΟΥΧΙΚΗ ΕΤΑΙΡΕΙΑ",
+      "path": "redesigns/business-accounting/index.html",
+      "url": "https://pm-brief.com/redesigns/business-accounting/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "BUSINESS ACCOUNTING ΚΑΙ ΣΥΝΕΡΓΑΤΕΣ ΙΔΙΩΤΙΚΗ ΚΕΦΑΛΑΙΟΥΧΙΚΗ ΕΤΑΙΡΕΙΑ",
+        "h1": "BUSINESS ACCOUNTING ΚΑΙ ΣΥΝΕΡΓΑΤΕΣ ΙΔΙΩΤΙΚΗ ΚΕΦΑΛΑΙΟΥΧΙΚΗ ΕΤΑΙΡΕΙΑ",
+        "company_guess": "BUSINESS ACCOUNTING ΚΑΙ ΣΥΝΕΡΓΑΤΕΣ ΙΔΙΩΤΙΚΗ ΚΕΦΑΛΑΙΟΥΧΙΚΗ ΕΤΑΙΡΕΙΑ",
+        "bytes": 3800,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "dental-all-dds-msc-dds-msc",
+      "company": "Dental All",
+      "path": "redesigns/dental-all-dds-msc-dds-msc/index.html",
+      "url": "https://pm-brief.com/redesigns/dental-all-dds-msc-dds-msc/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "Dental All - Οδοντιατρική Κλινική Πυλαία | Ραϊσάκης Β. Μάριος DDS, MSc, Αποστόλου Μαρία DDS, MSc και Συνεργάτες",
+        "h1": "Dental All - Οδοντιατρική Κλινική Πυλαία | Ραϊσάκης Β. Μάριος DDS, MSc, Αποστόλου Μαρία DDS, MSc και Συνεργάτες",
+        "company_guess": "Dental All",
+        "bytes": 3965,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "dental-care",
+      "company": "Οδοντιατρείο Dental Care",
+      "path": "redesigns/dental-care/index.html",
+      "url": "https://pm-brief.com/redesigns/dental-care/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "Οδοντιατρείο Dental Care - Σελβιαρίδης Ι. Κυριάκος",
+        "h1": "Οδοντιατρείο Dental Care - Σελβιαρίδης Ι. Κυριάκος",
+        "company_guess": "Οδοντιατρείο Dental Care",
+        "bytes": 3628,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "dentalhouse",
+      "company": "Dentalhouse Παπαδόπουλος Σωκράτης",
+      "path": "redesigns/dentalhouse/index.html",
+      "url": "https://pm-brief.com/redesigns/dentalhouse/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "Dentalhouse Παπαδόπουλος Σωκράτης",
+        "h1": "Dentalhouse Παπαδόπουλος Σωκράτης",
+        "company_guess": "Dentalhouse Παπαδόπουλος Σωκράτης",
+        "bytes": 3477,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "derma-lysitsa",
+      "company": "Δερματολόγος Λυσίτσα (Derma Lysitsa)",
+      "path": "redesigns/derma-lysitsa/index.html",
+      "url": "https://pm-brief.com/redesigns/derma-lysitsa/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "Δερματολόγος Λυσίτσα (Derma Lysitsa)",
+        "h1": "Δερματολόγος Λυσίτσα (Derma Lysitsa)",
+        "company_guess": "Δερματολόγος Λυσίτσα (Derma Lysitsa)",
+        "bytes": 3490,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "doutsirelis-accounting",
+      "company": "Doutsirelis Accounting",
+      "path": "redesigns/doutsirelis-accounting/index.html",
+      "url": "https://pm-brief.com/redesigns/doutsirelis-accounting/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "Doutsirelis Accounting",
+        "h1": "Doutsirelis Accounting",
+        "company_guess": "Doutsirelis Accounting",
+        "bytes": 3344,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "dr-tolidis-tsimiski-thessaloniki-downtown",
+      "company": "Dr Tolidis Οδοντιατρος Θεσσαλονικη Τολίδης Τσιμισκή Tsimiski Thessaloniki Οδοντίατρος Θεσσαλονίκη κέντρο downtown",
+      "path": "redesigns/dr-tolidis-tsimiski-thessaloniki-downtown/index.html",
+      "url": "https://pm-brief.com/redesigns/dr-tolidis-tsimiski-thessaloniki-downtown/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "Dr Tolidis Οδοντιατρος Θεσσαλονικη Τολίδης Τσιμισκή Tsimiski Thessaloniki Οδοντίατρος Θεσσαλονίκη κέντρο downtown",
+        "h1": "Dr Tolidis Οδοντιατρος Θεσσαλονικη Τολίδης Τσιμισκή Tsimiski Thessaloniki Οδοντίατρος Θεσσαλονίκη κέντρο downtown",
+        "company_guess": "Dr Tolidis Οδοντιατρος Θεσσαλονικη Τολίδης Τσιμισκή Tsimiski Thessaloniki Οδοντίατρος Θεσσαλονίκη κέντρο downtown",
+        "bytes": 4021,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "eleni-serafeimidou-polygyrnou",
+      "company": "ELENI SERAFEIMIDOU-POLYGYRNOU",
+      "path": "redesigns/eleni-serafeimidou-polygyrnou/index.html",
+      "url": "https://pm-brief.com/redesigns/eleni-serafeimidou-polygyrnou/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "ELENI SERAFEIMIDOU-POLYGYRNOU",
+        "h1": "ELENI SERAFEIMIDOU-POLYGYRNOU",
+        "company_guess": "ELENI SERAFEIMIDOU-POLYGYRNOU",
+        "bytes": 3383,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "evdokia-parselia-papaioannou",
+      "company": "Evdokia Parselia Papaioannou",
+      "path": "redesigns/evdokia-parselia-papaioannou/index.html",
+      "url": "https://pm-brief.com/redesigns/evdokia-parselia-papaioannou/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "Evdokia Parselia Papaioannou",
+        "h1": "Evdokia Parselia Papaioannou",
+        "company_guess": "Evdokia Parselia Papaioannou",
+        "bytes": 3412,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "filtre-pure",
+      "company": "High-integrity filtration for liquid & air.",
+      "path": "redesigns/filtre-pure/index.html",
+      "url": "https://pm-brief.com/redesigns/filtre-pure/",
+      "quality": "bespoke",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "Filtre Pure — High-Integrity Liquid & Air Filtration | Chișinău, Moldova",
+        "h1": "High-integrity filtration for liquid & air.",
+        "company_guess": "High-integrity filtration for liquid & air.",
+        "bytes": 28497,
+        "quality": "bespoke",
+        "failures": [],
+        "warnings": []
+      }
+    },
+    {
+      "slug": "fysiognosis",
+      "company": "ΦυσιόΓνωσις",
+      "path": "redesigns/fysiognosis/index.html",
+      "url": "https://pm-brief.com/redesigns/fysiognosis/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "ΦυσιόΓνωσις - Fysiognosis",
+        "h1": "ΦυσιόΓνωσις - Fysiognosis",
+        "company_guess": "ΦυσιόΓνωσις",
+        "bytes": 3466,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "georgaki-and-partners-law-firm",
+      "company": "Georgaki and Partners Law Firm",
+      "path": "redesigns/georgaki-and-partners-law-firm/index.html",
+      "url": "https://pm-brief.com/redesigns/georgaki-and-partners-law-firm/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "Georgaki and Partners Law Firm",
+        "h1": "Georgaki and Partners Law Firm",
+        "company_guess": "Georgaki and Partners Law Firm",
+        "bytes": 3389,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "george-kanetidis-dds-msc-dental-clinic",
+      "company": "George Kanetidis DDS MSc Dental Clinic",
+      "path": "redesigns/george-kanetidis-dds-msc-dental-clinic/index.html",
+      "url": "https://pm-brief.com/redesigns/george-kanetidis-dds-msc-dental-clinic/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "George Kanetidis DDS MSc Dental Clinic",
+        "h1": "George Kanetidis DDS MSc Dental Clinic",
+        "company_guess": "George Kanetidis DDS MSc Dental Clinic",
+        "bytes": 3456,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "haralampos-hachalis-partners-law-office",
+      "company": "Haralampos Hachalis & Partners Law Office",
+      "path": "redesigns/haralampos-hachalis-partners-law-office/index.html",
+      "url": "https://pm-brief.com/redesigns/haralampos-hachalis-partners-law-office/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "Haralampos Hachalis & Partners Law Office",
+        "h1": "Haralampos Hachalis & Partners Law Office",
+        "company_guess": "Haralampos Hachalis & Partners Law Office",
+        "bytes": 3450,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "hoteli",
+      "company": "Hoteli",
+      "path": "redesigns/hoteli/index.html",
+      "url": "https://pm-brief.com/redesigns/hoteli/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "Hoteli",
+        "h1": "Hoteli",
+        "company_guess": "Hoteli",
+        "bytes": 3304,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "infotax-accounting-services",
+      "company": "INFOTAX ACCOUNTING SERVICES",
+      "path": "redesigns/infotax-accounting-services/index.html",
+      "url": "https://pm-brief.com/redesigns/infotax-accounting-services/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "INFOTAX ACCOUNTING SERVICES",
+        "h1": "INFOTAX ACCOUNTING SERVICES",
+        "company_guess": "INFOTAX ACCOUNTING SERVICES",
+        "bytes": 3370,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "job-033290d2",
+      "company": "ΑΠΟΣΤΟΛΟΥ ΠΑΡΑΣΚΕΥΗ",
+      "path": "redesigns/job-033290d2/index.html",
+      "url": "https://pm-brief.com/redesigns/job-033290d2/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "ΑΠΟΣΤΟΛΟΥ ΠΑΡΑΣΚΕΥΗ - ΣΥΜΒΟΛΑΙΟΓΡΑΦΟΣ - ΘΕΣΣΑΛΟΝΙΚΗ",
+        "h1": "ΑΠΟΣΤΟΛΟΥ ΠΑΡΑΣΚΕΥΗ - ΣΥΜΒΟΛΑΙΟΓΡΑΦΟΣ - ΘΕΣΣΑΛΟΝΙΚΗ",
+        "company_guess": "ΑΠΟΣΤΟΛΟΥ ΠΑΡΑΣΚΕΥΗ",
+        "bytes": 3650,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "job-0b8fd27d",
+      "company": "ΜΑΡΙΑΝΝΑ ΤΖΙΒΟΠΟΥΛΟΥ",
+      "path": "redesigns/job-0b8fd27d/index.html",
+      "url": "https://pm-brief.com/redesigns/job-0b8fd27d/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "ΜΑΡΙΑΝΝΑ ΤΖΙΒΟΠΟΥΛΟΥ",
+        "h1": "ΜΑΡΙΑΝΝΑ ΤΖΙΒΟΠΟΥΛΟΥ",
+        "company_guess": "ΜΑΡΙΑΝΝΑ ΤΖΙΒΟΠΟΥΛΟΥ",
+        "bytes": 3460,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "job-25005467",
+      "company": "Καρανίκα -Βαϊνά Όλγα",
+      "path": "redesigns/job-25005467/index.html",
+      "url": "https://pm-brief.com/redesigns/job-25005467/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "Καρανίκα -Βαϊνά Όλγα",
+        "h1": "Καρανίκα -Βαϊνά Όλγα",
+        "company_guess": "Καρανίκα -Βαϊνά Όλγα",
+        "bytes": 3443,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "job-2fff6056",
+      "company": "ΣΥΜΒΟΛΑΙΟΓΡΑΦΟΣ ΑΝΝΑ ΤΣΑΝΤΗΛΑ",
+      "path": "redesigns/job-2fff6056/index.html",
+      "url": "https://pm-brief.com/redesigns/job-2fff6056/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "ΣΥΜΒΟΛΑΙΟΓΡΑΦΟΣ ΑΝΝΑ ΤΣΑΝΤΗΛΑ",
+        "h1": "ΣΥΜΒΟΛΑΙΟΓΡΑΦΟΣ ΑΝΝΑ ΤΣΑΝΤΗΛΑ",
+        "company_guess": "ΣΥΜΒΟΛΑΙΟΓΡΑΦΟΣ ΑΝΝΑ ΤΣΑΝΤΗΛΑ",
+        "bytes": 3674,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "job-4e074481",
+      "company": "Νικόλαος Νάσλας",
+      "path": "redesigns/job-4e074481/index.html",
+      "url": "https://pm-brief.com/redesigns/job-4e074481/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "Νικόλαος Νάσλας",
+        "h1": "Νικόλαος Νάσλας",
+        "company_guess": "Νικόλαος Νάσλας",
+        "bytes": 3592,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "job-655ebc37",
+      "company": "Συμβολαιογράφος Αηδονίδου Αικατερίνη",
+      "path": "redesigns/job-655ebc37/index.html",
+      "url": "https://pm-brief.com/redesigns/job-655ebc37/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "Συμβολαιογράφος Αηδονίδου Αικατερίνη",
+        "h1": "Συμβολαιογράφος Αηδονίδου Αικατερίνη",
+        "company_guess": "Συμβολαιογράφος Αηδονίδου Αικατερίνη",
+        "bytes": 3538,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "job-69e7622c",
+      "company": "ΘΩΜΟΣ ΧΡΗΣΤΟΣ-ΓΑΡΟΥΦΑΛΗΣ ΙΩΑΝΝΗΣ ΚΑΙ ΣΥΝΕΡΓΑΤΕΣ",
+      "path": "redesigns/job-69e7622c/index.html",
+      "url": "https://pm-brief.com/redesigns/job-69e7622c/",
+      "quality": "bespoke",
+      "source": "local-static-html",
+      "dashboard_synced": true,
+      "job_id": "69e7622c-6098-4707-ac0b-578f078694e9",
+      "status": "review",
+      "audit": {
+        "title": "Θώμος Χρήστος-Γαρουφάλης Ιωάννης και Συνεργάτες — Νομικές Υπηρεσίες Θεσσαλονίκη",
+        "h1": "Νομικές υπηρεσίες με συνέπεια και διακριτικότητα",
+        "company_guess": "Νομικές υπηρεσίες με συνέπεια και διακριτικότητα",
+        "bytes": 8243,
+        "quality": "bespoke",
+        "failures": [],
+        "warnings": []
+      }
+    },
+    {
+      "slug": "job-6c736afe",
+      "company": "ΣΙΑΜΚΟΥΡΗ ΚΑΡΑΚΑΣΗ ΑΛΙΚΗ",
+      "path": "redesigns/job-6c736afe/index.html",
+      "url": "https://pm-brief.com/redesigns/job-6c736afe/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "ΣΙΑΜΚΟΥΡΗ ΚΑΡΑΚΑΣΗ ΑΛΙΚΗ",
+        "h1": "ΣΙΑΜΚΟΥΡΗ ΚΑΡΑΚΑΣΗ ΑΛΙΚΗ",
+        "company_guess": "ΣΙΑΜΚΟΥΡΗ ΚΑΡΑΚΑΣΗ ΑΛΙΚΗ",
+        "bytes": 3485,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "job-73d80ac8",
+      "company": "Καραμπούτας Β. Γεώργιος Ειδικός Δερματολόγος",
+      "path": "redesigns/job-73d80ac8/index.html",
+      "url": "https://pm-brief.com/redesigns/job-73d80ac8/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "Καραμπούτας Β. Γεώργιος Ειδικός Δερματολόγος - Αφροδισιολόγος",
+        "h1": "Καραμπούτας Β. Γεώργιος Ειδικός Δερματολόγος - Αφροδισιολόγος",
+        "company_guess": "Καραμπούτας Β. Γεώργιος Ειδικός Δερματολόγος",
+        "bytes": 4072,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "job-758f1f86",
+      "company": "ΙΩΑΝΝΗΣ ΜΗΤΛΙΑΓΚΑΣ ΣΥΜΒΟΛΑΙΟΓΡΑΦΟΣ",
+      "path": "redesigns/job-758f1f86/index.html",
+      "url": "https://pm-brief.com/redesigns/job-758f1f86/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "ΙΩΑΝΝΗΣ ΜΗΤΛΙΑΓΚΑΣ ΣΥΜΒΟΛΑΙΟΓΡΑΦΟΣ",
+        "h1": "ΙΩΑΝΝΗΣ ΜΗΤΛΙΑΓΚΑΣ ΣΥΜΒΟΛΑΙΟΓΡΑΦΟΣ",
+        "company_guess": "ΙΩΑΝΝΗΣ ΜΗΤΛΙΑΓΚΑΣ ΣΥΜΒΟΛΑΙΟΓΡΑΦΟΣ",
+        "bytes": 3534,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "job-79b74b98",
+      "company": "Κωνσταντίνος Χατζής",
+      "path": "redesigns/job-79b74b98/index.html",
+      "url": "https://pm-brief.com/redesigns/job-79b74b98/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "Κωνσταντίνος Χατζής - Συμβολαιογράφος Θεσσαλονίκης",
+        "h1": "Κωνσταντίνος Χατζής - Συμβολαιογράφος Θεσσαλονίκης",
+        "company_guess": "Κωνσταντίνος Χατζής",
+        "bytes": 3667,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "job-89316ea9",
+      "company": "Δεληνάσιος Νικόλαος",
+      "path": "redesigns/job-89316ea9/index.html",
+      "url": "https://pm-brief.com/redesigns/job-89316ea9/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "Δεληνάσιος Νικόλαος",
+        "h1": "Δεληνάσιος Νικόλαος",
+        "company_guess": "Δεληνάσιος Νικόλαος",
+        "bytes": 3274,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "job-8e399dba",
+      "company": "ΕΙΡΗΝΗ ΚΑΝΑΤΑΚΗ ΣΥΜΒΟΛΑΙΟΓΡΑΦΟΣ",
+      "path": "redesigns/job-8e399dba/index.html",
+      "url": "https://pm-brief.com/redesigns/job-8e399dba/",
+      "quality": "bespoke",
+      "source": "local-static-html",
+      "dashboard_synced": true,
+      "job_id": "8e399dba-0553-4e11-b03b-3da8c1c19f68",
+      "status": "review",
+      "audit": {
+        "title": "Ειρήνη Κανατάκη — Συμβολαιογράφος Θεσσαλονίκης",
+        "h1": "Συμβολαιογραφικές πράξεις με σαφήνεια και ασφάλεια",
+        "company_guess": "Συμβολαιογραφικές πράξεις με σαφήνεια και ασφάλεια",
+        "bytes": 14372,
+        "quality": "bespoke",
+        "failures": [],
+        "warnings": [
+          "external_google_fonts"
+        ]
+      }
+    },
+    {
+      "slug": "job-9565ed47",
+      "company": "Άννα Πουλουτίδου",
+      "path": "redesigns/job-9565ed47/index.html",
+      "url": "https://pm-brief.com/redesigns/job-9565ed47/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "Άννα Πουλουτίδου - Πασατσιφλικιώτη",
+        "h1": "Άννα Πουλουτίδου - Πασατσιφλικιώτη",
+        "company_guess": "Άννα Πουλουτίδου",
+        "bytes": 3674,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "job-9d5b5dc7",
+      "company": "Αρσενόη Βασιλείου",
+      "path": "redesigns/job-9d5b5dc7/index.html",
+      "url": "https://pm-brief.com/redesigns/job-9d5b5dc7/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "Αρσενόη Βασιλείου - Κίκη",
+        "h1": "Αρσενόη Βασιλείου - Κίκη",
+        "company_guess": "Αρσενόη Βασιλείου",
+        "bytes": 3451,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "job-a2166850",
+      "company": "Συμβολαιογράφος Αντωνία Ψαράκη-Αγοραστούδη",
+      "path": "redesigns/job-a2166850/index.html",
+      "url": "https://pm-brief.com/redesigns/job-a2166850/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "Συμβολαιογράφος Αντωνία Ψαράκη-Αγοραστούδη",
+        "h1": "Συμβολαιογράφος Αντωνία Ψαράκη-Αγοραστούδη",
+        "company_guess": "Συμβολαιογράφος Αντωνία Ψαράκη-Αγοραστούδη",
+        "bytes": 3595,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "job-b2bc15a0",
+      "company": "Αφροδίτη Σέμκου",
+      "path": "redesigns/job-b2bc15a0/index.html",
+      "url": "https://pm-brief.com/redesigns/job-b2bc15a0/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "Αφροδίτη Σέμκου",
+        "h1": "Αφροδίτη Σέμκου",
+        "company_guess": "Αφροδίτη Σέμκου",
+        "bytes": 3373,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "job-b890d7d1",
+      "company": "Παπαδημητρίου Ηλίας",
+      "path": "redesigns/job-b890d7d1/index.html",
+      "url": "https://pm-brief.com/redesigns/job-b890d7d1/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "Παπαδημητρίου Ηλίας - Δερματολόγος Αφροδισιολόγος",
+        "h1": "Παπαδημητρίου Ηλίας - Δερματολόγος Αφροδισιολόγος",
+        "company_guess": "Παπαδημητρίου Ηλίας",
+        "bytes": 3648,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "job-d5d96a9a",
+      "company": "Λάτσιου Αλεξάνδρα",
+      "path": "redesigns/job-d5d96a9a/index.html",
+      "url": "https://pm-brief.com/redesigns/job-d5d96a9a/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "Λάτσιου Αλεξάνδρα",
+        "h1": "Λάτσιου Αλεξάνδρα",
+        "company_guess": "Λάτσιου Αλεξάνδρα",
+        "bytes": 3382,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "job-d93ed4ae",
+      "company": "ΣΥΜΒΟΛΑΙΟΓΡΑΦΟΣ Φραγκίστη Ν. Μύρου",
+      "path": "redesigns/job-d93ed4ae/index.html",
+      "url": "https://pm-brief.com/redesigns/job-d93ed4ae/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "ΣΥΜΒΟΛΑΙΟΓΡΑΦΟΣ Φραγκίστη Ν. Μύρου",
+        "h1": "ΣΥΜΒΟΛΑΙΟΓΡΑΦΟΣ Φραγκίστη Ν. Μύρου",
+        "company_guess": "ΣΥΜΒΟΛΑΙΟΓΡΑΦΟΣ Φραγκίστη Ν. Μύρου",
+        "bytes": 3514,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "job-dee5d4db",
+      "company": "Περσεφόνη Μ. Πάλλα",
+      "path": "redesigns/job-dee5d4db/index.html",
+      "url": "https://pm-brief.com/redesigns/job-dee5d4db/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "Περσεφόνη Μ. Πάλλα",
+        "h1": "Περσεφόνη Μ. Πάλλα",
+        "company_guess": "Περσεφόνη Μ. Πάλλα",
+        "bytes": 3400,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "kp-consultants-gr",
+      "company": "Κωνσταντινούδης Παναγιώτης",
+      "path": "redesigns/kp-consultants-gr/index.html",
+      "url": "https://pm-brief.com/redesigns/kp-consultants-gr/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "Κωνσταντινούδης Παναγιώτης | Λογιστικό",
+        "h1": "Κωνσταντινούδης Παναγιώτης | Λογιστικό",
+        "company_guess": "Κωνσταντινούδης Παναγιώτης",
+        "bytes": 3572,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "law-firm-e-kapsalis-associates",
+      "company": "Law Firm E. Kapsalis & Associates",
+      "path": "redesigns/law-firm-e-kapsalis-associates/index.html",
+      "url": "https://pm-brief.com/redesigns/law-firm-e-kapsalis-associates/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "Law Firm E. Kapsalis & Associates",
+        "h1": "Law Firm E. Kapsalis & Associates",
+        "company_guess": "Law Firm E. Kapsalis & Associates",
+        "bytes": 3407,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "law-office-christos-papoutsis-partners",
+      "company": "Law Office Christos Papoutsis & Partners",
+      "path": "redesigns/law-office-christos-papoutsis-partners/index.html",
+      "url": "https://pm-brief.com/redesigns/law-office-christos-papoutsis-partners/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "Law Office Christos Papoutsis & Partners",
+        "h1": "Law Office Christos Papoutsis & Partners",
+        "company_guess": "Law Office Christos Papoutsis & Partners",
+        "bytes": 3430,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "law-to-impact",
+      "company": "Law To Impact",
+      "path": "redesigns/law-to-impact/index.html",
+      "url": "https://pm-brief.com/redesigns/law-to-impact/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "Law To Impact",
+        "h1": "Law To Impact",
+        "company_guess": "Law To Impact",
+        "bytes": 3307,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "new-gen-accounting-n-g-a",
+      "company": "New Gen Accounting (N.G.A.)",
+      "path": "redesigns/new-gen-accounting-n-g-a/index.html",
+      "url": "https://pm-brief.com/redesigns/new-gen-accounting-n-g-a/",
+      "quality": "bespoke",
+      "source": "local-static-html",
+      "dashboard_synced": true,
+      "job_id": "03ff49e3-9229-4002-94ed-95c36f84a885",
+      "status": "review",
+      "audit": {
+        "title": "New Gen Accounting (N.G.A.) — Thessaloniki accounting office",
+        "h1": "Modern accounting, without the fog.",
+        "company_guess": "Modern accounting, without the fog.",
+        "bytes": 15245,
+        "quality": "bespoke",
+        "failures": [],
+        "warnings": [
+          "possibly_unverified_claims",
+          "external_google_fonts"
+        ]
+      }
+    },
+    {
+      "slug": "nikolakes-com",
+      "company": "Συμβολαιογράφος Νίκος Νικολάκης",
+      "path": "redesigns/nikolakes-com/index.html",
+      "url": "https://pm-brief.com/redesigns/nikolakes-com/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "Συμβολαιογράφος Νίκος Νικολάκης",
+        "h1": "Συμβολαιογράφος Νίκος Νικολάκης",
+        "company_guess": "Συμβολαιογράφος Νίκος Νικολάκης",
+        "bytes": 3520,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "notary-elena-zafeiriou",
+      "company": "Συμβολαιογράφος Ελενα Ζαφειρίου",
+      "path": "redesigns/notary-elena-zafeiriou/index.html",
+      "url": "https://pm-brief.com/redesigns/notary-elena-zafeiriou/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "Συμβολαιογράφος Ελενα Ζαφειρίου - Notary Elena Zafeiriou",
+        "h1": "Συμβολαιογράφος Ελενα Ζαφειρίου - Notary Elena Zafeiriou",
+        "company_guess": "Συμβολαιογράφος Ελενα Ζαφειρίου",
+        "bytes": 3616,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "notary-public-elena-georgiadou",
+      "company": "Συμβολαιογράφος Έλενα Γεωργιάδου Γρηγοριάδου",
+      "path": "redesigns/notary-public-elena-georgiadou/index.html",
+      "url": "https://pm-brief.com/redesigns/notary-public-elena-georgiadou/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "Συμβολαιογράφος Έλενα Γεωργιάδου Γρηγοριάδου - Notary Public Elena Georgiadou",
+        "h1": "Συμβολαιογράφος Έλενα Γεωργιάδου Γρηγοριάδου - Notary Public Elena Georgiadou",
+        "company_guess": "Συμβολαιογράφος Έλενα Γεωργιάδου Γρηγοριάδου",
+        "bytes": 3752,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "odontiatriki-merimna",
+      "company": "ODONTIATRIKI MERIMNA THESSALONIKIS S.A.",
+      "path": "redesigns/odontiatriki-merimna/index.html",
+      "url": "https://pm-brief.com/redesigns/odontiatriki-merimna/",
+      "quality": "bespoke",
+      "source": "local-static-html",
+      "dashboard_synced": true,
+      "job_id": "ba7d1c49-ee71-4751-8324-57add372e814",
+      "status": "review",
+      "audit": {
+        "title": "Οδοντιατρική Μέριμνα Θεσσαλονίκης — Σύγχρονο Οδοντιατρείο · Τσιμισκή 86",
+        "h1": "Η φροντίδα του χαμόγελού σας, με μέριμνα.",
+        "company_guess": "Η φροντίδα του χαμόγελού σας, με μέριμνα.",
+        "bytes": 18969,
+        "quality": "bespoke",
+        "failures": [],
+        "warnings": []
+      }
+    },
+    {
+      "slug": "panidis-paul-accounting-office-thessaloniki",
+      "company": "PANIDIS PAUL",
+      "path": "redesigns/panidis-paul-accounting-office-thessaloniki/index.html",
+      "url": "https://pm-brief.com/redesigns/panidis-paul-accounting-office-thessaloniki/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "PANIDIS PAUL - ACCOUNTING OFFICE - THESSALONIKI",
+        "h1": "PANIDIS PAUL - ACCOUNTING OFFICE - THESSALONIKI",
+        "company_guess": "PANIDIS PAUL",
+        "bytes": 3435,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "papadopoulou-christina-dentist",
+      "company": "PAPADOPOULOU CHRISTINA",
+      "path": "redesigns/papadopoulou-christina-dentist/index.html",
+      "url": "https://pm-brief.com/redesigns/papadopoulou-christina-dentist/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "PAPADOPOULOU CHRISTINA - dentist",
+        "h1": "PAPADOPOULOU CHRISTINA - dentist",
+        "company_guess": "PAPADOPOULOU CHRISTINA",
+        "bytes": 3382,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "physio-lab",
+      "company": "Physio Lab Κέντρο Φυσικοθεραπείας Κοτταράς Αναστάσιος",
+      "path": "redesigns/physio-lab/index.html",
+      "url": "https://pm-brief.com/redesigns/physio-lab/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "Physio Lab Κέντρο Φυσικοθεραπείας Κοτταράς Αναστάσιος",
+        "h1": "Physio Lab Κέντρο Φυσικοθεραπείας Κοτταράς Αναστάσιος",
+        "company_guess": "Physio Lab Κέντρο Φυσικοθεραπείας Κοτταράς Αναστάσιος",
+        "bytes": 3638,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "physio-loft-thessaloniki",
+      "company": "Physio Loft Thessaloniki",
+      "path": "redesigns/physio-loft-thessaloniki/index.html",
+      "url": "https://pm-brief.com/redesigns/physio-loft-thessaloniki/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "Physio Loft Thessaloniki",
+        "h1": "Physio Loft Thessaloniki",
+        "company_guess": "Physio Loft Thessaloniki",
+        "bytes": 3378,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "physiotherapy-pitelis-anna",
+      "company": "Physiotherapy Pitelis Anna",
+      "path": "redesigns/physiotherapy-pitelis-anna/index.html",
+      "url": "https://pm-brief.com/redesigns/physiotherapy-pitelis-anna/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "Physiotherapy Pitelis Anna",
+        "h1": "Physiotherapy Pitelis Anna",
+        "company_guess": "Physiotherapy Pitelis Anna",
+        "bytes": 3415,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "physis-massage-therapy",
+      "company": "Physis Massage Therapy",
+      "path": "redesigns/physis-massage-therapy/index.html",
+      "url": "https://pm-brief.com/redesigns/physis-massage-therapy/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "Physis Massage Therapy",
+        "h1": "Physis Massage Therapy",
+        "company_guess": "Physis Massage Therapy",
+        "bytes": 3347,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "prodent-dental-care",
+      "company": "Prodent dental care",
+      "path": "redesigns/prodent-dental-care/index.html",
+      "url": "https://pm-brief.com/redesigns/prodent-dental-care/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "Prodent dental care",
+        "h1": "Prodent dental care",
+        "company_guess": "Prodent dental care",
+        "bytes": 3441,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "realphysio",
+      "company": "RealPhysio",
+      "path": "redesigns/realphysio/index.html",
+      "url": "https://pm-brief.com/redesigns/realphysio/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "RealPhysio",
+        "h1": "RealPhysio",
+        "company_guess": "RealPhysio",
+        "bytes": 3305,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "retseli-gr",
+      "company": "ΣΥΜΒΟΛΑΙΟΓΡΑΦΟΣ ΡΕΤΣΕΛΗ ΜΑΡΙΑ",
+      "path": "redesigns/retseli-gr/index.html",
+      "url": "https://pm-brief.com/redesigns/retseli-gr/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "ΣΥΜΒΟΛΑΙΟΓΡΑΦΟΣ ΡΕΤΣΕΛΗ ΜΑΡΙΑ",
+        "h1": "ΣΥΜΒΟΛΑΙΟΓΡΑΦΟΣ ΡΕΤΣΕΛΗ ΜΑΡΙΑ",
+        "company_guess": "ΣΥΜΒΟΛΑΙΟΓΡΑΦΟΣ ΡΕΤΣΕΛΗ ΜΑΡΙΑ",
+        "bytes": 3489,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "rozou-associates-law-firm",
+      "company": "Rozou & Associates Law Firm",
+      "path": "redesigns/rozou-associates-law-firm/index.html",
+      "url": "https://pm-brief.com/redesigns/rozou-associates-law-firm/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "Rozou & Associates Law Firm",
+        "h1": "Rozou & Associates Law Firm",
+        "company_guess": "Rozou & Associates Law Firm",
+        "bytes": 3399,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "scharalabidis-gr",
+      "company": "ΧΑΡΑΛΑΜΠΙΔΗΣ ΣΤΕΛΙΟΣ Δερματολόγος-Αφροδισιολόγος",
+      "path": "redesigns/scharalabidis-gr/index.html",
+      "url": "https://pm-brief.com/redesigns/scharalabidis-gr/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "ΧΑΡΑΛΑΜΠΙΔΗΣ ΣΤΕΛΙΟΣ Δερματολόγος-Αφροδισιολόγος",
+        "h1": "ΧΑΡΑΛΑΜΠΙΔΗΣ ΣΤΕΛΙΟΣ Δερματολόγος-Αφροδισιολόγος",
+        "company_guess": "ΧΑΡΑΛΑΜΠΙΔΗΣ ΣΤΕΛΙΟΣ Δερματολόγος-Αφροδισιολόγος",
+        "bytes": 3649,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "smiles",
+      "company": "Οδοντιατρείο Smiles",
+      "path": "redesigns/smiles/index.html",
+      "url": "https://pm-brief.com/redesigns/smiles/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "Οδοντιατρείο Smiles",
+        "h1": "Οδοντιατρείο Smiles",
+        "company_guess": "Οδοντιατρείο Smiles",
+        "bytes": 3374,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "stella-salepaki-notary-public",
+      "company": "Stella Salepaki-Notary Public",
+      "path": "redesigns/stella-salepaki-notary-public/index.html",
+      "url": "https://pm-brief.com/redesigns/stella-salepaki-notary-public/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "Stella Salepaki-Notary Public",
+        "h1": "Stella Salepaki-Notary Public",
+        "company_guess": "Stella Salepaki-Notary Public",
+        "bytes": 3382,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "stoma-kai-ygeia",
+      "company": "Στόμα και Υγεία - Γναθοχειρουργός Γ. Μήτσας | Εμφυτεύματα",
+      "path": "redesigns/stoma-kai-ygeia/index.html",
+      "url": "https://pm-brief.com/redesigns/stoma-kai-ygeia/",
+      "quality": "bespoke",
+      "source": "local-static-html",
+      "dashboard_synced": true,
+      "job_id": "ad2e49d1-95db-4dca-b1c1-66c25f03d459",
+      "status": "review",
+      "audit": {
+        "title": "Στόμα & Υγεία — Δρ. Γ. Μήτσας · Γναθοχειρουργός & Εμφυτεύματα · Θεσσαλονίκη",
+        "h1": "Το χαμόγελό σας, σε έμπειρα χέρια.",
+        "company_guess": "Το χαμόγελό σας, σε έμπειρα χέρια.",
+        "bytes": 23052,
+        "quality": "bespoke",
+        "failures": [],
+        "warnings": [
+          "possibly_unverified_claims"
+        ]
+      }
+    },
+    {
+      "slug": "taxation",
+      "company": "taxation • λογιστικό γραφείο",
+      "path": "redesigns/taxation/index.html",
+      "url": "https://pm-brief.com/redesigns/taxation/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "taxation • λογιστικό γραφείο",
+        "h1": "taxation • λογιστικό γραφείο",
+        "company_guess": "taxation • λογιστικό γραφείο",
+        "bytes": 3439,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "taxinomisis",
+      "company": "Taxinomisis",
+      "path": "redesigns/taxinomisis/index.html",
+      "url": "https://pm-brief.com/redesigns/taxinomisis/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "Taxinomisis - Φορολογικές και Οικονομικές Υπηρεσίες",
+        "h1": "Taxinomisis - Φορολογικές και Οικονομικές Υπηρεσίες",
+        "company_guess": "Taxinomisis",
+        "bytes": 3666,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "the-dental-tree",
+      "company": "Χάμου Αναστασία, The Dental Tree - Χειρουργός Οδοντίατρος - Θεσσαλονίκη",
+      "path": "redesigns/the-dental-tree/index.html",
+      "url": "https://pm-brief.com/redesigns/the-dental-tree/",
+      "quality": "bespoke",
+      "source": "local-static-html",
+      "dashboard_synced": true,
+      "job_id": "76f6a6c6-b2c3-4bc2-97ae-35e3995cdea0",
+      "status": "review",
+      "audit": {
+        "title": "The Dental Tree — Χάμου Αναστασία",
+        "h1": "A dental office that looks like a place of tranquility.",
+        "company_guess": "A dental office that looks like a place of tranquility.",
+        "bytes": 113271,
+        "quality": "bespoke",
+        "failures": [],
+        "warnings": [
+          "external_google_fonts"
+        ]
+      }
+    },
+    {
+      "slug": "the-smile-design-clinic",
+      "company": "The Smile Design Clinic 🦷🪥",
+      "path": "redesigns/the-smile-design-clinic/index.html",
+      "url": "https://pm-brief.com/redesigns/the-smile-design-clinic/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "The Smile Design Clinic 🦷🪥",
+        "h1": "The Smile Design Clinic 🦷🪥",
+        "company_guess": "The Smile Design Clinic 🦷🪥",
+        "bytes": 3387,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "urban-veterinary-care",
+      "company": "Κτηνιατρείο",
+      "path": "redesigns/urban-veterinary-care/index.html",
+      "url": "https://pm-brief.com/redesigns/urban-veterinary-care/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "Κτηνιατρείο - Urban Veterinary Care",
+        "h1": "Κτηνιατρείο - Urban Veterinary Care",
+        "company_guess": "Κτηνιατρείο",
+        "bytes": 3503,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "veterinary-clinic-navarino-k-kapsali",
+      "company": "Veterinary clinic Navarino K.Kapsali",
+      "path": "redesigns/veterinary-clinic-navarino-k-kapsali/index.html",
+      "url": "https://pm-brief.com/redesigns/veterinary-clinic-navarino-k-kapsali/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "Veterinary clinic Navarino K.Kapsali",
+        "h1": "Veterinary clinic Navarino K.Kapsali",
+        "company_guess": "Veterinary clinic Navarino K.Kapsali",
+        "bytes": 3413,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    },
+    {
+      "slug": "zerorisk",
+      "company": "ZERORISK",
+      "path": "redesigns/zerorisk/index.html",
+      "url": "https://pm-brief.com/redesigns/zerorisk/",
+      "quality": "generic",
+      "source": "local-static-html",
+      "dashboard_synced": false,
+      "job_id": null,
+      "status": null,
+      "audit": {
+        "title": "ZERORISK",
+        "h1": "ZERORISK",
+        "company_guess": "ZERORISK",
+        "bytes": 3290,
+        "quality": "generic",
+        "failures": [
+          "generic_fallback_copy"
+        ],
+        "warnings": [
+          "small_html"
+        ]
+      }
+    }
+  ]
+}
