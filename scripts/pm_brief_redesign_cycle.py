@@ -258,6 +258,8 @@ def build_prompt(job, content):
         "something is missing, write polished but conservative copy from the business category.",
         "- Preserve the original language (Greek stays Greek). Give a real <title> and "
         "<meta name=description>. Responsive and accessible.",
+        "- These previews are hosted on pm-brief.com but are not ours to rank. Always include "
+        "<meta name=\"robots\" content=\"noindex, nofollow\"> in the <head>.",
         "- Output ONLY the raw HTML document, starting with <!DOCTYPE html>. No markdown, no commentary.",
         "",
         f"Business: {job.get('company','')}",
@@ -329,8 +331,29 @@ def clean_html(s):
     s = re.sub(r"\s*```$", "", s).strip()
     low = s.lower()
     if "<html" in low or "<!doctype html" in low:
-        return s
+        return force_noindex(s)
     return None
+
+
+def force_noindex(s):
+    """Guarantee the noindex tag the prompt asks for.
+
+    These previews live on pm-brief.com but belong to the lead, not to us —
+    indexing dozens of near-identical pitch pages buries the toolkit under
+    thin duplicate content. The model is told to add the tag; this makes sure
+    it is there even when it doesn't.
+    """
+    if re.search(r"<meta[^>]+name=[\"']?robots", s, re.I):
+        return re.sub(
+            r"(<meta[^>]+name=[\"']?robots[\"']?[^>]*content=[\"'])[^\"']*([\"'])",
+            r"\1noindex, nofollow\2", s, count=1, flags=re.I)
+    tag = '<meta name="robots" content="noindex, nofollow"/>'
+    # <head> if there is one; otherwise straight after <html>, where the parser
+    # hoists it into the implicit head anyway.
+    m = re.search(r"<head[^>]*>", s, re.I) or re.search(r"<html[^>]*>", s, re.I)
+    if m:
+        return s[:m.end()] + "\n" + tag + s[m.end():]
+    return tag + "\n" + s
 
 
 def template_html(job):
@@ -344,6 +367,7 @@ def template_html(job):
     return f"""<!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="robots" content="noindex, nofollow"/>
 <title>{c}</title>
 <style>
 :root{{--bg:#f6f9fb;--ink:#12202b;--muted:#5b7180;--line:#e2ebf0;--acc:#0fb5a6;--acc2:#0d94a5;--navy:#123a4d}}
