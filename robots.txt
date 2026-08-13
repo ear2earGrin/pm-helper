@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+
+# Note: /login.html, /dashboard.html and every page under /redesigns/ carry a
+# `noindex` meta tag instead of a Disallow here. A Disallow would stop crawlers
+# reading the page at all — including the noindex — so a URL shared elsewhere
+# could still surface in results. Letting them crawl is what actually keeps
+# those pages out of the index.
+
+Sitemap: https://pm-brief.com/sitemap.xml
