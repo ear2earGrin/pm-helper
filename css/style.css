@@ -1160,3 +1160,35 @@ code { font-family: var(--font-mono); font-size: 0.85em; }
 @media (max-width: 620px) {
   .footer-map { grid-template-columns: 1fr; }
 }
+
+/* ── Design credit ────────────────────────────────────────── */
+.footer-credit {
+  max-width: 1100px;
+  margin: var(--space-lg) auto 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+.footer-credit-label { color: var(--text-muted); }
+.footer-credit-brand {
+  color: #C9A961;
+  font-weight: 700;
+  text-decoration: none;
+  animation: e2eg-pulse 2.6s ease-in-out infinite;
+}
+.footer-credit-brand:hover {
+  filter: brightness(1.4);
+  animation-play-state: paused;
+}
+@keyframes e2eg-pulse {
+  0%, 100% { opacity: 0.8; filter: brightness(1); }
+  50%      { opacity: 1;   filter: brightness(1.35); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .footer-credit-brand { animation: none; opacity: 1; }
+}
