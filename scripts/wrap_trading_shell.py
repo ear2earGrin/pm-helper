@@ -45,6 +45,7 @@ SHELL = """<!DOCTYPE html>
 __APP_ASSETS__
   <link rel="stylesheet" href="../css/style.css?v=2" />
   <link rel="stylesheet" href="../css/i18n.css" />
+  <link rel="stylesheet" href="trading.css?v=2" />
   <script>try{var _l=localStorage.getItem('yf-lang');if(_l==='bg'||_l==='en')document.documentElement.lang=_l;}catch(e){}</script>
   <script src="../js/i18n-site.js" defer></script>
   <style>
@@ -71,7 +72,11 @@ __APP_ASSETS__
       <div class="nav-links">
         <a href="../pm.html" class="nav-link"><span data-lang="en">Project Management</span><span data-lang="bg">Управление на проекти</span></a>
         <a href="../calc/index.html" class="nav-link"><span data-lang="en">Calculators</span><span data-lang="bg">Калкулатори</span></a>
-        <a href="../lattice.html" class="nav-link"><span data-lang="en">Options Pricer</span><span data-lang="bg">Опции</span></a>
+        <!-- Not part of the upstream bundle, so they sit in the site nav rather
+             than the app's own tab bar: Lattice is a standalone page, Options is
+             built from trading/ui/options.js by scripts/build_options.sh. -->
+        <a href="../lattice.html" class="nav-link">Lattice</a>
+        <a href="options.html" class="nav-link"><span data-lang="en">Options</span><span data-lang="bg">Опции</span></a>
       </div>
     </div>
   </nav>
