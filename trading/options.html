@@ -5,36 +5,29 @@
   <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Trading Desk — Crypto System v2.0 | YARD Financial</title>
-  <meta name="description" content="A mechanical crypto swing-trading desk: weekly regime scanner, Donchian breakout signals, backtests with a full metrics grid, a paper-trading mirror and a trade journal." />
-  <link rel="canonical" href="https://pm-brief.com/trading/" />
+  <title>Options Payoff Diagrams — Multi-Leg Strategies | YARD Financial</title>
+  <meta name="description" content="Build multi-leg options positions and read their payoff at expiry: straddles, spreads, strangles and collars, with max profit, max loss and breakeven points." />
+  <link rel="canonical" href="https://pm-brief.com/trading/options.html" />
   <meta name="robots" content="index, follow" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="YARD Financial" />
-  <meta property="og:title" content="Trading Desk — Crypto System v2.0" />
-  <meta property="og:description" content="Regime scanner, Donchian breakout signals, backtests, a paper-trading mirror and a trade journal. Analysis only — it never places an order." />
-  <meta property="og:url" content="https://pm-brief.com/trading/" />
+  <meta property="og:title" content="Options Payoff Diagrams — Multi-Leg Strategies" />
+  <meta property="og:description" content="Multi-leg options payoff diagrams with max profit, max loss and breakeven points. Analysis only — it never places an order." />
+  <meta property="og:url" content="https://pm-brief.com/trading/options.html" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
-  <script type="module" crossorigin src="./assets/index-Cru2dT9v.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-BgpoJzBH.css">
   <link rel="stylesheet" href="../css/style.css?v=2" />
   <link rel="stylesheet" href="../css/i18n.css" />
   <link rel="stylesheet" href="trading.css?v=2" />
   <script>try{var _l=localStorage.getItem('yf-lang');if(_l==='bg'||_l==='en')document.documentElement.lang=_l;}catch(e){}</script>
   <script src="../js/i18n-site.js" defer></script>
+  <script src="options.bundle.js" defer></script>
   <style>
-    /* Vite's starter CSS flips :root to a white background under
-       prefers-color-scheme: light. Pin the page to the site's dark palette so
-       the app never renders light inside pm-brief's chrome. */
-    :root { color-scheme: dark; background-color: var(--bg-0, #05080F); color: var(--text-primary, #EDF0F7); }
-    /* Column layout keeps the footer at the bottom on short tabs instead of
-       leaving it stranded mid-page. */
     body.landing-body { background: var(--bg-0, #05080F); display: flex; flex-direction: column; min-height: 100vh; }
-    #root { min-height: 0; flex: 1 0 auto; }
-    /* The app's sticky tab bar sits under the site nav rather than over it. */
-    #root > nav { top: 0; }
+    #options-root { flex: 1 0 auto; max-width: 1400px; width: 100%; margin: 0 auto; padding: var(--space-xl) var(--space-lg); }
+    /* The sub-nav sticks under the site nav rather than to the top of the page. */
+    .tr-subnav-bar { top: 0; }
   </style>
 </head>
 <body class="landing-body">
@@ -48,16 +41,28 @@
       <div class="nav-links">
         <a href="../pm.html" class="nav-link"><span data-lang="en">Project Management</span><span data-lang="bg">Управление на проекти</span></a>
         <a href="../calc/index.html" class="nav-link"><span data-lang="en">Calculators</span><span data-lang="bg">Калкулатори</span></a>
-        <!-- Not part of the upstream bundle, so they sit in the site nav rather
-             than the app's own tab bar: Lattice is a standalone page, Options is
-             built from trading/ui/options.js by scripts/build_options.sh. -->
-        <a href="../lattice.html" class="nav-link">Lattice</a>
-        <a href="options.html" class="nav-link"><span data-lang="en">Options</span><span data-lang="bg">Опции</span></a>
       </div>
     </div>
   </nav>
 
-  <div id="root"></div>
+  <div class="tr-subnav-bar">
+    <div class="tr-subnav-inner">
+      <span class="tr-subnav-brand">◧ TRADING DESK</span>
+      <a href="index.html#/" class="tr-subnav">CHECKER</a>
+      <a href="index.html#/scanner" class="tr-subnav">SCANNER</a>
+      <a href="index.html#/backtest" class="tr-subnav">BACKTEST</a>
+      <a href="index.html#/log" class="tr-subnav">TRADE LOG</a>
+      <a href="index.html#/paper" class="tr-subnav">PAPER</a>
+      <a href="../lattice.html" class="tr-subnav">LATTICE</a>
+      <a href="options.html" class="tr-subnav tr-subnav--active">OPTIONS</a>
+    </div>
+  </div>
+
+  <main id="options-root"></main>
+
+  <noscript>
+    <div class="tr-view"><div class="tr-empty">The options tool needs JavaScript enabled.</div></div>
+  </noscript>
 
   <footer class="footer">
     <div class="footer-inner">
@@ -65,7 +70,7 @@
         <span class="brand-icon">◈</span>
         <span class="brand-name">YARD Financial<span style="color:var(--text-secondary,#8B93A8);font-weight:400;font-size:0.9em"> / Risk Management</span></span>
       </div>
-      <p class="footer-note"><span data-lang="en">Mechanical swing trading · Analysis only, never places an order</span><span data-lang="bg">Механична суинг търговия · Само анализ, никога не подава поръчка</span> · <a href="../disclaimer.html" style="color: var(--accent-text);"><span data-lang="en">Disclaimer</span><span data-lang="bg">Условия</span></a></p>
+      <p class="footer-note"><span data-lang="en">Payoff at expiry · Analysis only, never places an order</span><span data-lang="bg">Изплащане на падеж · Само анализ, никога не подава поръчка</span> · <a href="../disclaimer.html" style="color: var(--accent-text);"><span data-lang="en">Disclaimer</span><span data-lang="bg">Условия</span></a></p>
       <a href="https://yardlaw.eu" target="_blank" rel="noopener" class="footer-partner">
         <span data-lang="en">A project by </span><span data-lang="bg">Проект на </span><strong>YARD Law Co.</strong>
       </a>
