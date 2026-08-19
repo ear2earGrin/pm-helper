@@ -1,90 +1,14 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
-  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Trading Desk — Swing Scanner, Backtests &amp; Options Payoffs | YARD Financial</title>
-  <meta name="description" content="A mechanical swing-trading desk: a daily entry scanner, single-asset backtests with a full metrics grid, a trade journal and options payoff diagrams." />
-  <link rel="canonical" href="https://pm-brief.com/trading/index.html" />
-  <meta name="robots" content="index, follow" />
-  <meta property="og:type" content="website" />
-  <meta property="og:site_name" content="YARD Financial" />
-  <meta property="og:title" content="Trading Desk — Swing Scanner, Backtests &amp; Options Payoffs" />
-  <meta property="og:description" content="Daily entry scanner, single-asset backtests with a metrics grid, a trade journal and multi-leg options payoff diagrams. Analysis only — it never places an order." />
-  <meta property="og:url" content="https://pm-brief.com/trading/index.html" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="../css/style.css?v=2" />
-  <link rel="stylesheet" href="trading.css?v=2" />
-  <link rel="stylesheet" href="../css/fx.css" />
-  <script src="../js/fx.js" defer></script>
-
-  <!-- Binance data source. We fetch Binance's public market-data host directly from the
-       browser. Binance 403s requests from cloud/edge IPs (a Cloudflare Worker proxy gets
-       "Request blocked" from CloudFront), but a normal browser on a residential connection
-       is fine, and data-api.binance.vision returns permissive CORS headers for public GET
-       endpoints — so no proxy is needed for public klines. (worker-binance/ is left in the
-       repo as a fallback for hosts whose region IS allowed but where CORS is the blocker.) -->
-  <script>
-    window.__BINANCE_PROXY_BASE__ = "https://data-api.binance.vision";
-  </script>
-
-  <!-- Charting: vendored standalone UMD build exposes window.LightweightCharts (Apache-2.0). -->
-  <script src="vendor/lightweight-charts.standalone.production.js" defer></script>
-
-  <!-- Trading UI, bundled to a single classic script with esbuild. GitHub Pages did not run the
-       multi-file <script type="module"> graph; a classic script loads exactly like the site's
-       other scripts (js/wizard.js, js/tools.js). Source of truth is trading/ui/*.js — regenerate
-       the bundle with:  npm run build:trading -->
-  <script src="trading.bundle.js?v=2" defer></script>
-</head>
-<body class="trading-body">
-
-  <!-- pm-brief nav (existing component) -->
-  <nav class="nav">
-    <div class="nav-inner">
-      <a href="../index.html" class="brand">
-        <span class="brand-icon">◈</span>
-        <span class="brand-name">YARD Financial<span style="color:var(--text-secondary,#8B93A8);font-weight:400;font-size:0.9em"> / Risk Management</span></span>
-      </a>
-      <div class="nav-links">
-        <a href="../pm.html" class="nav-link">Project Management</a>
-        <a href="../calc/index.html" class="nav-link">Calculators</a>
-      </div>
-    </div>
-  </nav>
-
-  <!-- Section sub-nav -->
-  <div class="tr-subnav-bar">
-    <div class="tr-subnav-inner">
-      <span class="tr-subnav-brand">◧ TRADING DESK</span>
-      <a href="#/scanner" class="tr-subnav" data-route="scanner">SCANNER</a>
-      <a href="#/backtest" class="tr-subnav" data-route="backtest">BACKTEST</a>
-      <a href="#/log" class="tr-subnav" data-route="log">TRADE LOG</a>
-      <a href="#/lattice" class="tr-subnav" data-route="lattice">LATTICE</a>
-      <a href="#/options" class="tr-subnav" data-route="options">OPTIONS</a>
-    </div>
-  </div>
-
-  <main id="trading-root"></main>
-
-  <noscript>
-    <div class="tr-view"><div class="tr-empty">The trading section needs JavaScript enabled.</div></div>
-  </noscript>
-
-  <footer class="footer">
-    <div class="footer-inner">
-      <div class="brand brand--small">
-        <span class="brand-icon">◈</span>
-        <span class="brand-name">YARD Financial<span style="color:var(--text-secondary,#8B93A8);font-weight:400;font-size:0.9em"> / Risk Management</span></span>
-      </div>
-      <p class="footer-note">Mechanical swing trading · Section ported from crypto-entry-checker · <a href="../disclaimer.html" style="color: var(--accent-text);">Disclaimer</a></p>
-      <a href="../docs/STRATEGY-SPEC.md" class="footer-partner">Strategy spec →</a>
-    </div>
-  </footer>
-
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="./vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>crypto-checker</title>
+    <script type="module" crossorigin src="./assets/index-LkVKwVR5.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-BgpoJzBH.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
 </html>
