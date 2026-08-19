@@ -1,4 +1,29 @@
-<!DOCTYPE html>
+#!/usr/bin/env python3
+"""Wrap the crypto-entry-checker bundle in the pm-brief page shell.
+
+`npm run build` in crypto-entry-checker emits a standalone page: Vite's default
+CSS (which flips to a white background under prefers-color-scheme: light) and no
+site chrome. Dropping that straight into /trading loses the YARD Financial
+header, the footer and the site's dark theme.
+
+This rewrites trading/index.html to put the app back inside the pm-brief shell.
+React still owns #root, so the chrome survives every rebuild. Run it after
+copying dist/* into trading/.
+
+Idempotent: it reads the generated asset tags out of whatever index.html is
+there — wrapped or not — so re-running after a rebuild picks up the new content
+hashes.
+
+    python3 scripts/wrap_trading_shell.py
+"""
+
+import pathlib
+import re
+import sys
+
+INDEX = pathlib.Path(__file__).resolve().parent.parent / "trading" / "index.html"
+
+SHELL = """<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -17,8 +42,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
-  <script type="module" crossorigin src="./assets/index-Cru2dT9v.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-BgpoJzBH.css">
+__APP_ASSETS__
   <link rel="stylesheet" href="../css/style.css?v=2" />
   <link rel="stylesheet" href="../css/i18n.css" />
   <script>try{var _l=localStorage.getItem('yf-lang');if(_l==='bg'||_l==='en')document.documentElement.lang=_l;}catch(e){}</script>
@@ -73,3 +97,30 @@
 
 </body>
 </html>
+"""
+
+
+def main():
+    if not INDEX.is_file():
+        sys.exit(f"not found: {INDEX} — copy the build's dist/* into trading/ first")
+
+    html = INDEX.read_text(encoding="utf-8")
+
+    # Vite emits these with content hashes that change on every rebuild, so pull
+    # them out of the file rather than hardcoding names.
+    assets = re.findall(
+        r'<(?:script|link)\b[^>]*(?:src|href)="\./assets/[^"]+"[^>]*>(?:</script>)?',
+        html,
+    )
+    if not assets:
+        sys.exit("no ./assets/* tags found — is trading/index.html the Vite build output?")
+
+    page = SHELL.replace("__APP_ASSETS__", "\n".join("  " + a for a in assets))
+    INDEX.write_text(page, encoding="utf-8")
+    print(f"wrapped {INDEX.relative_to(INDEX.parent.parent)} with the pm-brief shell")
+    for a in assets:
+        print("  kept:", a[:90])
+
+
+if __name__ == "__main__":
+    main()
