@@ -5,7 +5,7 @@
 // no equivalent upstream, so it lives on as its own page built from the same
 // source it always used: ui/options.js + options/*.js, no framework.
 //
-// Bundled to a classic script by scripts/build_options.sh — same approach the
+// Bundled to a classic script by scripts/build_trading_pages.sh — same approach the
 // old trading section used, so it loads like the site's other scripts.
 import { mount } from "./options.js";
 

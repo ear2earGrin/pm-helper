@@ -353,3 +353,52 @@
   .tr-opt-summary { grid-template-columns: 1fr 1fr; }
   .tr-opt-leg { grid-template-columns: 1fr 1fr 1fr 1fr 0.7fr 32px; }
 }
+
+/* ── Watchlist ─────────────────────────────────────────────
+   A saved list of coins to buy, with 24h change, volume and market cap.
+   Reuses the desk's card/table tokens; only the row grid is new. */
+.tr-wl-search { display: flex; gap: 8px; }
+.tr-wl-search .tr-input { width: 100%; }
+.tr-wl-results { display: flex; flex-direction: column; gap: 4px; margin-top: 10px; }
+.tr-wl-result {
+  display: grid;
+  grid-template-columns: 70px 1fr auto auto;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  padding: 9px 12px;
+  background: var(--bg-3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-md);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  cursor: pointer;
+}
+.tr-wl-result:hover { border-color: var(--accent-border); background: var(--bg-4); }
+.tr-wl-add { color: var(--accent-text); font-weight: 700; letter-spacing: 0.06em; }
+
+.tr-wl-table { display: flex; flex-direction: column; gap: 4px; min-width: 860px; }
+.tr-wl-row {
+  display: grid;
+  grid-template-columns: 1.4fr 0.9fr 0.7fr 1fr 1fr 1.6fr 40px;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--bg-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-md);
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+.tr-wl-row--head {
+  background: transparent;
+  border-color: transparent;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  padding-bottom: 0;
+}
+.tr-wl-name { display: block; font-size: 11px; }
+.tr-wl-note { width: 100%; font-size: 12px; padding: 5px 8px; }
+.tr-wl-x { padding: 4px 10px; line-height: 1; }
