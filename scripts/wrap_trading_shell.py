@@ -45,7 +45,7 @@ SHELL = """<!DOCTYPE html>
 __APP_ASSETS__
   <link rel="stylesheet" href="../css/style.css?v=2" />
   <link rel="stylesheet" href="../css/i18n.css" />
-  <link rel="stylesheet" href="trading.css?v=b265b8c6" />
+  <link rel="stylesheet" href="trading.css?v=29da3889" />
   <script>try{var _l=localStorage.getItem('yf-lang');if(_l==='bg'||_l==='en')document.documentElement.lang=_l;}catch(e){}</script>
   <script src="../js/i18n-site.js" defer></script>
   <style>

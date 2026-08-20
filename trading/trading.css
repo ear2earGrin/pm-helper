@@ -485,6 +485,10 @@
   height: 36px;
   resize: none;
   overflow: hidden;
+  box-sizing: border-box;
+  /* Collapsed, the note is strictly one line — wrapping would let the second
+     line bleed into view under the clip. It wraps again once expanded. */
+  white-space: nowrap;
   font-family: var(--font-mono);
   font-size: 12px;
   line-height: 1.55;
@@ -494,6 +498,7 @@
 .tr-wl-note-wrap:hover .tr-wl-note,
 .tr-wl-note:focus {
   height: 132px;
+  white-space: pre-wrap;
   overflow: auto;
   z-index: 40;
   background: var(--bg-4);
