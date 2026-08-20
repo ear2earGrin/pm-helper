@@ -324,15 +324,23 @@ export function mount(root) {
             cell("MARKET CAP", s ? `$${compact(s.marketCap)}` : "—"),
           ),
           el("div", { class: "tr-wl-tail" },
-            el("input", {
-              class: "tr-input tr-wl-note",
-              value: e.note,
-              placeholder: "why you're watching",
-              onChange: (ev) => {
-                entries = setNote(entries, e.id, ev.target.value);
-                persist();
-              },
-            }),
+            // A textarea rather than an input: notes run to a sentence or two,
+            // and an input can only ever show the first line. Collapsed to one
+            // line by default, it expands over the rows below on hover or
+            // focus, so the whole note is readable without opening anything.
+            el("div", { class: "tr-wl-note-wrap" },
+              el("textarea", {
+                class: "tr-input tr-wl-note",
+                rows: "1",
+                placeholder: "why you're watching",
+                title: e.note || "",
+                onChange: (ev) => {
+                  entries = setNote(entries, e.id, ev.target.value);
+                  ev.target.title = ev.target.value;
+                  persist();
+                },
+              }, e.note),
+            ),
             el("button", {
               class: "tr-wl-x",
               type: "button",
