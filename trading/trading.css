@@ -471,8 +471,38 @@
 .tr-wl-cell--down .tr-wl-cell-value { color: #FCA5A5; }
 .tr-wl-cell--flat .tr-wl-cell-value { color: var(--text-muted); }
 
-.tr-wl-tail { display: flex; align-items: center; gap: 8px; flex: 1 1 220px; min-width: 200px; }
-.tr-wl-note { flex: 1; font-size: 12px; padding: 8px 11px; }
+.tr-wl-tail { display: flex; align-items: flex-start; gap: 8px; flex: 1 1 220px; min-width: 200px; }
+
+/* The note is a one-line textarea that expands over the rows beneath it on
+   hover or focus. Notes here run to a sentence or two — a rating plus the
+   reasoning — and a single line can only ever show the front of that. The wrap
+   keeps its collapsed height so expanding never reflows the list. */
+.tr-wl-note-wrap { position: relative; flex: 1; min-width: 0; height: 36px; }
+.tr-wl-note {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  height: 36px;
+  resize: none;
+  overflow: hidden;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.55;
+  padding: 8px 11px;
+  transition: height 0.13s ease, box-shadow 0.13s ease, border-color 0.13s ease;
+}
+.tr-wl-note-wrap:hover .tr-wl-note,
+.tr-wl-note:focus {
+  height: 132px;
+  overflow: auto;
+  z-index: 40;
+  background: var(--bg-4);
+  border-color: var(--accent-border);
+  box-shadow: 0 20px 44px rgba(0, 0, 0, 0.6);
+}
+/* Lift the whole row while its note is open so the box sits above the next one. */
+.tr-wl-item { position: relative; }
+.tr-wl-item:hover, .tr-wl-item:focus-within { z-index: 5; }
 .tr-wl-x {
   flex: 0 0 auto;
   width: 30px; height: 30px;
