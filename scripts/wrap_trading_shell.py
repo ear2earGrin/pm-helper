@@ -74,7 +74,8 @@ __APP_ASSETS__
         <a href="../calc/index.html" class="nav-link"><span data-lang="en">Calculators</span><span data-lang="bg">Калкулатори</span></a>
         <!-- Not part of the upstream bundle, so they sit in the site nav rather
              than the app's own tab bar: Lattice is a standalone page, Options is
-             built from trading/ui/options.js by scripts/build_options.sh. -->
+             built from trading/ui/*.js by scripts/build_trading_pages.sh. -->
+        <a href="watchlist.html" class="nav-link"><span data-lang="en">Watchlist</span><span data-lang="bg">Списък</span></a>
         <a href="../lattice.html" class="nav-link">Lattice</a>
         <a href="options.html" class="nav-link"><span data-lang="en">Options</span><span data-lang="bg">Опции</span></a>
       </div>
