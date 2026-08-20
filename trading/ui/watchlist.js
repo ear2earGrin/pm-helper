@@ -1,5 +1,6 @@
-// Watchlist view — a plain list of coins you intend to buy, with the three
-// numbers worth glancing at: 24h change, 24h volume and market cap.
+// Watchlist view — a plain list of coins you intend to buy, with the numbers
+// worth glancing at: price change over a chosen window (24h, 1W or 1M), 24h
+// volume and market cap.
 //
 // Deliberately not a scanner. It holds no signals and makes no judgements; it
 // is a memory aid, so the only state it keeps is which coins you saved and an
@@ -34,6 +35,24 @@ function pct(n) {
   return `${n > 0 ? "+" : ""}${n.toFixed(2)}%`;
 }
 
+// The change windows CoinGecko returns in one call, in display order.
+const WINDOWS = [
+  { key: "change24h", label: "24H" },
+  { key: "change7d", label: "1W" },
+  { key: "change30d", label: "1M" },
+];
+const WINDOW_KEY = "yf-trading-watchlist-window";
+
+function loadWindow() {
+  try {
+    const saved = localStorage.getItem(WINDOW_KEY);
+    if (WINDOWS.some((w) => w.key === saved)) return saved;
+  } catch {
+    /* storage unavailable — fall through to the default */
+  }
+  return "change24h";
+}
+
 function ago(ms) {
   if (!Number.isFinite(ms)) return "";
   const s = Math.round(ms / 1000);
@@ -64,6 +83,36 @@ export function mount(root) {
   const listHost = el("div", { class: "tr-wl-list" });
   const statusHost = el("div", { class: "tr-wl-status" });
   const refreshBtn = el("button", { class: "tr-act", type: "button", onClick: () => refresh({ force: true }) }, "REFRESH");
+
+  // Which change window the list shows. Every window is already in the cached
+  // row, so switching is instant and makes no request.
+  let activeWindow = loadWindow();
+  const windowHost = el("div", { class: "tr-wl-window", role: "group", "aria-label": "Price change window" });
+
+  function selectWindow(key) {
+    activeWindow = key;
+    try {
+      localStorage.setItem(WINDOW_KEY, key);
+    } catch {
+      /* the choice just won't persist */
+    }
+    renderWindow();
+    renderList();
+  }
+
+  function renderWindow() {
+    clear(windowHost);
+    for (const w of WINDOWS) {
+      windowHost.appendChild(
+        el("button", {
+          class: `tr-wl-window-btn${w.key === activeWindow ? " tr-wl-window-btn--active" : ""}`,
+          type: "button",
+          "aria-pressed": w.key === activeWindow ? "true" : "false",
+          onClick: () => selectWindow(w.key),
+        }, w.label),
+      );
+    }
+  }
 
   function setStatus(kind, text) {
     status = text ? { kind, text } : null;
@@ -246,10 +295,17 @@ export function mount(root) {
       return;
     }
 
+    const win = WINDOWS.find((w) => w.key === activeWindow) || WINDOWS[0];
+
     for (const e of entries) {
       const s = stats[e.id];
-      const ch = s ? s.change24h : null;
+      const ch = s ? s[win.key] : null;
       const dir = !Number.isFinite(ch) ? "flat" : ch > 0 ? "up" : ch < 0 ? "down" : "flat";
+      // Hovering shows every window, so the other two are one gesture away
+      // rather than requiring a click on the toggle.
+      const allWindows = s
+        ? WINDOWS.map((w) => `${w.label} ${pct(s[w.key])}`).join("   ")
+        : "No data yet";
 
       listHost.appendChild(
         el("div", { class: "tr-wl-item" },
@@ -260,8 +316,8 @@ export function mount(root) {
           ),
           el("div", { class: "tr-wl-figures" },
             cell("PRICE", price(s?.price)),
-            el("div", { class: `tr-wl-cell tr-wl-cell--change tr-wl-cell--${dir}` },
-              el("span", { class: "tr-wl-cell-label" }, "24H"),
+            el("div", { class: `tr-wl-cell tr-wl-cell--change tr-wl-cell--${dir}`, title: allWindows },
+              el("span", { class: "tr-wl-cell-label" }, win.label),
               el("span", { class: "tr-wl-cell-value" }, pct(ch)),
             ),
             cell("24H VOLUME", s ? `$${compact(s.volume24h)}` : "—"),
@@ -296,10 +352,17 @@ export function mount(root) {
       el("div", null,
         el("h1", { class: "tr-title" }, "WATCHLIST"),
         el("p", { class: "tr-subtitle" },
-          "Coins you are planning to buy, with 24h change, 24h volume and market cap. " +
+          "Coins you are planning to buy. Switch the change column between 24h, 1 week " +
+          "and 1 month; volume and market cap sit alongside. " +
           "Saved in this browser only — no account, and it never places an order."),
       ),
-      el("div", { class: "tr-header-actions" }, refreshBtn),
+      el("div", { class: "tr-header-actions" },
+        el("div", { class: "tr-wl-window-wrap" },
+          el("span", { class: "tr-wl-window-label" }, "CHANGE"),
+          windowHost,
+        ),
+        refreshBtn,
+      ),
     ),
     el("div", { class: "tr-wl-searchbar" }, input, resultsHost),
     statusHost,
@@ -311,6 +374,7 @@ export function mount(root) {
 
   clear(root);
   root.appendChild(view);
+  renderWindow();
   renderList();
   renderStatus();
   refresh();
