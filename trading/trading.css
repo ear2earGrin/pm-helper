@@ -355,50 +355,123 @@
 }
 
 /* ── Watchlist ─────────────────────────────────────────────
-   A saved list of coins to buy, with 24h change, volume and market cap.
-   Reuses the desk's card/table tokens; only the row grid is new. */
-.tr-wl-search { display: flex; gap: 8px; }
-.tr-wl-search .tr-input { width: 100%; }
-.tr-wl-results { display: flex; flex-direction: column; gap: 4px; margin-top: 10px; }
+   A saved list of coins to buy. Each row is a card rather than a table row:
+   the figures carry their own labels, so the row stays readable when it wraps
+   on a narrow screen and no header row is needed to decode it. */
+.tr-wl-searchbar { margin-bottom: var(--space-lg); }
+.tr-wl-input { width: 100%; padding: 13px 16px; font-size: 14px; }
+.tr-wl-results { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+.tr-wl-searching { font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); padding: 8px 4px; }
 .tr-wl-result {
   display: grid;
-  grid-template-columns: 70px 1fr auto auto;
+  grid-template-columns: 74px 1fr auto auto;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   text-align: left;
-  padding: 9px 12px;
+  padding: 11px 14px;
   background: var(--bg-3);
   border: 1px solid var(--border-subtle);
   border-radius: var(--r-md);
-  color: var(--text-primary);
   font-family: var(--font-mono);
-  font-size: 12px;
   cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
 }
 .tr-wl-result:hover { border-color: var(--accent-border); background: var(--bg-4); }
-.tr-wl-add { color: var(--accent-text); font-weight: 700; letter-spacing: 0.06em; }
+.tr-wl-result-sym { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+.tr-wl-result-name { font-size: 12px; color: var(--text-secondary); }
+.tr-wl-result-rank { font-size: 11px; color: var(--text-muted); }
+.tr-wl-add { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: var(--accent-text); }
 
-.tr-wl-table { display: flex; flex-direction: column; gap: 4px; min-width: 860px; }
-.tr-wl-row {
-  display: grid;
-  grid-template-columns: 1.4fr 0.9fr 0.7fr 1fr 1fr 1.6fr 40px;
+.tr-wl-status { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; min-height: 22px; margin-bottom: var(--space-md); }
+
+.tr-wl-list { display: flex; flex-direction: column; gap: 10px; }
+.tr-wl-item {
+  display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
+  gap: var(--space-lg);
+  flex-wrap: wrap;
+  padding: 16px 18px;
   background: var(--bg-2);
+  border: 1px solid var(--border-default);
+  border-radius: var(--r-lg);
+  transition: border-color 0.15s ease;
+}
+.tr-wl-item:hover { border-color: var(--border-strong); }
+
+.tr-wl-coin { display: flex; flex-direction: column; gap: 2px; min-width: 150px; flex: 0 0 auto; }
+.tr-wl-sym { font-family: var(--font-mono); font-size: 17px; font-weight: 700; letter-spacing: 0.04em; color: var(--text-primary); }
+.tr-wl-name { font-size: 12px; color: var(--text-muted); }
+.tr-wl-stale {
+  align-self: flex-start;
+  margin-top: 3px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--amber);
+  background: var(--amber-dim);
+  border: 1px solid var(--amber-border);
+  border-radius: 100px;
+  padding: 2px 7px;
+}
+
+/* The figures share one grid so columns line up down the list. */
+.tr-wl-figures {
+  flex: 1 1 380px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(88px, 1fr));
+  gap: var(--space-md);
+}
+.tr-wl-cell { display: flex; flex-direction: column; gap: 3px; }
+.tr-wl-cell-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+}
+.tr-wl-cell-value {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+.tr-wl-cell--up .tr-wl-cell-value { color: var(--accent); }
+.tr-wl-cell--down .tr-wl-cell-value { color: #FCA5A5; }
+.tr-wl-cell--flat .tr-wl-cell-value { color: var(--text-muted); }
+
+.tr-wl-tail { display: flex; align-items: center; gap: 8px; flex: 1 1 220px; min-width: 200px; }
+.tr-wl-note { flex: 1; font-size: 12px; padding: 8px 11px; }
+.tr-wl-x {
+  flex: 0 0 auto;
+  width: 30px; height: 30px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 17px; line-height: 1;
+  background: transparent;
   border: 1px solid var(--border-subtle);
   border-radius: var(--r-md);
-  font-family: var(--font-mono);
-  font-size: 13px;
-}
-.tr-wl-row--head {
-  background: transparent;
-  border-color: transparent;
-  font-size: 10px;
-  letter-spacing: 0.08em;
   color: var(--text-muted);
-  padding-bottom: 0;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
 }
-.tr-wl-name { display: block; font-size: 11px; }
-.tr-wl-note { width: 100%; font-size: 12px; padding: 5px 8px; }
-.tr-wl-x { padding: 4px 10px; line-height: 1; }
+.tr-wl-x:hover { color: #FCA5A5; border-color: rgba(252, 165, 165, 0.4); }
+
+@media (max-width: 720px) {
+  .tr-wl-item { align-items: stretch; gap: var(--space-md); }
+  .tr-wl-figures { flex-basis: 100%; grid-template-columns: repeat(2, 1fr); }
+  .tr-wl-tail { flex-basis: 100%; }
+  .tr-wl-result { grid-template-columns: 60px 1fr auto; }
+  .tr-wl-result-rank { display: none; }
+}
+
+/* The desk sub-nav grew to eight entries; below ~900px it no longer fits on one
+   line. Let the bar scroll sideways rather than pushing the whole page wider. */
+@media (max-width: 900px) {
+  .tr-subnav-inner {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .tr-subnav-inner::-webkit-scrollbar { display: none; }
+  .tr-subnav, .tr-subnav-brand { flex: 0 0 auto; }
+}

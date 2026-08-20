@@ -26,3 +26,8 @@ build() {
 
 build trading/ui/options-entry.js   trading/options.bundle.js
 build trading/ui/watchlist-entry.js trading/watchlist.bundle.js
+
+# Point every page at the current trading.css, so a stylesheet change can never
+# be masked by a stale cached copy under an unchanged URL.
+python3 scripts/stamp_css_version.py
+python3 scripts/wrap_trading_shell.py >/dev/null && echo "re-wrapped trading/index.html"
