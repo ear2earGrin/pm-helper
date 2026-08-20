@@ -382,6 +382,38 @@
 .tr-wl-result-rank { font-size: 11px; color: var(--text-muted); }
 .tr-wl-add { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: var(--accent-text); }
 
+/* Change-window toggle: 24H / 1W / 1M. All three windows come down in the same
+   request, so switching is a pure re-render. */
+.tr-wl-window-wrap { display: flex; align-items: center; gap: 8px; }
+.tr-wl-window-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+}
+.tr-wl-window {
+  display: inline-flex;
+  padding: 2px;
+  background: var(--bg-3);
+  border: 1px solid var(--border-subtle);
+  border-radius: 100px;
+}
+.tr-wl-window-btn {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 5px 12px;
+  border: none;
+  border-radius: 100px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+.tr-wl-window-btn:hover { color: var(--text-primary); }
+.tr-wl-window-btn--active { background: var(--accent); color: var(--text-inverse); }
+
 .tr-wl-status { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; min-height: 22px; margin-bottom: var(--space-md); }
 
 .tr-wl-list { display: flex; flex-direction: column; gap: 10px; }
@@ -475,3 +507,7 @@
   .tr-subnav-inner::-webkit-scrollbar { display: none; }
   .tr-subnav, .tr-subnav-brand { flex: 0 0 auto; }
 }
+
+/* The watchlist header carries a toggle as well as REFRESH; let them wrap
+   together rather than squeezing the title. */
+.tr-view .tr-header-actions { display: flex; align-items: center; gap: var(--space-md); flex-wrap: wrap; }

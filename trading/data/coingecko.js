@@ -23,7 +23,9 @@
 const BASE = "https://api.coingecko.com/api/v3";
 const MIN_GAP_MS = 2500;
 const CACHE_TTL_MS = 90_000;
-const CACHE_KEY = "yf-trading-watchlist-cache";
+// Bumped when the cached row shape changes — v1 rows held only the 24h window,
+// so an old cache would render 1W and 1M as blanks forever.
+const CACHE_KEY = "yf-trading-watchlist-cache-v2";
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -127,7 +129,12 @@ function toRow(r) {
     name: r.name || r.id,
     symbol: String(r.symbol || "").toUpperCase(),
     price: num(r.current_price),
-    change24h: num(r.price_change_percentage_24h),
+    // Asking for the 7d/30d windows renames the fields with an _in_currency
+    // suffix; plain price_change_percentage_24h is always sent, so it backs up
+    // the 24h window if the suffixed one is absent.
+    change24h: num(r.price_change_percentage_24h_in_currency) ?? num(r.price_change_percentage_24h),
+    change7d: num(r.price_change_percentage_7d_in_currency),
+    change30d: num(r.price_change_percentage_30d_in_currency),
     volume24h: num(r.total_volume),
     marketCap: num(r.market_cap),
     rank: num(r.market_cap_rank),
@@ -169,7 +176,9 @@ export async function fetchMarkets(ids, { force = false } = {}) {
     const url =
       `${BASE}/coins/markets?vs_currency=usd` +
       `&ids=${encodeURIComponent(missing.join(","))}` +
-      `&order=market_cap_desc&per_page=250&page=1&sparkline=false&price_change_percentage=24h`;
+      // All three windows arrive in this one call, so switching between 24H,
+      // 1W and 1M in the UI costs no extra requests.
+      `&order=market_cap_desc&per_page=250&page=1&sparkline=false&price_change_percentage=24h,7d,30d`;
     const rows = await getJson(url);
     if (!Array.isArray(rows)) throw new Error("Unexpected market data from CoinGecko.");
     const at = Date.now();
