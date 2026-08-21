@@ -2,6 +2,7 @@
 //  Redesign Studio — dashboard logic
 // ============================================================
 import { supabase, currentUsername, SUPABASE_URL, SUPABASE_ANON } from './pmh-supabase.js';
+import { initTrades } from './pmh-trades.js';
 
 // ── Prospecting lists ───────────────────────────────────────
 const COUNTRIES = [
@@ -105,9 +106,27 @@ function timeAgo(iso) {
   buildStatusSelect();
   buildProspectControls();
   wireUI();
-  await loadAll();
+  wireViewSwitcher();
+  await Promise.all([loadAll(), initTrades(me)]);
   subscribeRealtime();
 })();
+
+// ── View switcher (Outreach / Crypto trades) ────────────────
+function wireViewSwitcher() {
+  const btns = document.querySelectorAll('.db-view-btn');
+  function show(view) {
+    $('view-outreach').hidden = view !== 'outreach';
+    $('view-trades').hidden = view !== 'trades';
+    btns.forEach((b) => b.classList.toggle('active', b.dataset.view === view));
+    try { localStorage.setItem('pmh-view', view); } catch (_) {}
+    if (view === 'trades') history.replaceState(null, '', '#trades');
+    else history.replaceState(null, '', location.pathname);
+  }
+  btns.forEach((b) => b.addEventListener('click', () => show(b.dataset.view)));
+  const initial = location.hash === '#trades' ? 'trades'
+    : (localStorage.getItem('pmh-view') === 'trades' ? 'trades' : 'outreach');
+  show(initial);
+}
 
 function buildStatusSelect() {
   $('f_status').innerHTML = STATUS_ORDER

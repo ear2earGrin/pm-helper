@@ -143,6 +143,45 @@
     .modal-foot { display: flex; gap: 10px; justify-content: flex-end; margin-top: var(--space-lg); }
 
     .db-loading { text-align: center; color: var(--text-muted); padding: var(--space-2xl); font-family: var(--font-mono); font-size: 13px; }
+
+    /* ── View switcher (Outreach / Trades) ───────────────── */
+    .db-views {
+      display: inline-flex; gap: 4px; padding: 4px;
+      background: var(--bg-2); border: 1px solid var(--border-subtle);
+      border-radius: 999px; margin-bottom: var(--space-lg);
+    }
+    .db-view-btn {
+      background: none; border: none; color: var(--text-secondary);
+      font-size: 13px; font-weight: 600; padding: 7px 16px; border-radius: 999px;
+      transition: all var(--duration) var(--ease); cursor: pointer;
+    }
+    .db-view-btn.active { background: var(--bg-3); color: var(--text-primary); }
+    .db-view-btn:hover { color: var(--text-primary); }
+
+    /* ── Crypto trades panel ─────────────────────────────── */
+    .t-section-title { font-size: 12px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); margin: var(--space-lg) 0 10px; }
+    .t-wrap { overflow-x: auto; border: 1px solid var(--border-subtle); border-radius: var(--r-lg); background: var(--bg-2); }
+    .t-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 900px; }
+    .t-table th {
+      text-align: left; padding: 10px 12px; font-size: 11px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted);
+      border-bottom: 1px solid var(--border-subtle); white-space: nowrap;
+    }
+    .t-table td { padding: 10px 12px; border-bottom: 1px solid var(--border-subtle); white-space: nowrap; font-family: var(--font-mono); font-size: 12.5px; }
+    .t-table tr:last-child td { border-bottom: none; }
+    .t-coin { font-weight: 700; font-family: var(--font-body, inherit); font-size: 13.5px; }
+    .t-owner { font-size: 11px; color: var(--text-muted); }
+    .t-dir { font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 999px; letter-spacing: 0.05em; }
+    .t-dir--long  { background: rgba(15,217,160,0.12); color: #6EE7B7; }
+    .t-dir--short { background: rgba(248,113,113,0.14); color: #FCA5A5; }
+    .t-pos { color: #6EE7B7; } .t-neg { color: #FCA5A5; }
+    .t-pos-c { color: #6EE7B7; opacity: 0.9; } .t-neg-c { color: #FCA5A5; opacity: 0.9; }
+    .t-warn-c { color: #FCD34D; opacity: 0.9; }
+    .t-muted { color: var(--text-muted); }
+    .t-small { font-size: 10.5px; }
+    .t-note { cursor: help; }
+    .t-actions { display: flex; gap: 6px; justify-content: flex-end; }
+    .c-preview { min-height: 20px; font-size: 14px; color: var(--text-secondary); margin-top: 4px; }
   </style>
 </head>
 <body>
@@ -159,6 +198,12 @@
   </header>
 
   <main class="db-main">
+    <div class="db-views" role="tablist">
+      <button class="db-view-btn active" data-view="outreach" role="tab">◈ Outreach</button>
+      <button class="db-view-btn" data-view="trades" role="tab">₿ Crypto trades</button>
+    </div>
+
+    <div id="view-outreach">
     <div class="db-head">
       <div>
         <h1 class="db-title">Outreach <em>dashboard</em></h1>
@@ -187,7 +232,114 @@
     <div class="db-tabs" id="tabs"></div>
 
     <div id="board"><div class="db-loading">Loading board…</div></div>
+    </div><!-- /view-outreach -->
+
+    <!-- ── Crypto trades view ─────────────────────────────── -->
+    <div id="view-trades" hidden>
+      <div class="db-head">
+        <div>
+          <h1 class="db-title">Crypto <em>trades</em></h1>
+          <p class="db-subtitle">Shared trade journal — log entries, targets and results. Both of you see every trade live.</p>
+        </div>
+        <button class="btn btn-primary" id="t_newBtn">+ Log trade</button>
+      </div>
+
+      <div class="db-stats" id="tr_stats"></div>
+      <div class="db-tabs" id="tr_tabs"></div>
+
+      <div class="t-section-title">Open positions</div>
+      <div id="tr_open"><div class="db-loading">Loading…</div></div>
+
+      <div class="t-section-title">Closed</div>
+      <div id="tr_closed"></div>
+    </div><!-- /view-trades -->
   </main>
+
+  <!-- New / edit trade modal -->
+  <div class="modal-back" id="tradeBack">
+    <form class="modal" id="tradeForm">
+      <h2 id="tradeTitle">New trade</h2>
+      <input type="hidden" id="t_id" />
+      <div class="form-row two">
+        <div>
+          <label for="t_coin">Coin *</label>
+          <input id="t_coin" placeholder="BTC" autocapitalize="characters" required />
+        </div>
+        <div>
+          <label for="t_dir">Direction</label>
+          <select id="t_dir">
+            <option value="LONG">LONG</option>
+            <option value="SHORT">SHORT</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row two">
+        <div>
+          <label for="t_date">Date opened</label>
+          <input id="t_date" type="date" />
+        </div>
+        <div>
+          <label for="t_entry">Entry price *</label>
+          <input id="t_entry" type="number" step="any" inputmode="decimal" placeholder="64200" required />
+        </div>
+      </div>
+      <div class="form-row two">
+        <div>
+          <label for="t_qty">Open quantity</label>
+          <input id="t_qty" type="number" step="any" inputmode="decimal" placeholder="0.05" />
+        </div>
+        <div>
+          <label for="t_lev">Leverage</label>
+          <input id="t_lev" type="number" step="any" inputmode="decimal" placeholder="5" />
+        </div>
+      </div>
+      <div class="form-row two">
+        <div>
+          <label for="t_tp">Take profit</label>
+          <input id="t_tp" type="number" step="any" inputmode="decimal" placeholder="70000" />
+        </div>
+        <div>
+          <label for="t_sl">Stop loss</label>
+          <input id="t_sl" type="number" step="any" inputmode="decimal" placeholder="61000" />
+        </div>
+      </div>
+      <div class="form-row">
+        <label for="t_liq">Estimated liquidation <span class="muted" style="text-transform:none">(auto-estimated from entry × leverage — edit to override)</span></label>
+        <input id="t_liq" type="number" step="any" inputmode="decimal" placeholder="auto" />
+      </div>
+      <div class="form-row">
+        <label for="t_notes">Notes</label>
+        <textarea id="t_notes" placeholder="Setup, reason, anything worth remembering…"></textarea>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn" id="t_cancel">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="t_save">Save</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Close-position modal -->
+  <div class="modal-back" id="closeBack">
+    <form class="modal" id="closeForm">
+      <h2>Close position</h2>
+      <p class="send-meta" id="c_meta"></p>
+      <div class="form-row two">
+        <div>
+          <label for="c_exit">Exit price *</label>
+          <input id="c_exit" type="number" step="any" inputmode="decimal" required />
+        </div>
+        <div>
+          <label for="c_date">Date closed</label>
+          <input id="c_date" type="date" />
+        </div>
+      </div>
+      <div class="c-preview" id="c_preview"></div>
+      <div class="modal-foot">
+        <button type="button" class="btn" id="c_cancel">Cancel</button>
+        <button type="submit" class="btn btn-primary">Close trade</button>
+      </div>
+    </form>
+  </div>
 
   <!-- Add / edit modal -->
   <div class="modal-back" id="modalBack">
@@ -358,6 +510,6 @@
     .send-meta a { color: var(--accent-text); font-weight: 500; }
   </style>
 
-  <script type="module" src="js/pmh-dashboard.js?v=redesign-sync-20260811"></script>
+  <script type="module" src="js/pmh-dashboard.js?v=trades-20260821"></script>
 </body>
 </html>
