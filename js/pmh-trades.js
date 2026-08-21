@@ -13,7 +13,7 @@
 // ============================================================
 import { supabase, SUPABASE_URL, SUPABASE_ANON } from './pmh-supabase.js';
 
-const BUILD = 'v6-fees-20260821';
+const BUILD = 'v7-exchanges-20260821';
 
 const $ = (id) => document.getElementById(id);
 function esc(s) {
@@ -44,6 +44,34 @@ export function estimateLiq(entry, leverage, direction) {
 // Kraken charges on entry AND exit, at possibly different rates (a limit order
 // in is maker, a market order out is taker). Both fall back to the legacy
 // single rate. Live base tier (futures): maker 0.02%, taker 0.05%.
+// Exchanges. Colours are brand-ish approximations rendered as self-contained
+// monogram chips — no external logo requests, nothing to break offline. Swap a
+// colour here (or drop in an <img>) if you want a closer match.
+// `funding: true` = we can auto-fetch funding for it (Kraken proxy today).
+const EXCHANGES = [
+  { id: 'Kraken',      short: 'K',  color: '#7B5CFF', funding: true },
+  { id: 'Binance',     short: 'B',  color: '#F0B90B' },
+  { id: 'Bybit',       short: 'BY', color: '#F7A600' },
+  { id: 'Gate.io',     short: 'G',  color: '#E6486B' },
+  { id: 'MEXC',        short: 'M',  color: '#1F8FFF' },
+  { id: 'Hyperliquid', short: 'HL', color: '#5BE9CE' },
+];
+const DEFAULT_EXCHANGE = 'Kraken';
+const LS_EXCHANGE = 'pmh-last-exchange';
+
+function exchangeOf(t) { return (t && t.exchange) || DEFAULT_EXCHANGE; }
+function exchangeMeta(name) {
+  return EXCHANGES.find((e) => e.id === name)
+    || { id: name || 'Other', short: String(name || '?').slice(0, 2).toUpperCase(), color: '#8B93A8' };
+}
+function exchangeChip(name, withName = false) {
+  const m = exchangeMeta(name);
+  return `<span class="x-chip" style="--xc:${m.color}" title="${esc(m.id)}">`
+    + `<span class="x-mark">${esc(m.short)}</span>`
+    + (withName ? `<span class="x-name">${esc(m.id)}</span>` : '')
+    + '</span>';
+}
+
 function feeIn(t) { const f = num(t.fee_entry_pct) ?? num(t.fee_pct); return f && f > 0 ? f / 100 : 0; }
 function feeOut(t) { const f = num(t.fee_exit_pct) ?? num(t.fee_pct); return f && f > 0 ? f / 100 : 0; }
 function dirSign(t) { return t.direction === 'SHORT' ? -1 : 1; }
@@ -283,10 +311,13 @@ function detailRow(t) {
 
   const fund = fundingOf(t);
   const busy = fundingBusy.has(t.id);
+  const canAutoFund = !!exchangeMeta(exchangeOf(t)).funding;
   m.push(['Funding', `${t.funding_paid == null
       ? '<span class="t-muted">not estimated</span>'
       : `<span class="${tone(fund)}">${signed(fund)}</span>`}
-     <button class="btn btn-sm t-fund-btn" data-tact="funding" data-id="${t.id}"${busy ? ' disabled' : ''}>${busy ? '…' : '↻ Kraken'}</button>
+     ${canAutoFund
+       ? `<button class="btn btn-sm t-fund-btn" data-tact="funding" data-id="${t.id}"${busy ? ' disabled' : ''}>${busy ? '…' : '↻ Kraken'}</button>`
+       : `<small class="t-muted">auto-fetch is Kraken-only for now — type it in via Edit</small>`}
      <div class="t-fund-note" id="fundnote-${t.id}"></div>`]);
   if (w.fees || w.feeToClose) {
     m.push(['Est. fees paid', `${fmt(w.fees)} <small class="t-muted">in ${fmt(w.feesIn)} · out ${fmt(w.feesOut)}</small>`]);
@@ -314,7 +345,7 @@ function detailRow(t) {
   </td></tr>`;
 }
 
-function tradeRow(t) {
+function tradeRow(t, showExchange) {
   const w = walk(t, { includeClose: false });
   const p = tradePnl(t);
   const isOpen = t.status === 'OPEN';
@@ -343,7 +374,7 @@ function tradeRow(t) {
 
   return `<tr class="t-expandable" data-trow="${t.id}">
     <td>${esc(t.opened_at || '')}${t.closed_at ? `<div class="t-muted t-small">→ ${esc(t.closed_at)}</div>` : ''}</td>
-    <td class="t-coin"><span class="t-caret">${expanded.has(t.id) ? '▾' : '▸'}</span> ${esc((t.coin || '').toUpperCase())}</td>
+    <td class="t-coin"><span class="t-caret">${expanded.has(t.id) ? '▾' : '▸'}</span> ${showExchange ? exchangeChip(exchangeOf(t)) + ' ' : ''}${esc((t.coin || '').toUpperCase())}</td>
     <td>${dirBadge(t.direction)}</td>
     <td>${fmtPrice(w.avg || t.entry_price)}${hasAdds ? ' <small class="t-muted">avg</small>' : ''}</td>
     <td class="t-pos-c">${numPos(t.take_profit) ? fmtPrice(t.take_profit) : '<span class="t-muted">—</span>'}</td>
@@ -366,9 +397,38 @@ function renderTables() {
   const closed = trades.filter((t) => t.status === 'CLOSED');
   const table = (rows) =>
     `<div class="t-wrap"><table class="t-table"><thead>${HEAD}</thead><tbody>${rows.join('')}</tbody></table></div>`;
-  $('tr_open').innerHTML = open.length ? table(open.map(tradeRow))
-    : '<div class="db-empty" style="padding:24px"><p>No open positions.</p></div>';
-  $('tr_closed').innerHTML = closed.length ? table(closed.map(tradeRow))
+
+  // Open positions are grouped per exchange, each with its own header.
+  if (!open.length) {
+    $('tr_open').innerHTML = '<div class="db-empty" style="padding:24px"><p>No open positions.</p></div>';
+  } else {
+    const groups = new Map();
+    open.forEach((t) => {
+      const k = exchangeOf(t);
+      if (!groups.has(k)) groups.set(k, []);
+      groups.get(k).push(t);
+    });
+    const order = [...EXCHANGES.map((e) => e.id).filter((id) => groups.has(id)),
+                   ...[...groups.keys()].filter((k) => !EXCHANGES.some((e) => e.id === k))];
+    $('tr_open').innerHTML = order.map((key) => {
+      const list = groups.get(key);
+      const banked = list.reduce((sum, t) => {
+        const w = walk(t, { includeClose: false });
+        return sum + (w.exitQty > 0 || fundingOf(t) ? w.net : 0);
+      }, 0);
+      return `<section class="x-group">
+        <header class="x-group-head">
+          ${exchangeChip(key, true)}
+          <span class="x-count">${list.length} open</span>
+          ${banked ? `<span class="x-banked ${tone(banked)}">${signed(banked)} banked</span>` : ''}
+        </header>
+        ${table(list.map((t) => tradeRow(t, false)))}
+      </section>`;
+    }).join('');
+  }
+
+  $('tr_closed').innerHTML = closed.length
+    ? table(closed.map((t) => tradeRow(t, true)))
     : '<div class="db-empty" style="padding:24px"><p>No closed trades yet.</p></div>';
 
   document.querySelectorAll('[data-tact]').forEach((el) => {
@@ -431,6 +491,8 @@ function openTradeModal(t) {
   liqTouched = editing && t.liq_est != null;
   $('tradeTitle').textContent = editing ? 'Edit trade' : 'New trade';
   $('t_id').value = editing ? t.id : '';
+  $('t_exchange').value = editing ? exchangeOf(t)
+    : (localStorage.getItem(LS_EXCHANGE) || DEFAULT_EXCHANGE);
   $('t_coin').value = editing ? t.coin || '' : '';
   $('t_dir').value = editing ? t.direction : 'LONG';
   $('t_date').value = editing ? t.opened_at || today() : today();
@@ -455,6 +517,7 @@ async function saveTrade(e) {
   e.preventDefault();
   const id = $('t_id').value;
   const payload = {
+    exchange: $('t_exchange').value || DEFAULT_EXCHANGE,
     coin: $('t_coin').value.trim().toUpperCase(),
     direction: $('t_dir').value,
     opened_at: $('t_date').value || today(),
@@ -477,6 +540,7 @@ async function saveTrade(e) {
     : await supabase.from('pmh_trades').insert({ ...payload, owner: me, status: 'OPEN' });
   $('t_save').disabled = false;
   if (res.error) { alert('Could not save: ' + res.error.message); return; }
+  try { localStorage.setItem(LS_EXCHANGE, payload.exchange); } catch (_) {}
   closeTradeModal();
   await loadTrades();
 }
@@ -616,6 +680,7 @@ async function deleteTrade(t) {
 // ── Init ────────────────────────────────────────────────────
 export async function initTrades(username) {
   me = username;
+  $('t_exchange').innerHTML = EXCHANGES.map((e) => `<option value="${esc(e.id)}">${esc(e.id)}</option>`).join('');
   $('t_newBtn').addEventListener('click', () => openTradeModal(null));
   $('t_cancel').addEventListener('click', closeTradeModal);
   $('tradeForm').addEventListener('submit', saveTrade);

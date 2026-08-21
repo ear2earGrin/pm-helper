@@ -192,6 +192,22 @@
     .t-metric-l { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); font-family: var(--font-body, inherit); }
     .t-metric-v { font-size: 13px; margin-top: 3px; }
     .t-fills { margin-top: 12px; border-top: 1px solid var(--border-subtle); padding-top: 10px; }
+    /* Exchange chips + per-exchange groups */
+    .x-chip { display: inline-flex; align-items: center; gap: 7px; vertical-align: middle; }
+    .x-mark {
+      display: inline-grid; place-items: center; width: 22px; height: 22px;
+      border-radius: 7px; background: color-mix(in srgb, var(--xc) 22%, transparent);
+      color: var(--xc); border: 1px solid color-mix(in srgb, var(--xc) 45%, transparent);
+      font-size: 10px; font-weight: 800; letter-spacing: 0.02em; font-family: var(--font-body, inherit);
+    }
+    .x-name { font-size: 14px; font-weight: 600; color: var(--text-primary); font-family: var(--font-body, inherit); }
+    .x-group { margin-bottom: var(--space-lg); }
+    .x-group-head {
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+      padding: 0 2px 8px; border-bottom: 1px solid var(--border-subtle); margin-bottom: 10px;
+    }
+    .x-count { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+    .x-banked { font-size: 12px; font-family: var(--font-mono); margin-left: auto; }
     .t-hint { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
     .t-fund-btn { padding: 2px 8px; font-size: 11px; margin-left: 6px; vertical-align: middle; }
     .t-fund-note { font-size: 11px; margin-top: 4px; line-height: 1.45; }
@@ -273,6 +289,10 @@
     <form class="modal" id="tradeForm">
       <h2 id="tradeTitle">New trade</h2>
       <input type="hidden" id="t_id" />
+      <div class="form-row">
+        <label for="t_exchange">Exchange</label>
+        <select id="t_exchange"></select>
+      </div>
       <div class="form-row two">
         <div>
           <label for="t_coin">Coin *</label>
@@ -578,6 +598,6 @@
     .send-meta a { color: var(--accent-text); font-weight: 500; }
   </style>
 
-  <script type="module" src="js/pmh-dashboard.js?v=v6-fees-20260821"></script>
+  <script type="module" src="js/pmh-dashboard.js?v=v7-exchanges-20260821"></script>
 </body>
 </html>
