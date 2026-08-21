@@ -208,6 +208,12 @@
     }
     .x-count { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
     .x-banked { font-size: 12px; font-family: var(--font-mono); margin-left: auto; }
+    .t-section-head { display: flex; align-items: center; gap: 12px; margin: var(--space-lg) 0 10px; flex-wrap: wrap; }
+    .t-px-note { font-size: 11px; color: var(--text-muted); font-family: var(--font-mono); }
+    .t-section-head .btn { margin-left: auto; padding: 4px 10px; font-size: 11px; }
+    .t-live { color: var(--text-primary); }
+    .x-unreal { font-size: 12px; font-family: var(--font-mono); margin-left: auto; }
+    .x-unreal + .x-banked { margin-left: 0; }
     .t-hint { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
     .t-fund-btn { padding: 2px 8px; font-size: 11px; margin-left: 6px; vertical-align: middle; }
     .t-fund-note { font-size: 11px; margin-top: 4px; line-height: 1.45; }
@@ -276,7 +282,11 @@
 
       <div class="db-stats" id="tr_stats"></div>
 
-      <div class="t-section-title">Open positions</div>
+      <div class="t-section-head">
+        <span class="t-section-title" style="margin:0">Open positions</span>
+        <span class="t-px-note" id="tr_pxnote"></span>
+        <button class="btn btn-sm" id="tr_pxRefresh" title="Refresh live prices">↻ Prices</button>
+      </div>
       <div id="tr_open"><div class="db-loading">Loading…</div></div>
 
       <div class="t-section-title">Closed</div>
@@ -598,6 +608,6 @@
     .send-meta a { color: var(--accent-text); font-weight: 500; }
   </style>
 
-  <script type="module" src="js/pmh-dashboard.js?v=v7-exchanges-20260821"></script>
+  <script type="module" src="js/pmh-dashboard.js?v=v8-live-20260821"></script>
 </body>
 </html>

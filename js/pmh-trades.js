@@ -13,7 +13,7 @@
 // ============================================================
 import { supabase, SUPABASE_URL, SUPABASE_ANON } from './pmh-supabase.js';
 
-const BUILD = 'v7-exchanges-20260821';
+const BUILD = 'v8-live-20260821';
 
 const $ = (id) => document.getElementById(id);
 function esc(s) {
@@ -231,6 +231,61 @@ async function estimateFunding(t) {
   return { effect, hours, from, to, covered: Math.min(1, hours / expected) };
 }
 
+// ── Live prices ─────────────────────────────────────────────
+// Served by the `prices` Edge Function (Binance, Kraken fallback) so we never
+// depend on an exchange sending CORS headers and the rate limit is ours.
+const PRICE_REFRESH_MS = 60_000;
+let prices = {};
+let pricesAt = null;
+let pricesErr = null;
+
+async function loadPrices() {
+  const coins = [...new Set(trades.filter((t) => t.status === 'OPEN')
+    .map((t) => String(t.coin || '').toUpperCase()).filter(Boolean))];
+  if (!coins.length) { prices = {}; pricesAt = null; pricesErr = null; return; }
+  try {
+    const { data } = await supabase.auth.getSession();
+    const token = data?.session?.access_token;
+    if (!token) throw new Error('not signed in');
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/prices?symbols=${encodeURIComponent(coins.join(','))}`, {
+      headers: { Authorization: `Bearer ${token}`, apikey: SUPABASE_ANON },
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(j.error || `HTTP ${res.status}`);
+    prices = j.prices || {};
+    pricesAt = j.at ? new Date(j.at) : new Date();
+    pricesErr = (j.missing || []).length ? `no price for ${j.missing.join(', ')}` : null;
+  } catch (e) {
+    pricesErr = e.message || String(e);
+  }
+}
+
+function priceOf(t) {
+  const p = prices[String(t.coin || '').toUpperCase()];
+  return Number.isFinite(p) ? p : null;
+}
+// Unrealized on the still-open quantity, net of the fee it will cost to close.
+function unrealized(t) {
+  const p = priceOf(t);
+  if (p === null || t.status !== 'OPEN') return null;
+  const total = whatIf(t, p);
+  if (total === null) return null;
+  return total - walk(t, { includeClose: false }).net;
+}
+function totalIfClosedNow(t) {
+  const p = priceOf(t);
+  return p === null ? null : whatIf(t, p);
+}
+
+function renderPriceNote() {
+  const el = $('tr_pxnote');
+  if (!el) return;
+  if (pricesErr && !pricesAt) { el.innerHTML = `<span class="t-neg">prices unavailable (${esc(pricesErr)})</span>`; return; }
+  if (!pricesAt) { el.textContent = ''; return; }
+  el.innerHTML = `prices ${pricesAt.toLocaleTimeString()}`
+    + (pricesErr ? ` · <span class="t-neg">${esc(pricesErr)}</span>` : '');
+}
+
 // ── State ───────────────────────────────────────────────────
 let trades = [];
 let me = null;
@@ -250,6 +305,8 @@ async function loadTrades() {
   if (error) { console.error(error); return; }
   trades = data || [];
   render();
+  await loadPrices();
+  render();
 }
 
 // ── Rendering ───────────────────────────────────────────────
@@ -265,12 +322,17 @@ function renderStats() {
   });
   closed.forEach((t) => { const p = tradePnl(t); if (p && p.pnl > 0) wins++; });
   const winRate = closed.length ? `${Math.round((wins / closed.length) * 100)}%` : '—';
+  let unreal = 0, haveUnreal = false;
+  open.forEach((t) => { const u = unrealized(t); if (u !== null) { unreal += u; haveUnreal = true; } });
   const costs = feesTotal - fundingTotal;   // fees + funding paid, as a positive cost
   $('tr_stats').innerHTML = [
     { n: open.length, l: 'Open positions', c: 'var(--text-primary)' },
     { n: closed.length, l: 'Closed trades', c: 'var(--text-primary)' },
     { n: signed(realized), l: 'Realized PnL (USDT)', c: realized > 0 ? 'var(--accent)' : realized < 0 ? 'var(--danger)' : 'var(--text-primary)',
       t: 'Closed trades + profit already taken on open positions, after estimated fees and funding' },
+    { n: haveUnreal ? signed(unreal) : '—', l: 'Open PnL (live)',
+      c: !haveUnreal ? 'var(--text-muted)' : unreal > 0 ? 'var(--accent)' : unreal < 0 ? 'var(--danger)' : 'var(--text-primary)',
+      t: 'Unrealized on open positions at the latest price, net of the fee to close' },
     { n: winRate, l: 'Win rate', c: 'var(--text-primary)' },
     { n: fmt(costs), l: 'Fees + funding', c: 'var(--text-muted)', t: 'Estimated trading fees plus funding paid (a negative total means funding earned you money)' },
   ].map((s) =>
@@ -282,9 +344,10 @@ function dirBadge(d) {
   return `<span class="t-dir ${d === 'SHORT' ? 't-dir--short' : 't-dir--long'}">${d}</span>`;
 }
 
-const COLS = 12;
+const COLS_OPEN = 13;
+const COLS_CLOSED = 12;
 
-function detailRow(t) {
+function detailRow(t, cols) {
   const w = walk(t, { includeClose: false });
   const fills = partialFills(t);
   const isOpen = t.status === 'OPEN';
@@ -309,6 +372,18 @@ function detailRow(t) {
       : `<span class="${tone(atTP)}">${signed(atTP)}</span>`]);
   }
 
+  const live = priceOf(t);
+  if (isOpen && live !== null) {
+    const u = unrealized(t), tot = totalIfClosedNow(t);
+    m.push(['Price now', fmtPrice(live)]);
+    m.push(['Unrealized', `<span class="${tone(u)}">${signed(u)}</span> <small class="t-muted">on ${fmt(w.qty, 6)}</small>`]);
+    m.push(['Total if closed now', `<span class="${tone(tot)}">${signed(tot)}</span>`]);
+    const liq = numPos(t.liq_est);
+    if (liq) {
+      const away = ((live - liq) / live) * 100 * dirSign(t);
+      m.push(['Distance to liq', `<span class="${away < 10 ? 't-neg' : ''}">${fmt(Math.abs(away), 1)}%</span>`]);
+    }
+  }
   const fund = fundingOf(t);
   const busy = fundingBusy.has(t.id);
   const canAutoFund = !!exchangeMeta(exchangeOf(t)).funding;
@@ -337,7 +412,7 @@ function detailRow(t) {
     </div>`;
   }).join('');
 
-  return `<tr class="t-detail"><td colspan="${COLS}">
+  return `<tr class="t-detail"><td colspan="${cols}">
     <div class="t-detail-grid">
       ${m.map(([l, v]) => `<div class="t-metric"><div class="t-metric-l">${l}</div><div class="t-metric-v">${v}</div></div>`).join('')}
     </div>
@@ -351,13 +426,11 @@ function tradeRow(t, showExchange) {
   const isOpen = t.status === 'OPEN';
   const fills = partialFills(t);
   const hasAdds = fills.some((f) => f.kind === 'add');
+  const live = priceOf(t);
 
-  let pnlCell = '<span class="t-muted">—</span>';
-  if (!isOpen && p) {
-    pnlCell = `<span class="${tone(p.pnl)}">${signed(p.pnl)}${p.pct !== null ? ` <small>(${signed(p.pct, 1)}%)</small>` : ''}</span>`;
-  } else if (isOpen && (w.exitQty > 0 || fundingOf(t))) {
-    pnlCell = `<span class="${tone(w.net)}">${signed(w.net)} <small class="t-muted">so far</small></span>`;
-  }
+  const banked = (w.exitQty > 0 || fundingOf(t))
+    ? `<span class="${tone(w.net)}">${signed(w.net)}</span>`
+    : '<span class="t-muted">—</span>';
 
   const qtyCell = isOpen && fills.length
     ? `${fmt(w.qty, 6)} <small class="t-muted">/ ${fmt(w.addQty, 6)}</small>`
@@ -372,31 +445,51 @@ function tradeRow(t, showExchange) {
     : `<button class="btn btn-sm" data-tact="edit" data-id="${t.id}">Edit</button>
        <button class="btn btn-sm btn-ghost-danger" data-tact="delete" data-id="${t.id}">✕</button>`;
 
-  return `<tr class="t-expandable" data-trow="${t.id}">
-    <td>${esc(t.opened_at || '')}${t.closed_at ? `<div class="t-muted t-small">→ ${esc(t.closed_at)}</div>` : ''}</td>
+  const head = `<td>${esc(t.opened_at || '')}${t.closed_at ? `<div class="t-muted t-small">→ ${esc(t.closed_at)}</div>` : ''}</td>
     <td class="t-coin"><span class="t-caret">${expanded.has(t.id) ? '▾' : '▸'}</span> ${showExchange ? exchangeChip(exchangeOf(t)) + ' ' : ''}${esc((t.coin || '').toUpperCase())}</td>
     <td>${dirBadge(t.direction)}</td>
-    <td>${fmtPrice(w.avg || t.entry_price)}${hasAdds ? ' <small class="t-muted">avg</small>' : ''}</td>
-    <td class="t-pos-c">${numPos(t.take_profit) ? fmtPrice(t.take_profit) : '<span class="t-muted">—</span>'}</td>
+    <td>${fmtPrice(w.avg || t.entry_price)}${hasAdds ? ' <small class="t-muted">avg</small>' : ''}</td>`;
+  const levels = `<td class="t-pos-c">${numPos(t.take_profit) ? fmtPrice(t.take_profit) : '<span class="t-muted">—</span>'}</td>
     <td class="t-neg-c">${numPos(t.stop_loss) ? fmtPrice(t.stop_loss) : '<span class="t-muted">—</span>'}</td>
     <td>${qtyCell}</td>
     <td>${numPos(t.leverage) ? fmt(t.leverage, 1) + '×' : '—'}</td>
-    <td class="t-warn-c" title="Estimated liquidation price">${numPos(t.liq_est) ? fmtPrice(t.liq_est) : '<span class="t-muted">—</span>'}</td>
-    <td>${t.status === 'CLOSED' ? fmtPrice(t.exit_price) : '<span class="t-muted">open</span>'}</td>
-    <td>${pnlCell}</td>
+    <td class="t-warn-c" title="Estimated liquidation price">${numPos(t.liq_est) ? fmtPrice(t.liq_est) : '<span class="t-muted">—</span>'}</td>`;
+
+  let rest;
+  if (isOpen) {
+    const u = unrealized(t);
+    const nowCell = live === null
+      ? '<span class="t-muted">…</span>'
+      : `<span class="t-live">${fmtPrice(live)}</span>`;
+    rest = `<td>${nowCell}</td>${levels}
+      <td>${u === null ? '<span class="t-muted">—</span>' : `<span class="${tone(u)}">${signed(u)}</span>`}</td>
+      <td>${banked}</td>`;
+    // Now sits right after Entry, so re-order: head + now + levels handled above
+    return `<tr class="t-expandable" data-trow="${t.id}">${head}${rest}
+      <td><div class="t-actions">${actions}</div></td>
+    </tr>${expanded.has(t.id) ? detailRow(t, COLS_OPEN) : ''}`;
+  }
+  rest = `${levels}
+    <td>${fmtPrice(t.exit_price)}</td>
+    <td>${p ? `<span class="${tone(p.pnl)}">${signed(p.pnl)}${p.pct !== null ? ` <small>(${signed(p.pct, 1)}%)</small>` : ''}</span>` : banked}</td>`;
+  return `<tr class="t-expandable" data-trow="${t.id}">${head}${rest}
     <td><div class="t-actions">${actions}</div></td>
-  </tr>${expanded.has(t.id) ? detailRow(t) : ''}`;
+  </tr>${expanded.has(t.id) ? detailRow(t, COLS_CLOSED) : ''}`;
 }
 
-const HEAD = `<tr>
+const HEAD_OPEN = `<tr>
+  <th>Date</th><th>Coin</th><th>Dir</th><th>Entry</th><th>Now</th><th>TP</th><th>SL</th>
+  <th>Qty</th><th>Lev</th><th>Liq est.</th><th>Unreal.</th><th>Banked</th><th></th></tr>`;
+const HEAD_CLOSED = `<tr>
   <th>Date</th><th>Coin</th><th>Dir</th><th>Entry</th><th>TP</th><th>SL</th>
   <th>Qty</th><th>Lev</th><th>Liq est.</th><th>Exit</th><th>PnL</th><th></th></tr>`;
 
 function renderTables() {
   const open = trades.filter((t) => t.status === 'OPEN');
   const closed = trades.filter((t) => t.status === 'CLOSED');
-  const table = (rows) =>
-    `<div class="t-wrap"><table class="t-table"><thead>${HEAD}</thead><tbody>${rows.join('')}</tbody></table></div>`;
+  const table = (rows, head) =>
+    `<div class="t-wrap"><table class="t-table"><thead>${head}</thead><tbody>${rows.join('')}</tbody></table></div>`;
+  renderPriceNote();
 
   // Open positions are grouped per exchange, each with its own header.
   if (!open.length) {
@@ -416,19 +509,22 @@ function renderTables() {
         const w = walk(t, { includeClose: false });
         return sum + (w.exitQty > 0 || fundingOf(t) ? w.net : 0);
       }, 0);
+      let groupUnreal = 0, groupHasUnreal = false;
+      list.forEach((t) => { const u = unrealized(t); if (u !== null) { groupUnreal += u; groupHasUnreal = true; } });
       return `<section class="x-group">
         <header class="x-group-head">
           ${exchangeChip(key, true)}
           <span class="x-count">${list.length} open</span>
+          ${groupHasUnreal ? `<span class="x-unreal ${tone(groupUnreal)}">${signed(groupUnreal)} open</span>` : ''}
           ${banked ? `<span class="x-banked ${tone(banked)}">${signed(banked)} banked</span>` : ''}
         </header>
-        ${table(list.map((t) => tradeRow(t, false)))}
+        ${table(list.map((t) => tradeRow(t, false)), HEAD_OPEN)}
       </section>`;
     }).join('');
   }
 
   $('tr_closed').innerHTML = closed.length
-    ? table(closed.map((t) => tradeRow(t, true)))
+    ? table(closed.map((t) => tradeRow(t, true)), HEAD_CLOSED)
     : '<div class="db-empty" style="padding:24px"><p>No closed trades yet.</p></div>';
 
   document.querySelectorAll('[data-tact]').forEach((el) => {
@@ -705,7 +801,21 @@ export async function initTrades(username) {
   ['p_price', 'p_qty'].forEach((id) => $(id).addEventListener('input', previewFill));
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeTradeModal(); closeCloseModal(); closeFillModal(); } });
 
+  $('tr_pxRefresh').addEventListener('click', async () => {
+    $('tr_pxRefresh').disabled = true;
+    await loadPrices();
+    render();
+    $('tr_pxRefresh').disabled = false;
+  });
+
   await loadTrades();
+  setInterval(async () => {
+    if (document.hidden) return;
+    if ($('view-trades') && $('view-trades').hidden) return;
+    await loadPrices();
+    render();
+  }, PRICE_REFRESH_MS);
+
   try {
     supabase.channel('pmh-trades')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'pmh_trades' }, () => loadTrades())
