@@ -11,7 +11,7 @@
 //  date order gives the running average entry, the realized PnL and
 //  the quantity timeline that funding is charged against.
 // ============================================================
-import { supabase } from './pmh-supabase.js';
+import { supabase, SUPABASE_URL, SUPABASE_ANON } from './pmh-supabase.js';
 
 const $ = (id) => document.getElementById(id);
 function esc(s) {
@@ -140,16 +140,29 @@ function krakenSymbol(coin) {
 }
 
 const ratesCache = new Map();
-async function fundingRates(symbol) {
-  if (ratesCache.has(symbol)) return ratesCache.get(symbol);
-  const res = await fetch(`https://futures.kraken.com/derivatives/api/v4/historicalfundingrates?symbol=${encodeURIComponent(symbol)}`);
-  if (!res.ok) throw new Error(`Kraken HTTP ${res.status}`);
-  const j = await res.json();
+// Kraken sends no CORS headers, so this goes through our `funding` Edge
+// Function (a thin server-side proxy for the same public endpoint).
+async function fundingRates(symbol, since) {
+  const key = `${symbol}|${since || 0}`;
+  if (ratesCache.has(key)) return ratesCache.get(key);
+  const { data } = await supabase.auth.getSession();
+  const token = data?.session?.access_token;
+  if (!token) throw new Error('not signed in');
+  const params = new URLSearchParams({ symbol });
+  if (since) params.set('since', String(since));
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/funding?${params.toString()}`, {
+    headers: { Authorization: `Bearer ${token}`, apikey: SUPABASE_ANON },
+  });
+  const j = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    if (j.error === 'kraken_error') throw new Error(`Kraken said ${j.status} for ${symbol}`);
+    throw new Error(j.error || `HTTP ${res.status}`);
+  }
   const rates = (j.rates || [])
     .map((r) => ({ ts: Date.parse(r.timestamp), rate: Number(r.fundingRate) }))
     .filter((r) => Number.isFinite(r.ts) && Number.isFinite(r.rate));
-  if (!rates.length) throw new Error(`no rates for ${symbol}`);
-  ratesCache.set(symbol, rates);
+  if (!rates.length) throw new Error(`no rates for ${symbol} in this period`);
+  ratesCache.set(key, rates);
   return rates;
 }
 
@@ -157,8 +170,8 @@ async function fundingRates(symbol) {
 // base coin. Positive rate => longs pay shorts, so a long's PnL effect is
 // negative. Returns { effect, hours, from, to, covered }.
 async function estimateFunding(t) {
-  const rates = await fundingRates(krakenSymbol(t.coin));
   const start = Date.parse((t.opened_at || today()) + 'T00:00:00Z');
+  const rates = await fundingRates(krakenSymbol(t.coin), start);
   const end = t.status === 'CLOSED' && t.closed_at
     ? Date.parse(t.closed_at + 'T23:59:59Z') : Date.now();
   let effect = 0, hours = 0, from = null, to = null;
