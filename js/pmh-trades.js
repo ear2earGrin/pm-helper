@@ -13,7 +13,7 @@
 // ============================================================
 import { supabase, SUPABASE_URL, SUPABASE_ANON } from './pmh-supabase.js';
 
-const BUILD = 'v5-funding-20260821';
+const BUILD = 'v6-fees-20260821';
 
 const $ = (id) => document.getElementById(id);
 function esc(s) {
@@ -41,7 +41,11 @@ export function estimateLiq(entry, leverage, direction) {
   return direction === 'SHORT' ? e * (1 + 1 / l - MMR) : e * (1 - 1 / l + MMR);
 }
 
-function feeRate(t) { const f = num(t.fee_pct); return f && f > 0 ? f / 100 : 0; }
+// Kraken charges on entry AND exit, at possibly different rates (a limit order
+// in is maker, a market order out is taker). Both fall back to the legacy
+// single rate. Live base tier (futures): maker 0.02%, taker 0.05%.
+function feeIn(t) { const f = num(t.fee_entry_pct) ?? num(t.fee_pct); return f && f > 0 ? f / 100 : 0; }
+function feeOut(t) { const f = num(t.fee_exit_pct) ?? num(t.fee_pct); return f && f > 0 ? f / 100 : 0; }
 function dirSign(t) { return t.direction === 'SHORT' ? -1 : 1; }
 function fundingOf(t) { return num(t.funding_paid) || 0; }   // signed: negative = paid
 function partialFills(t) { return Array.isArray(t.partials) ? t.partials : []; }
@@ -60,28 +64,32 @@ function positionEvents(t) {
 
 // Weighted-average-cost walk (what exchanges show as "average entry").
 function walk(t, { includeClose = true } = {}) {
-  const f = feeRate(t), s = dirSign(t);
+  const fIn = feeIn(t), fOut = feeOut(t), s = dirSign(t);
   const evs = positionEvents(t);
   if (includeClose && t.status === 'CLOSED' && numPos(t.exit_price) !== null) {
     evs.push({ date: t.closed_at, price: num(t.exit_price), qty: Infinity, kind: 'tp', final: true });
   }
-  let qty = 0, avg = 0, realized = 0, fees = 0, exitQty = 0, exitNotional = 0, addQty = 0;
+  let qty = 0, avg = 0, realized = 0, feesIn = 0, feesOut = 0,
+      exitQty = 0, exitNotional = 0, addQty = 0;
   for (const e of evs) {
     if (e.kind === 'tp') {
       const q = Math.min(e.qty, qty);
       if (q <= 0) continue;
       realized += (e.price - avg) * q * s;
-      fees += f * e.price * q;
+      feesOut += fOut * e.price * q;
       qty -= q; exitQty += q; exitNotional += e.price * q;
     } else {
-      fees += f * e.price * e.qty;
+      feesIn += fIn * e.price * e.qty;
       avg = qty + e.qty > 0 ? (avg * qty + e.price * e.qty) / (qty + e.qty) : e.price;
       qty += e.qty; addQty += e.qty;
     }
   }
+  const fees = feesIn + feesOut;
   return {
-    qty, avg, realized, fees, addQty, exitQty,
+    qty, avg, realized, fees, feesIn, feesOut, addQty, exitQty,
     avgExit: exitQty > 0 ? exitNotional / exitQty : null,
+    // what it still costs to close whatever is left
+    feeToClose: fOut * qty * (avg || 0),
     // everything banked so far, after fees and funding
     net: realized - fees + fundingOf(t),
   };
@@ -105,7 +113,7 @@ function tradePnl(t) {
 function breakEven(t) {
   const w = walk(t, { includeClose: false });
   if (!w.qty || !w.avg) return null;
-  const f = feeRate(t);
+  const f = feeOut(t);
   const b = t.direction === 'SHORT'
     ? (w.avg + w.net / w.qty) / (1 + f)
     : (w.avg - w.net / w.qty) / (1 - f);
@@ -117,7 +125,7 @@ function whatIf(t, price) {
   const p = numPos(price);
   const w = walk(t, { includeClose: false });
   if (p === null || !w.qty) return null;
-  return w.net + (p - w.avg) * w.qty * dirSign(t) - feeRate(t) * p * w.qty;
+  return w.net + (p - w.avg) * w.qty * dirSign(t) - feeOut(t) * p * w.qty;
 }
 
 // ── Funding (Kraken public API) ─────────────────────────────
@@ -280,7 +288,10 @@ function detailRow(t) {
       : `<span class="${tone(fund)}">${signed(fund)}</span>`}
      <button class="btn btn-sm t-fund-btn" data-tact="funding" data-id="${t.id}"${busy ? ' disabled' : ''}>${busy ? '…' : '↻ Kraken'}</button>
      <div class="t-fund-note" id="fundnote-${t.id}"></div>`]);
-  if (w.fees) m.push(['Est. fees', fmt(w.fees)]);
+  if (w.fees || w.feeToClose) {
+    m.push(['Est. fees paid', `${fmt(w.fees)} <small class="t-muted">in ${fmt(w.feesIn)} · out ${fmt(w.feesOut)}</small>`]);
+    if (isOpen && w.feeToClose) m.push(['Fee to close rest', `≈ ${fmt(w.feeToClose)} <small class="t-muted">at ${fmt(feeOut(t) * 100, 3)}%</small>`]);
+  }
   if (t.notes) m.push(['Notes', esc(t.notes)]);
 
   const fillRows = fills.map((f, i) => {
@@ -429,7 +440,8 @@ function openTradeModal(t) {
   $('t_tp').value = editing ? t.take_profit ?? '' : '';
   $('t_sl').value = editing ? t.stop_loss ?? '' : '';
   $('t_liq').value = editing ? t.liq_est ?? '' : '';
-  $('t_fee').value = editing ? (t.fee_pct ?? '') : '0.05';
+  $('t_feeIn').value = editing ? (t.fee_entry_pct ?? t.fee_pct ?? '') : '0.05';
+  $('t_feeOut').value = editing ? (t.fee_exit_pct ?? t.fee_pct ?? '') : '0.05';
   $('t_funding').value = editing ? (t.funding_paid ?? '') : '';
   $('t_notes').value = editing ? t.notes || '' : '';
   $('t_entryHint').textContent = editing && partialFills(t).some((f) => f.kind === 'add')
@@ -452,7 +464,9 @@ async function saveTrade(e) {
     take_profit: numPos($('t_tp').value),
     stop_loss: numPos($('t_sl').value),
     liq_est: numPos($('t_liq').value),
-    fee_pct: numPos($('t_fee').value),
+    fee_pct: numPos($('t_feeIn').value),
+    fee_entry_pct: numPos($('t_feeIn').value),
+    fee_exit_pct: numPos($('t_feeOut').value),
     funding_paid: num($('t_funding').value),
     notes: $('t_notes').value.trim() || null,
   };
@@ -609,6 +623,13 @@ export async function initTrades(username) {
   ['t_entry', 't_lev'].forEach((id) => $(id).addEventListener('input', autoLiq));
   $('t_dir').addEventListener('change', autoLiq);
   $('t_liq').addEventListener('input', () => { liqTouched = true; });
+  $('t_feePreset').addEventListener('change', (e) => {
+    const v = e.target.value;
+    if (!v) return;
+    const [inPct, outPct] = v.split('/');
+    $('t_feeIn').value = inPct;
+    $('t_feeOut').value = outPct;
+  });
   $('c_cancel').addEventListener('click', closeCloseModal);
   $('closeForm').addEventListener('submit', confirmClose);
   $('closeBack').addEventListener('click', (e) => { if (e.target === $('closeBack')) closeCloseModal(); });

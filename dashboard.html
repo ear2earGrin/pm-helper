@@ -323,8 +323,25 @@
           <input id="t_liq" type="number" step="any" inputmode="decimal" placeholder="auto" />
         </div>
         <div>
-          <label for="t_fee">Fee % per side <span class="muted" style="text-transform:none">(Kraken: futures 0.05/0.02 · spot 0.40/0.25)</span></label>
-          <input id="t_fee" type="number" step="any" inputmode="decimal" placeholder="0.05" />
+          <label for="t_feePreset">Fee preset</label>
+          <select id="t_feePreset">
+            <option value="">— pick to fill both —</option>
+            <option value="0.05/0.05">Kraken futures · taker both sides (0.05%)</option>
+            <option value="0.02/0.05">Kraken futures · maker in, taker out (0.02 / 0.05)</option>
+            <option value="0.02/0.02">Kraken futures · maker both sides (0.02%)</option>
+            <option value="0.25/0.25">Kraken app "Consumer" (0.25%)</option>
+            <option value="0/0">No fees</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row two">
+        <div>
+          <label for="t_feeIn">Entry fee %</label>
+          <input id="t_feeIn" type="number" step="any" inputmode="decimal" placeholder="0.05" />
+        </div>
+        <div>
+          <label for="t_feeOut">Exit fee %</label>
+          <input id="t_feeOut" type="number" step="any" inputmode="decimal" placeholder="0.05" />
         </div>
       </div>
       <div class="form-row">
@@ -561,6 +578,6 @@
     .send-meta a { color: var(--accent-text); font-weight: 500; }
   </style>
 
-  <script type="module" src="js/pmh-dashboard.js?v=v5-funding-20260821"></script>
+  <script type="module" src="js/pmh-dashboard.js?v=v6-fees-20260821"></script>
 </body>
 </html>
