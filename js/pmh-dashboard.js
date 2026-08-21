@@ -2,7 +2,9 @@
 //  Redesign Studio — dashboard logic
 // ============================================================
 import { supabase, currentUsername, SUPABASE_URL, SUPABASE_ANON } from './pmh-supabase.js';
-import { initTrades } from './pmh-trades.js';
+// NOTE: keep the ?v= in sync with dashboard.html — without it the browser
+// happily serves a cached copy of this module even when the entry file changes.
+import { initTrades } from './pmh-trades.js?v=v5-funding-20260821';
 
 // ── Prospecting lists ───────────────────────────────────────
 const COUNTRIES = [

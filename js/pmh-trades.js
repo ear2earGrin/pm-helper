@@ -13,6 +13,8 @@
 // ============================================================
 import { supabase, SUPABASE_URL, SUPABASE_ANON } from './pmh-supabase.js';
 
+const BUILD = 'v5-funding-20260821';
+
 const $ = (id) => document.getElementById(id);
 function esc(s) {
   return String(s ?? '').replace(/[&<>"']/g, (c) =>
@@ -150,9 +152,13 @@ async function fundingRates(symbol, since) {
   if (!token) throw new Error('not signed in');
   const params = new URLSearchParams({ symbol });
   if (since) params.set('since', String(since));
-  const res = await fetch(`${SUPABASE_URL}/functions/v1/funding?${params.toString()}`, {
-    headers: { Authorization: `Bearer ${token}`, apikey: SUPABASE_ANON },
-  });
+  const endpoint = `${SUPABASE_URL}/functions/v1/funding?${params.toString()}`;
+  let res;
+  try {
+    res = await fetch(endpoint, { headers: { Authorization: `Bearer ${token}`, apikey: SUPABASE_ANON } });
+  } catch (e) {
+    throw new Error(`can't reach the funding proxy — ${e.message || e}`);
+  }
   const j = await res.json().catch(() => ({}));
   if (!res.ok) {
     if (j.error === 'kraken_error') throw new Error(`Kraken said ${j.status} for ${symbol}`);
@@ -398,7 +404,7 @@ async function refreshFunding(t) {
   } catch (e) {
     fundingBusy.delete(t.id);
     renderTables();
-    note(`Couldn't fetch (${esc(e.message || e)}) — type it into Funding via Edit.`, 't-neg');
+    note(`Couldn't fetch: ${esc(e.message || e)}<br><span class="t-muted">build ${esc(BUILD)} · you can type the number into Funding via Edit.</span>`, 't-neg');
   }
 }
 
