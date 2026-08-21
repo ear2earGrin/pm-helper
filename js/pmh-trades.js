@@ -13,7 +13,7 @@
 // ============================================================
 import { supabase, SUPABASE_URL, SUPABASE_ANON } from './pmh-supabase.js';
 
-const BUILD = 'v8-live-20260821';
+const BUILD = 'v9-mark-20260821';
 
 const $ = (id) => document.getElementById(id);
 function esc(s) {
@@ -235,33 +235,57 @@ async function estimateFunding(t) {
 // Served by the `prices` Edge Function (Binance, Kraken fallback) so we never
 // depend on an exchange sending CORS headers and the rate limit is ours.
 const PRICE_REFRESH_MS = 60_000;
-let prices = {};
+let prices = {};        // keyed `${exchange}|${COIN}`
 let pricesAt = null;
+let priceSources = [];
 let pricesErr = null;
 
+// One request per venue the open positions live on, because the price has to
+// match the venue: a Kraken perp is marked at Kraken's own mark price, not at
+// Binance spot, and the basis between them is exactly the gap between our
+// unrealized PnL and the exchange's.
 async function loadPrices() {
-  const coins = [...new Set(trades.filter((t) => t.status === 'OPEN')
-    .map((t) => String(t.coin || '').toUpperCase()).filter(Boolean))];
-  if (!coins.length) { prices = {}; pricesAt = null; pricesErr = null; return; }
+  const byVenue = new Map();
+  trades.filter((t) => t.status === 'OPEN').forEach((t) => {
+    const coin = String(t.coin || '').toUpperCase();
+    if (!coin) return;
+    const v = exchangeOf(t);
+    if (!byVenue.has(v)) byVenue.set(v, new Set());
+    byVenue.get(v).add(coin);
+  });
+  if (!byVenue.size) { prices = {}; pricesAt = null; pricesErr = null; priceSources = []; return; }
+
   try {
     const { data } = await supabase.auth.getSession();
     const token = data?.session?.access_token;
     if (!token) throw new Error('not signed in');
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/prices?symbols=${encodeURIComponent(coins.join(','))}`, {
-      headers: { Authorization: `Bearer ${token}`, apikey: SUPABASE_ANON },
-    });
-    const j = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(j.error || `HTTP ${res.status}`);
-    prices = j.prices || {};
-    pricesAt = j.at ? new Date(j.at) : new Date();
-    pricesErr = (j.missing || []).length ? `no price for ${j.missing.join(', ')}` : null;
+    const next = {};
+    const srcs = new Set();
+    const misses = [];
+    await Promise.all([...byVenue.entries()].map(async ([venue, coins]) => {
+      const params = new URLSearchParams({ symbols: [...coins].join(',') });
+      // Only Kraken has a venue-specific feed today; everything else takes spot.
+      if (venue.toLowerCase() === 'kraken') params.set('venue', 'kraken');
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/prices?${params.toString()}`, {
+        headers: { Authorization: `Bearer ${token}`, apikey: SUPABASE_ANON },
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(j.error || `HTTP ${res.status}`);
+      for (const [coin, px] of Object.entries(j.prices || {})) next[`${venue}|${coin}`] = px;
+      (j.sources || []).forEach((x) => srcs.add(x));
+      (j.missing || []).forEach((m) => misses.push(`${venue} ${m}`));
+    }));
+    prices = next;
+    priceSources = [...srcs];
+    pricesAt = new Date();
+    pricesErr = misses.length ? `no price for ${misses.join(', ')}` : null;
   } catch (e) {
     pricesErr = e.message || String(e);
   }
 }
 
 function priceOf(t) {
-  const p = prices[String(t.coin || '').toUpperCase()];
+  const p = prices[`${exchangeOf(t)}|${String(t.coin || '').toUpperCase()}`];
   return Number.isFinite(p) ? p : null;
 }
 // Unrealized on the still-open quantity, net of the fee it will cost to close.
@@ -282,7 +306,9 @@ function renderPriceNote() {
   if (!el) return;
   if (pricesErr && !pricesAt) { el.innerHTML = `<span class="t-neg">prices unavailable (${esc(pricesErr)})</span>`; return; }
   if (!pricesAt) { el.textContent = ''; return; }
-  el.innerHTML = `prices ${pricesAt.toLocaleTimeString()}`
+  const src = priceSources.length
+    ? ` · ${priceSources.map((x) => x === 'kraken-mark' ? 'Kraken mark' : x).join(' + ')}` : '';
+  el.innerHTML = `prices ${pricesAt.toLocaleTimeString()}${esc(src)}`
     + (pricesErr ? ` · <span class="t-neg">${esc(pricesErr)}</span>` : '');
 }
 
@@ -460,7 +486,7 @@ function tradeRow(t, showExchange) {
     const u = unrealized(t);
     const nowCell = live === null
       ? '<span class="t-muted">…</span>'
-      : `<span class="t-live">${fmtPrice(live)}</span>`;
+      : `<span class="t-live" title="${esc(exchangeOf(t) === 'Kraken' ? "Kraken's mark price — the number it marks your position at" : 'Binance spot')}">${fmtPrice(live)}</span>`;
     rest = `<td>${nowCell}</td>${levels}
       <td>${u === null ? '<span class="t-muted">—</span>' : `<span class="${tone(u)}">${signed(u)}</span>`}</td>
       <td>${banked}</td>`;

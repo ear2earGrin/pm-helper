@@ -6,12 +6,15 @@
 //  headers, and so the rate limit is ours (one cached call for
 //  every coin) rather than per-visitor.
 //
-//  GET ?symbols=BTC,SUI,ETH
-//    → { at, prices: { BTC: 76825.1, ... }, missing: [...], sources: [...] }
+//  GET ?symbols=BTC,SUI,ETH[&venue=kraken]
+//    → { at, venue, prices: { BTC: 76825.1, ... }, missing, sources }
 //
-//  Binance is primary (one call covers every pair). Anything it
-//  does not list is looked up on Kraken, which carries coins
-//  Binance sometimes lacks and is also our funding source.
+//  The price must match the venue the position is on: a Kraken perp
+//  is marked against Kraken's OWN mark price, not Binance spot, and
+//  the two differ by the perp basis (small, but it is the difference
+//  between our unrealized PnL and the exchange's). So venue=kraken
+//  reads Kraken's futures tickers; everything else uses Binance spot,
+//  with the other source as fallback for coins one of them lacks.
 // ============================================================
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
@@ -54,6 +57,31 @@ async function binanceAll(): Promise<Map<string, number>> {
   return map;
 }
 
+// Kraken perp mark prices — the number Kraken itself marks positions at.
+let krakenCache: { at: number; map: Map<string, number> } | null = null;
+async function krakenMarks(): Promise<Map<string, number>> {
+  if (krakenCache && Date.now() - krakenCache.at < TTL_MS) return krakenCache.map;
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 15000);
+  const res = await fetch("https://futures.kraken.com/derivatives/api/v3/tickers", {
+    signal: ctrl.signal,
+    headers: { "User-Agent": "pm-brief-trades/1.0" },
+  });
+  clearTimeout(timer);
+  if (!res.ok) throw new Error(`kraken HTTP ${res.status}`);
+  const j = await res.json() as { tickers?: Array<{ symbol?: string; markPrice?: number; last?: number }> };
+  const map = new Map<string, number>();
+  for (const t of j.tickers || []) {
+    const p = Number(t?.markPrice ?? t?.last);
+    if (t?.symbol && Number.isFinite(p)) map.set(t.symbol, p);
+  }
+  krakenCache = { at: Date.now(), map };
+  return map;
+}
+function krakenPerp(sym: string) {
+  return `PF_${sym === "BTC" ? "XBT" : sym}USD`;
+}
+
 // Kraken spot uses its own pair names; XBT for BTC, and it accepts SYMUSD.
 function krakenPair(sym: string) {
   const base = sym === "BTC" ? "XBT" : sym;
@@ -89,9 +117,39 @@ Deno.serve(async (req) => {
     .slice(0, MAX_SYMBOLS);
   if (!symbols.length) return json({ error: "no_symbols" }, 400);
 
+  const venue = (url.searchParams.get("venue") || "").toLowerCase();
   const prices: Record<string, number> = {};
   const sources: string[] = [];
   let missing: string[] = [];
+
+  if (venue === "kraken") {
+    try {
+      const marks = await krakenMarks();
+      sources.push("kraken-mark");
+      for (const s of symbols) {
+        const hit = marks.get(krakenPerp(s));
+        if (hit !== undefined) prices[s] = hit;
+        else missing.push(s);
+      }
+    } catch (_) {
+      missing = [...symbols];
+    }
+    // anything Kraken does not list a perp for falls back to Binance spot
+    if (missing.length) {
+      try {
+        const all = await binanceAll();
+        const still: string[] = [];
+        for (const s of missing) {
+          const hit = all.get(`${s}USDT`) ?? all.get(`${s}USD`) ?? all.get(`${s}FDUSD`);
+          if (hit !== undefined) prices[s] = hit;
+          else still.push(s);
+        }
+        if (still.length < missing.length) sources.push("binance");
+        missing = still;
+      } catch (_) { /* keep missing as-is */ }
+    }
+    return json({ at: new Date().toISOString(), venue, prices, missing, sources });
+  }
 
   try {
     const all = await binanceAll();
@@ -116,5 +174,5 @@ Deno.serve(async (req) => {
     missing = stillMissing;
   }
 
-  return json({ at: new Date().toISOString(), prices, missing, sources });
+  return json({ at: new Date().toISOString(), venue: venue || "spot", prices, missing, sources });
 });
