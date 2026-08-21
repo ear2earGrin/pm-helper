@@ -1,6 +1,7 @@
 // ============================================================
 //  Crypto trade log — shared panel for both partners
-//  Backed by public.pmh_trades (Supabase, RLS: authenticated).
+//  Backed by public.pmh_trades (Supabase; RLS: each partner sees
+//  ONLY their own rows — enforced server-side by pmh_username()).
 //  Supports partial take-profits (partials jsonb) and per-side
 //  fee estimates (fee_pct, % of notional — Kraken defaults).
 // ============================================================
@@ -15,8 +16,10 @@ function fmt(n, d = 2) {
   if (n === null || n === undefined || !Number.isFinite(Number(n))) return '—';
   return Number(n).toLocaleString(undefined, { maximumFractionDigits: d });
 }
+function fmtPrice(n) { return fmt(n, Number(n) >= 100 ? 2 : 6); }
 function signed(n, d = 2) { return `${n > 0 ? '+' : ''}${fmt(n, d)}`; }
 function num(v) { const n = Number(v); return Number.isFinite(n) ? n : null; }
+function numPos(v) { const n = num(v); return n !== null && n > 0 ? n : null; }
 function today() { return new Date().toISOString().slice(0, 10); }
 
 // ── Trade math ──────────────────────────────────────────────
@@ -101,7 +104,7 @@ function breakEven(t) {
 // Total outcome if the remaining quantity exits at `price` now.
 function whatIf(t, price) {
   const qr = remainingQty(t);
-  if (!qr || num(price) === null) return null;
+  if (!qr || numPos(price) === null) return null;
   const fin = fillNet(t, price, qr);
   return fin ? partialsSummary(t).realized + fin.net : null;
 }
@@ -109,13 +112,10 @@ function whatIf(t, price) {
 // ── State ───────────────────────────────────────────────────
 let trades = [];
 let me = null;
-let ownerFilter = 'all';        // all | <username>
 let closingTrade = null;
 let partialTrade = null;
 let liqTouched = false;         // user overrode the auto liq estimate
 let expanded = new Set();       // trade ids with the detail row open
-
-const OWNERS = ['mdonkov', 'lkashkin'];
 
 // ── Data ────────────────────────────────────────────────────
 async function loadTrades() {
@@ -131,16 +131,11 @@ async function loadTrades() {
 // ── Rendering ───────────────────────────────────────────────
 function render() {
   renderStats();
-  renderOwnerTabs();
   renderTables();
 }
 
-function visible() {
-  return ownerFilter === 'all' ? trades : trades.filter((t) => t.owner === ownerFilter);
-}
-
 function renderStats() {
-  const list = visible();
+  const list = trades;
   const open = list.filter((t) => t.status === 'OPEN');
   const closed = list.filter((t) => t.status === 'CLOSED');
   let realized = 0, feesTotal = 0, wins = 0;
@@ -162,21 +157,11 @@ function renderStats() {
   ).join('');
 }
 
-function renderOwnerTabs() {
-  const tabs = [{ key: 'all', label: 'Both' }, ...OWNERS.map((o) => ({ key: o, label: '@' + o }))];
-  $('tr_tabs').innerHTML = tabs.map((t) => {
-    const n = t.key === 'all' ? trades.length : trades.filter((x) => x.owner === t.key).length;
-    return `<button class="db-tab ${t.key === ownerFilter ? 'active' : ''}" data-owner="${t.key}">${t.label}<span class="cnt">${n}</span></button>`;
-  }).join('');
-  $('tr_tabs').querySelectorAll('.db-tab').forEach((b) =>
-    b.addEventListener('click', () => { ownerFilter = b.dataset.owner; render(); }));
-}
-
 function dirBadge(d) {
   return `<span class="t-dir ${d === 'SHORT' ? 't-dir--short' : 't-dir--long'}">${d}</span>`;
 }
 
-const COLS = 13;
+const COLS = 12;
 
 function detailRow(t) {
   const ps = partialsSummary(t);
@@ -193,11 +178,11 @@ function detailRow(t) {
 
   const metrics = [];
   if (qr !== null) metrics.push(['Remaining qty', fmt(qr, 6)]);
-  if (ps.count) metrics.push(['Avg exit (fills)', fmt(ps.avgExit, 6)]);
+  if (ps.count) metrics.push(['Avg exit (fills)', fmtPrice(ps.avgExit)]);
   if (ps.count) metrics.push(['Taken so far (net)', `<span class="${ps.realized > 0 ? 't-pos' : ps.realized < 0 ? 't-neg' : ''}">${signed(ps.realized)}</span>`]);
   if (t.status === 'OPEN') {
     const be = breakEven(t);
-    if (be !== null) metrics.push([`Break-even for rest`, `${fmt(be, 6)} <small class="t-muted">total ≥ 0 ${t.direction === 'SHORT' ? 'below' : 'above'} this</small>`]);
+    if (be !== null) metrics.push([`Break-even for rest`, `${fmtPrice(be)} <small class="t-muted">total ≥ 0 ${t.direction === 'SHORT' ? 'below' : 'above'} this</small>`]);
     const atSL = whatIf(t, t.stop_loss), atTP = whatIf(t, t.take_profit);
     if (atSL !== null) metrics.push(['If SL hits now', `<span class="${atSL > 0 ? 't-pos' : atSL < 0 ? 't-neg' : ''}">${signed(atSL)}</span>`]);
     if (atTP !== null) metrics.push(['If TP hits', `<span class="${atTP > 0 ? 't-pos' : atTP < 0 ? 't-neg' : ''}">${signed(atTP)}</span>`]);
@@ -247,7 +232,6 @@ function tradeRow(t) {
 
   return `<tr class="${hasDetail ? 't-expandable' : ''}" data-trow="${t.id}">
     <td>${esc(t.opened_at || '')}${t.closed_at ? `<div class="t-muted t-small">→ ${esc(t.closed_at)}</div>` : ''}</td>
-    <td><span class="t-owner">@${esc(t.owner)}</span></td>
     <td class="t-coin">${caret}${esc((t.coin || '').toUpperCase())}${t.notes && !hasDetail ? ` <span class="t-note" title="${esc(t.notes)}">📝</span>` : ''}</td>
     <td>${dirBadge(t.direction)}</td>
     <td>${fmt(t.entry_price, 6)}</td>
@@ -263,11 +247,11 @@ function tradeRow(t) {
 }
 
 const HEAD = `<tr>
-  <th>Date</th><th>Who</th><th>Coin</th><th>Dir</th><th>Entry</th><th>TP</th><th>SL</th>
+  <th>Date</th><th>Coin</th><th>Dir</th><th>Entry</th><th>TP</th><th>SL</th>
   <th>Qty</th><th>Lev</th><th>Liq est.</th><th>Exit</th><th>PnL</th><th></th></tr>`;
 
 function renderTables() {
-  const list = visible();
+  const list = trades;
   const open = list.filter((t) => t.status === 'OPEN');
   const closed = list.filter((t) => t.status === 'CLOSED');
   const table = (rows) =>
@@ -333,11 +317,11 @@ async function saveTrade(e) {
     opened_at: $('t_date').value || today(),
     entry_price: num($('t_entry').value),
     quantity: num($('t_qty').value),
-    leverage: num($('t_lev').value),
-    take_profit: num($('t_tp').value),
-    stop_loss: num($('t_sl').value),
-    liq_est: num($('t_liq').value),
-    fee_pct: num($('t_fee').value),
+    leverage: numPos($('t_lev').value),
+    take_profit: numPos($('t_tp').value),
+    stop_loss: numPos($('t_sl').value),
+    liq_est: numPos($('t_liq').value),
+    fee_pct: numPos($('t_fee').value),
     notes: $('t_notes').value.trim() || null,
   };
   if (!payload.coin || payload.entry_price === null) { alert('Coin and entry price are required.'); return; }
@@ -385,7 +369,7 @@ function previewPartial() {
       + (r.fees ? ` <small class="t-muted">(after ~${fmt(r.fees)} fees)</small>` : ''),
     `Taken in total: <b class="${newTotal > 0 ? 't-pos' : newTotal < 0 ? 't-neg' : ''}">${signed(newTotal)}</b> · remaining ${fmt(remAfter, 6)}`,
   ];
-  if (be !== null) lines.push(`Rest is risk-free ${partialTrade.direction === 'SHORT' ? 'below' : 'above'} <b>${fmt(be, 6)}</b>`);
+  if (be !== null) lines.push(`Rest is risk-free ${partialTrade.direction === 'SHORT' ? 'below' : 'above'} <b>${fmtPrice(be)}</b>`);
   if (qty > qr + 1e-12) lines.push(`<span class="t-neg">Quantity exceeds the remaining ${fmt(qr, 6)}.</span>`);
   box.innerHTML = lines.join('<br>');
 }
