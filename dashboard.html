@@ -192,6 +192,9 @@
     .t-metric-l { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); font-family: var(--font-body, inherit); }
     .t-metric-v { font-size: 13px; margin-top: 3px; }
     .t-fills { margin-top: 12px; border-top: 1px solid var(--border-subtle); padding-top: 10px; }
+    .t-hint { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+    .t-fund-btn { padding: 2px 8px; font-size: 11px; margin-left: 6px; vertical-align: middle; }
+    .t-fund-note { font-size: 11px; margin-top: 4px; line-height: 1.45; }
     .t-fill { display: grid; grid-template-columns: 90px 1fr 90px 34px; gap: 10px; align-items: center; padding: 4px 0; font-size: 12.5px; }
   </style>
 </head>
@@ -291,6 +294,7 @@
         <div>
           <label for="t_entry">Entry price *</label>
           <input id="t_entry" type="number" step="any" inputmode="decimal" placeholder="64200" required />
+          <div class="t-hint" id="t_entryHint"></div>
         </div>
       </div>
       <div class="form-row two">
@@ -324,6 +328,10 @@
         </div>
       </div>
       <div class="form-row">
+        <label for="t_funding">Funding paid <span class="muted" style="text-transform:none">(negative = you paid; use ↻ Kraken on the row to estimate it automatically)</span></label>
+        <input id="t_funding" type="number" step="any" inputmode="decimal" placeholder="e.g. -42.50" />
+      </div>
+      <div class="form-row">
         <label for="t_notes">Notes</label>
         <textarea id="t_notes" placeholder="Setup, reason, anything worth remembering…"></textarea>
       </div>
@@ -337,15 +345,15 @@
   <!-- Partial take-profit modal -->
   <div class="modal-back" id="partialBack">
     <form class="modal" id="partialForm">
-      <h2>Partial take-profit</h2>
+      <h2 id="fillTitle">Partial take-profit</h2>
       <p class="send-meta" id="p_meta"></p>
       <div class="form-row two">
         <div>
-          <label for="p_price">Exit price *</label>
+          <label for="p_price" id="p_priceLabel">Exit price *</label>
           <input id="p_price" type="number" step="any" inputmode="decimal" required />
         </div>
         <div>
-          <label for="p_qty">Quantity sold *</label>
+          <label for="p_qty" id="p_qtyLabel">Quantity sold *</label>
           <input id="p_qty" type="number" step="any" inputmode="decimal" required />
         </div>
       </div>
@@ -356,7 +364,7 @@
       <div class="c-preview" id="p_preview"></div>
       <div class="modal-foot">
         <button type="button" class="btn" id="p_cancel">Cancel</button>
-        <button type="submit" class="btn btn-primary">Log partial</button>
+        <button type="submit" class="btn btn-primary" id="p_submit">Log partial</button>
       </div>
     </form>
   </div>
@@ -553,6 +561,6 @@
     .send-meta a { color: var(--accent-text); font-weight: 500; }
   </style>
 
-  <script type="module" src="js/pmh-dashboard.js?v=private-20260821"></script>
+  <script type="module" src="js/pmh-dashboard.js?v=funding-20260821"></script>
 </body>
 </html>
