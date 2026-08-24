@@ -546,3 +546,36 @@
 /* The watchlist header carries a toggle as well as REFRESH; let them wrap
    together rather than squeezing the title. */
 .tr-view .tr-header-actions { display: flex; align-items: center; gap: var(--space-md); flex-wrap: wrap; }
+
+/* ── Mobile: keep the desk's tools reachable ──────────────────
+   css/style.css hides every .nav-link below 768px. On the desk that also hid
+   Watchlist / Lattice / Options — the ONLY way to reach those tools from the
+   index page, because the app's own tab bar covers just its internal routes
+   (checker/scanner/backtest/log/paper). The 60px fixed nav has no room for
+   them on a phone, so they get their own strip underneath it instead. */
+.tr-toolstrip { display: none; }
+@media (max-width: 768px) {
+  .tr-toolstrip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px var(--space-md);
+    background: rgba(5, 8, 15, 0.9);
+    border-bottom: 1px solid var(--border-subtle);
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .tr-toolstrip::-webkit-scrollbar { display: none; }
+  .tr-toolstrip .tr-subnav { flex: 0 0 auto; }
+  /* the brand suffix costs width the tabs need */
+  .nav .brand-name > span { display: none; }
+}
+
+/* Options legs are a six-column grid; below ~720px the columns collapse to
+   ~50px and the selects and numbers become unreadable. Let the block scroll
+   sideways instead, so the header row stays aligned above its inputs. */
+@media (max-width: 720px) {
+  .tr-opt-legs-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .tr-opt-legs { min-width: 520px; }
+}

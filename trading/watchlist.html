@@ -58,6 +58,17 @@
     </div>
   </div>
 
+  <script>
+    // The sub-nav scrolls sideways on narrow screens and the active tab can be
+    // the last of eight, i.e. off-screen on load. Bring it into view.
+    (function () {
+      try {
+        var a = document.querySelector('.tr-subnav--active');
+        if (a && a.scrollIntoView) a.scrollIntoView({ inline: 'center', block: 'nearest' });
+      } catch (e) { /* nav still works unscrolled */ }
+    })();
+  </script>
+
   <main id="watchlist-root"></main>
 
   <noscript>

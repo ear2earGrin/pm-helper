@@ -58,6 +58,17 @@
     </div>
   </nav>
 
+  <!-- Mobile only. css/style.css hides every .nav-link below 768px, which on the
+       desk also hides Watchlist / Lattice / Options — and the app's own tab bar
+       covers only its internal routes, so those tools became unreachable on a
+       phone. This strip carries them; it is display:none from 769px up, where
+       the nav links are visible again. -->
+  <div class="tr-toolstrip">
+    <a href="watchlist.html" class="tr-subnav">WATCHLIST</a>
+    <a href="../lattice.html" class="tr-subnav">LATTICE</a>
+    <a href="options.html" class="tr-subnav">OPTIONS</a>
+  </div>
+
   <div id="root"></div>
 
   <footer class="footer">
