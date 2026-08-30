@@ -73,6 +73,13 @@ def main():
     if not os.path.exists(path):
         die(f"missing {path} — write the redesign first")
 
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from pathlib import Path
+    from redesign_utils import analyze_html
+    audit = analyze_html(Path(path))
+    if audit.get("failures") or audit.get("quality") == "generic":
+        die(f"quality gate failed ({audit.get('quality')}): {audit.get('failures')}")
+
     # git push. Idempotent: if this redesign was already committed/pushed but a
     # previous run timed out before the Supabase update, skip the empty commit
     # and still finish the database/event update below.
