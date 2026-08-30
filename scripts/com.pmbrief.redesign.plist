@@ -5,15 +5,22 @@
   Runs at 09:00, 12:00, 15:00, 18:00, 21:00 local. Native launchd instead of
   crontab (crontab needs Full Disk Access on modern macOS and hangs otherwise).
 
+  Chef is DeepSeek via scripts/pmbrief-llm.sh (DEEPSEEK_API_KEY).
+  Do NOT use ChatGPT OAuth / OPENAI_API_KEY for this job.
+
   Install (as the user, NOT sudo):
     cp scripts/com.pmbrief.redesign.plist ~/Library/LaunchAgents/com.pmbrief.redesign.plist
     launchctl unload ~/Library/LaunchAgents/com.pmbrief.redesign.plist 2>/dev/null
     launchctl load   ~/Library/LaunchAgents/com.pmbrief.redesign.plist
-    launchctl list | grep pmbrief          # confirm it's registered
+    launchctl list | grep pmbrief
   Run once now to test:
     launchctl start com.pmbrief.redesign
     tail -f /tmp/pm-brief-cron.log
-  Requires GITHUB_TOKEN, SUPABASE_BOT_PASSWORD and OPENAI_API_KEY in ~/.hermes/.env
+
+  ~/.hermes/.env must contain:
+    GITHUB_TOKEN
+    SUPABASE_BOT_PASSWORD
+    DEEPSEEK_API_KEY
 -->
 <plist version="1.0">
 <dict>
@@ -24,7 +31,7 @@
   <array>
     <string>/bin/bash</string>
     <string>-lc</string>
-    <string>set -a; . ~/.hermes/.env; set +a; export PMBRIEF_LLM_CMD="bash ~/.hermes/scripts/pmbrief-llm.sh"; cd /tmp &amp;&amp; rm -rf pm-helper &amp;&amp; git clone https://$GITHUB_TOKEN@github.com/ear2earGrin/pm-helper.git pm-helper &amp;&amp; python3 pm-helper/scripts/pm_brief_redesign_cycle.py</string>
+    <string>set -a; . ~/.hermes/.env; set +a; unset OPENAI_API_KEY; cd /tmp &amp;&amp; rm -rf pm-helper &amp;&amp; git clone https://$GITHUB_TOKEN@github.com/ear2earGrin/pm-helper.git pm-helper &amp;&amp; export PMBRIEF_LLM_CMD="bash /tmp/pm-helper/scripts/pmbrief-llm.sh" &amp;&amp; python3 pm-helper/scripts/pm_brief_redesign_cycle.py</string>
   </array>
 
   <key>StartCalendarInterval</key>
