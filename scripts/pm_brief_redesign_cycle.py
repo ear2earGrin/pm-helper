@@ -234,7 +234,44 @@ def crawl_site(url):
 
 
 # ── the ONE bounded LLM call ────────────────────────────────────────────────
+def load_taste():
+    path = Path(REPO) / "docs" / "TASTE.md"
+    try:
+        return path.read_text(encoding="utf-8")
+    except Exception:
+        return ""
+
+
+def download_images(urls, outdir, limit=6):
+    """Save a few real photos next to index.html. Skip tiny/failed downloads."""
+    saved = []
+    os.makedirs(outdir, exist_ok=True)
+    for i, url in enumerate(urls[:limit], 1):
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": UA, "Referer": url})
+            with urllib.request.urlopen(req, timeout=20) as r:
+                data = r.read(2_500_000)
+                ctype = (r.headers.get("Content-Type") or "").lower()
+            if len(data) < 8000:
+                continue
+            ext = "jpg"
+            if "png" in ctype or url.lower().split("?")[0].endswith(".png"):
+                ext = "png"
+            elif "webp" in ctype or url.lower().split("?")[0].endswith(".webp"):
+                ext = "webp"
+            name = f"photo-{i:02d}.{ext}"
+            dest = os.path.join(outdir, name)
+            with open(dest, "wb") as f:
+                f.write(data)
+            saved.append(name)
+            log(f"saved {name} ({len(data)} bytes)")
+        except Exception as e:
+            log(f"photo skip: {e}")
+    return saved
+
+
 def build_prompt(job, content):
+    taste = load_taste()
     lines = [
         "Redesign this small business's website as ONE complete, modern, self-contained "
         "index.html. This is a pitch preview — it must look like a real, premium site.",
@@ -250,14 +287,18 @@ def build_prompt(job, content):
         "and a Google-Maps <iframe> embed",
         "  + a sticky mobile call/CTA bar.",
         "",
+        "TASTE (follow exactly):",
+        taste or "- Art-directed, not templated. No navy/teal SaaS look.",
+        "",
         "RULES:",
         "- DESIGN DIRECTION: do NOT use a generic light-background + teal/navy SaaS template look. "
         "Pick ONE distinctive, premium direction that fits the business category (e.g. warm cream + deep "
         "green, charcoal + gold, editorial serif, soft clay + ink) and commit to it consistently across "
         "palette, typography, spacing, buttons and motion. It must look art-directed, not templated.",
-        "- One file: inline CSS (and minimal inline JS). No frameworks, no external CSS/JS. "
-        "Google Fonts via <link> is allowed. Reference the supplied image URLs directly.",
-        "- Use at least 3 of the supplied real images if any are given.",
+        "- One HTML file with inline CSS. No frameworks. Google Fonts via <link> is allowed.",
+        "- Images MUST be the local files listed below, as relative src (e.g. src=\"photo-01.jpg\"). "
+        "Do not hotlink. Do not emit data: URIs. Use at least 3 local photos if 3+ were supplied, "
+        "or all of them if fewer.",
         "- DO NOT invent services, doctors, staff names, reviews, ratings, awards, prices, or "
         "years of experience. Use ONLY what's in the scraped content + the details below. If "
         "something is missing, write polished but conservative copy from the business category.",
@@ -274,14 +315,17 @@ def build_prompt(job, content):
         f"Current site: {job.get('website_url','') or '(none)'}",
     ]
     if content:
-        imgs = content.get("images") or []
+        imgs = content.get("local_photos") or []
+        remote = content.get("images") or []
         lines += [
             "",
             f"--- scraped from their site ({len(content.get('pages', []))} page(s): "
             f"{', '.join(content.get('pages', [])[:6])}) — use it, present it better ---",
             f"Title: {content['title']}",
             f"Description: {content['description']}",
-            f"Real image URLs ({len(imgs)} — reference these directly): " + "\n  ".join([""] + imgs),
+            f"Local photo files ({len(imgs)} — MUST use these as relative src): "
+            + ("\n  ".join([""] + imgs) if imgs else "(none downloaded)"),
+            f"Source photo URLs we already saved from ({len(remote)}): do not hotlink these.",
             f"Text: {content['text']}",
         ]
     else:
@@ -305,7 +349,7 @@ def llm_html(prompt):
 
     key = os.environ.get("OPENAI_API_KEY")
     if not key:
-        log("no OPENAI_API_KEY / PMBRIEF_LLM_CMD — using built-in template")
+        log("no OPENAI_API_KEY / PMBRIEF_LLM_CMD — kitchen closed")
         return None
     model = os.environ.get("PMBRIEF_LLM_MODEL", "gpt-4o")
     body = json.dumps({
@@ -463,6 +507,14 @@ def main():
     except Exception as e:
         log(f"crawl error: {e}")
 
+    outdir = os.path.join(REPO, "redesigns", slug)
+    os.makedirs(outdir, exist_ok=True)
+    local_photos = []
+    if content and content.get("images"):
+        local_photos = download_images(content["images"], outdir, limit=min(6, MAX_IMAGES))
+        content["local_photos"] = local_photos
+        log(f"downloaded {len(local_photos)} local photo(s)")
+
     # 5) ONE bounded LLM call. No template dinner if the chef is absent/fails.
     page = clean_html(llm_html(build_prompt(job, content)))
     if not page:
@@ -473,11 +525,17 @@ def main():
     used = "llm"
     log(f"redesign source: {used} ({len(page)} bytes)")
 
-    outdir = os.path.join(REPO, "redesigns", slug)
-    os.makedirs(outdir, exist_ok=True)
     html_path = os.path.join(outdir, "index.html")
     with open(html_path, "w", encoding="utf-8") as f:
         f.write(page)
+
+    if local_photos:
+        photos_used = [n for n in local_photos if n in page]
+        need = min(3, len(local_photos))
+        if len(photos_used) < need:
+            log(f"QUALITY GATE FAIL: local photos supplied={local_photos} used={photos_used}. "
+                "Not marking Review.")
+            return 0
 
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
     from redesign_utils import analyze_html
