@@ -11,9 +11,13 @@ Pipeline:
   2. scripts/hermes_pick.py            -> pick/prospect ONE lead (JSON on stdout)
   3. if action != "build": exit 0      (nothing to do — a clean no-op)
   4. fetch the company's real website  (bounded; falls back to root domain)
-  5. ONE bounded LLM call -> index.html (OpenAI by default; or PMBRIEF_LLM_CMD;
-     else a clean built-in template — so the cycle ALWAYS produces a page)
-  6. scripts/hermes_finish.py          -> commit/push + move job to 'review'
+  5. If no generator (OPENAI_API_KEY / PMBRIEF_LLM_CMD): kitchen closes.
+     No prospecting, no fallback template, no Review.
+  6. ONE bounded LLM call -> index.html. If generation fails, kitchen closes
+     (do NOT fall back to the generic template).
+  7. Quality gate (scripts/redesign_utils.analyze_html). Failures or generic
+     copy -> do not finish, do not mark Review.
+  8. scripts/hermes_finish.py          -> commit/push + move job to 'review'
   7. print a concise summary; exit 0 on success, nonzero only on real failure
 
 Env:
@@ -39,6 +43,7 @@ import subprocess
 import sys
 import urllib.request
 from html.parser import HTMLParser
+from pathlib import Path
 from urllib.parse import urljoin, urlparse
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -406,9 +411,18 @@ footer{{background:var(--navy);color:#9fbccd;padding:34px 0;font-size:14px}}
 </body></html>"""
 
 
+def generator_available():
+    return bool(os.environ.get("OPENAI_API_KEY") or os.environ.get("PMBRIEF_LLM_CMD"))
+
+
 def main():
     os.chdir(REPO)
     log(f"repo: {REPO}")
+
+    if not generator_available():
+        log("KITCHEN CLOSED: no OPENAI_API_KEY / PMBRIEF_LLM_CMD. "
+            "Not prospecting, not building a fallback, not marking Review.")
+        return 0
 
     # 2) pick
     rc, out, err = run(["python3", "scripts/hermes_pick.py"], timeout=180)
@@ -449,22 +463,29 @@ def main():
     except Exception as e:
         log(f"crawl error: {e}")
 
-    have_llm = bool(os.environ.get("OPENAI_API_KEY") or os.environ.get("PMBRIEF_LLM_CMD"))
-    if not have_llm:
-        log("WARNING: no OPENAI_API_KEY / PMBRIEF_LLM_CMD — output will be the basic "
-            "template, NOT a content-rich redesign. Set a model key for real quality.")
-
-    # 5) ONE bounded LLM call, else template
+    # 5) ONE bounded LLM call. No template dinner if the chef is absent/fails.
     page = clean_html(llm_html(build_prompt(job, content)))
-    used = "llm"
     if not page:
-        page, used = template_html(job), "template"
+        log("KITCHEN CLOSED: generator produced no HTML. "
+            "Not writing the fallback template, not marking Review. "
+            "Job stays redesigning so the next pick can reset it to lead.")
+        return 0
+    used = "llm"
     log(f"redesign source: {used} ({len(page)} bytes)")
 
     outdir = os.path.join(REPO, "redesigns", slug)
     os.makedirs(outdir, exist_ok=True)
-    with open(os.path.join(outdir, "index.html"), "w", encoding="utf-8") as f:
+    html_path = os.path.join(outdir, "index.html")
+    with open(html_path, "w", encoding="utf-8") as f:
         f.write(page)
+
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from redesign_utils import analyze_html
+    audit = analyze_html(Path(html_path))
+    if audit.get("failures") or audit.get("quality") == "generic":
+        log(f"QUALITY GATE FAIL {audit.get('quality')}: {audit.get('failures')}. "
+            "Not calling hermes_finish, not marking Review.")
+        return 0
 
     # 6) finish (commit/push + move job to review)
     email = job.get("email") or ""
