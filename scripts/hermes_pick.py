@@ -85,6 +85,18 @@ def log_event(token, job_id, kind, body):
     rest("POST", "pmh_job_events", token,
          body={"job_id": job_id, "author": "hermes", "kind": kind, "body": body})
 
+def junk_company(name):
+    """Phone numbers and empty names are not businesses we should pitch."""
+    s = (name or "").strip()
+    if not s:
+        return True
+    digits = re.sub(r"\D", "", s)
+    letters = re.sub(r"[^A-Za-zΑ-Ωα-ωΆ-ώ]", "", s)
+    if len(digits) >= 8 and len(digits) > len(letters):
+        return True
+    return False
+
+
 def slugify(job):
     """ASCII URL slug with safe fallback for Greek/Cyrillic/etc. names."""
     base = re.sub(r"[^a-z0-9]+", "-", (job.get("company") or "").lower()).strip("-")[:60]
@@ -107,7 +119,16 @@ def main():
         log_event(token, j["id"], "system", "reset stuck redesigning -> lead")
 
     # 1) oldest unbuilt lead
-    leads = rest("GET", "pmh_jobs?status=eq.lead&redesign_url=is.null&select=*&order=created_at.asc&limit=1", token) or []
+    leads = rest("GET", "pmh_jobs?status=eq.lead&redesign_url=is.null&select=*&order=created_at.asc&limit=8", token) or []
+    kept = []
+    for j in leads:
+        if junk_company(j.get("company")):
+            rest("PATCH", f"pmh_jobs?id=eq.{j['id']}", token,
+                 body={"status": "passed", "notes": "Skipped: name looks like a phone number, not a business"})
+            log_event(token, j["id"], "system", "passed — junk company name (phone/empty)")
+            continue
+        kept.append(j)
+    leads = kept[:1]
 
     # 2) if none, prospect depth-first
     if not leads:
@@ -127,7 +148,8 @@ def main():
                 c["_reasons"] = results[i].get("reasons") if i < len(results) else None
                 if results[i:i+1] and results[i].get("resolved_url"):
                     c["website_url"] = results[i]["resolved_url"]
-            weak = [c for c in cands if isinstance(c.get("_score"), int) and c["_score"] <= 6]
+            weak = [c for c in cands if isinstance(c.get("_score"), int) and c["_score"] <= 6
+                    and not junk_company(c.get("company"))]
             if not weak:
                 continue  # category effectively exhausted for this page
             weak.sort(key=lambda c: c["_score"])
