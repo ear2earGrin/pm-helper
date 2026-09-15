@@ -159,7 +159,24 @@
       const { error } = await supabase.auth.signInWithPassword({ email, password });
 
       if (error) {
-        showError('Wrong username or password. Try again.');
+        // Every failure used to read "wrong username or password", which hid
+        // rate limits, outages and connectivity problems behind a credentials
+        // message and made them impossible to tell apart. Say what happened.
+        const status = error.status || 0;
+        const m = (error.message || '').toLowerCase();
+        let msg = 'Wrong username or password. Try again.';
+        if (status === 429 || m.includes('rate limit') || m.includes('too many')) {
+          msg = 'Too many attempts. Wait about a minute, then try again.';
+        } else if (m.includes('failed to fetch') || m.includes('networkerror')
+                   || m.includes('load failed') || status === 0) {
+          msg = 'Could not reach the login server — check your connection, then retry.';
+        } else if (m.includes('email not confirmed')) {
+          msg = 'This account has not been confirmed yet.';
+        } else if (status >= 500) {
+          msg = 'The login server is having trouble. Try again shortly.';
+        }
+        showError(msg);
+        console.warn('[login] status=%s message=%s', status, error.message);
         btn.disabled = false;
         btnText.textContent = 'Sign in';
         return;
