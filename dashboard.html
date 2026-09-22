@@ -323,34 +323,34 @@
         </div>
         <div>
           <label for="t_entry">Entry price *</label>
-          <input id="t_entry" type="number" step="any" inputmode="decimal" placeholder="64200" required />
+          <input id="t_entry" type="text" inputmode="decimal" autocomplete="off" placeholder="64200" required />
           <div class="t-hint" id="t_entryHint"></div>
         </div>
       </div>
       <div class="form-row two">
         <div>
           <label for="t_qty">Open quantity</label>
-          <input id="t_qty" type="number" step="any" inputmode="decimal" placeholder="0.05" />
+          <input id="t_qty" type="text" inputmode="decimal" autocomplete="off" placeholder="0.05" />
         </div>
         <div>
           <label for="t_lev">Leverage</label>
-          <input id="t_lev" type="number" step="any" inputmode="decimal" placeholder="5" />
+          <input id="t_lev" type="text" inputmode="decimal" autocomplete="off" placeholder="5" />
         </div>
       </div>
       <div class="form-row two">
         <div>
           <label for="t_tp">Take profit</label>
-          <input id="t_tp" type="number" step="any" inputmode="decimal" placeholder="70000" />
+          <input id="t_tp" type="text" inputmode="decimal" autocomplete="off" placeholder="70000" />
         </div>
         <div>
           <label for="t_sl">Stop loss</label>
-          <input id="t_sl" type="number" step="any" inputmode="decimal" placeholder="61000" />
+          <input id="t_sl" type="text" inputmode="decimal" autocomplete="off" placeholder="61000" />
         </div>
       </div>
       <div class="form-row two">
         <div>
           <label for="t_liq">Est. liquidation <span class="muted" style="text-transform:none">(auto from entry × lev)</span></label>
-          <input id="t_liq" type="number" step="any" inputmode="decimal" placeholder="auto" />
+          <input id="t_liq" type="text" inputmode="decimal" autocomplete="off" placeholder="auto" />
         </div>
         <div>
           <label for="t_feePreset">Fee preset</label>
@@ -367,16 +367,16 @@
       <div class="form-row two">
         <div>
           <label for="t_feeIn">Entry fee %</label>
-          <input id="t_feeIn" type="number" step="any" inputmode="decimal" placeholder="0.05" />
+          <input id="t_feeIn" type="text" inputmode="decimal" autocomplete="off" placeholder="0.05" />
         </div>
         <div>
           <label for="t_feeOut">Exit fee %</label>
-          <input id="t_feeOut" type="number" step="any" inputmode="decimal" placeholder="0.05" />
+          <input id="t_feeOut" type="text" inputmode="decimal" autocomplete="off" placeholder="0.05" />
         </div>
       </div>
       <div class="form-row">
         <label for="t_funding">Funding paid <span class="muted" style="text-transform:none">(negative = you paid; use ↻ Kraken on the row to estimate it automatically)</span></label>
-        <input id="t_funding" type="number" step="any" inputmode="decimal" placeholder="e.g. -42.50" />
+        <input id="t_funding" type="text" inputmode="decimal" autocomplete="off" placeholder="e.g. -42.50" />
       </div>
       <div class="form-row">
         <label for="t_notes">Notes</label>
@@ -397,11 +397,11 @@
       <div class="form-row two">
         <div>
           <label for="p_price" id="p_priceLabel">Exit price *</label>
-          <input id="p_price" type="number" step="any" inputmode="decimal" required />
+          <input id="p_price" type="text" inputmode="decimal" autocomplete="off" required />
         </div>
         <div>
           <label for="p_qty" id="p_qtyLabel">Quantity sold *</label>
-          <input id="p_qty" type="number" step="any" inputmode="decimal" required />
+          <input id="p_qty" type="text" inputmode="decimal" autocomplete="off" required />
         </div>
       </div>
       <div class="form-row">
@@ -424,7 +424,7 @@
       <div class="form-row two">
         <div>
           <label for="c_exit">Exit price *</label>
-          <input id="c_exit" type="number" step="any" inputmode="decimal" required />
+          <input id="c_exit" type="text" inputmode="decimal" autocomplete="off" required />
         </div>
         <div>
           <label for="c_date">Date closed</label>
@@ -608,6 +608,6 @@
     .send-meta a { color: var(--accent-text); font-weight: 500; }
   </style>
 
-  <script type="module" src="js/pmh-dashboard.js?v=v9-mark-20260821"></script>
+  <script type="module" src="js/pmh-dashboard.js?v=v10-decimal-20260922"></script>
 </body>
 </html>

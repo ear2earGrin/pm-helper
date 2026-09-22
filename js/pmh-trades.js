@@ -13,7 +13,7 @@
 // ============================================================
 import { supabase, SUPABASE_URL, SUPABASE_ANON } from './pmh-supabase.js';
 
-const BUILD = 'v9-mark-20260821';
+const BUILD = 'v10-decimal-20260922';
 
 const $ = (id) => document.getElementById(id);
 function esc(s) {
@@ -27,7 +27,26 @@ function fmt(n, d = 2) {
 function fmtPrice(n) { return fmt(n, Math.abs(Number(n)) >= 100 ? 2 : 6); }
 function signed(n, d = 2) { return `${n > 0 ? '+' : ''}${fmt(n, d)}`; }
 function tone(n) { return n > 0 ? 't-pos' : n < 0 ? 't-neg' : ''; }
-function num(v) { const n = Number(v); return Number.isFinite(n) ? n : null; }
+// Accepts what people actually type. A phone keypad in a comma-decimal locale
+// offers "," and no ".", so "0,0684" has to mean 0.0684 — and type="number"
+// rejected it outright, which made every numeric field unusable there.
+// Both separators present: the LAST one is the decimal point, the other is
+// grouping ("1.234,56" and "1,234.56" both work). A lone comma is a decimal
+// point unless it is clearly grouping ("1,234,567").
+function num(v) {
+  if (typeof v === 'number') return Number.isFinite(v) ? v : null;
+  if (v === null || v === undefined) return null;
+  let s = String(v).trim().replace(/[\s\u00A0'’]/g, '');
+  if (!s) return null;
+  const c = s.lastIndexOf(','), d = s.lastIndexOf('.');
+  if (c > -1 && d > -1) {
+    s = c > d ? s.replace(/\./g, '').replace(',', '.') : s.replace(/,/g, '');
+  } else if (c > -1) {
+    s = s.split(',').length === 2 ? s.replace(',', '.') : s.replace(/,/g, '');
+  }
+  const n = Number(s);
+  return Number.isFinite(n) ? n : null;
+}
 function numPos(v) { const n = num(v); return n !== null && n > 0 ? n : null; }
 function today() { return new Date().toISOString().slice(0, 10); }
 
