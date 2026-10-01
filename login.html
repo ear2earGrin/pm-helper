@@ -140,6 +140,13 @@
       if (data?.session) location.replace('dashboard.html');
     })();
 
+    // Arriving from a session the server no longer accepts (e.g. after a
+    // password change) — say so, instead of a bare login screen.
+    if (new URLSearchParams(location.search).get('expired')) {
+      errorBox.textContent = 'Your session expired. Please sign in again.';
+      errorBox.classList.add('show');
+    }
+
     function showError(msg) {
       errorBox.textContent = msg;
       errorBox.classList.add('show');

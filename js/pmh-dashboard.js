@@ -4,7 +4,7 @@
 import { supabase, currentUsername, SUPABASE_URL, SUPABASE_ANON } from './pmh-supabase.js';
 // NOTE: keep the ?v= in sync with dashboard.html — without it the browser
 // happily serves a cached copy of this module even when the entry file changes.
-import { initTrades } from './pmh-trades.js?v=v10-decimal-20260922';
+import { initTrades } from './pmh-trades.js?v=v11-loaderr-20261001';
 
 // ── Prospecting lists ───────────────────────────────────────
 const COUNTRIES = [

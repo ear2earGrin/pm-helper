@@ -13,7 +13,7 @@
 // ============================================================
 import { supabase, SUPABASE_URL, SUPABASE_ANON } from './pmh-supabase.js';
 
-const BUILD = 'v10-decimal-20260922';
+const BUILD = 'v11-loaderr-20261001';
 
 const $ = (id) => document.getElementById(id);
 function esc(s) {
@@ -342,12 +342,49 @@ let expanded = new Set();
 let fundingBusy = new Set();
 
 // ── Data ────────────────────────────────────────────────────
+// A stale session still satisfies the auth gate (the user object is cached), so
+// the page says "signed in" while every data call is rejected. Changing a
+// password invalidates existing sessions, which is exactly how that happens.
+function isAuthError(e) {
+  const status = e?.status || 0;
+  const m = `${e?.message || ''} ${e?.code || ''}`.toLowerCase();
+  return status === 401 || status === 403
+    || m.includes('jwt') || m.includes('token') || m.includes('session')
+    || m.includes('not authenticated');
+}
+
+function showLoadError(error) {
+  const msg = error?.message || String(error);
+  $('tr_closed').innerHTML = '';
+  $('tr_stats').innerHTML = '';
+  $('tr_open').innerHTML =
+    `<div class="db-empty" style="padding:24px">
+       <div class="big">Couldn't load your trades</div>
+       <p class="t-neg">${esc(msg)}</p>
+       <p class="t-muted" style="font-size:12px">build ${esc(BUILD)}</p>
+       <button class="btn btn-primary btn-sm" id="tr_retry" style="margin-top:10px">Retry</button>
+     </div>`;
+  const b = $('tr_retry');
+  if (b) b.addEventListener('click', () => loadTrades());
+}
+
 async function loadTrades() {
   const { data, error } = await supabase.from('pmh_trades')
     .select('*')
     .order('status', { ascending: false })
     .order('opened_at', { ascending: false });
-  if (error) { console.error(error); return; }
+  if (error) {
+    console.error('[trades] load failed', error);
+    if (isAuthError(error)) {
+      // the session is no longer valid — send them back to sign in cleanly
+      // rather than leaving a page that claims they are logged in.
+      try { await supabase.auth.signOut(); } catch (_) { /* ignore */ }
+      location.replace('login.html?expired=1');
+      return;
+    }
+    showLoadError(error);
+    return;
+  }
   trades = data || [];
   render();
   await loadPrices();
