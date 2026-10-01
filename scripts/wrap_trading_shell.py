@@ -82,6 +82,17 @@ __APP_ASSETS__
     </div>
   </nav>
 
+  <!-- Mobile only. css/style.css hides every .nav-link below 768px, which on the
+       desk also hides Watchlist / Lattice / Options — and the app's own tab bar
+       covers only its internal routes, so those tools became unreachable on a
+       phone. This strip carries them; it is display:none from 769px up, where
+       the nav links are visible again. -->
+  <div class="tr-toolstrip">
+    <a href="watchlist.html" class="tr-subnav">WATCHLIST</a>
+    <a href="../lattice.html" class="tr-subnav">LATTICE</a>
+    <a href="options.html" class="tr-subnav">OPTIONS</a>
+  </div>
+
   <div id="root"></div>
 
   <footer class="footer">
@@ -121,10 +132,20 @@ def main():
     if not assets:
         sys.exit("no ./assets/* tags found — is trading/index.html the Vite build output?")
 
-    page = SHELL.replace("__APP_ASSETS__", "\n".join("  " + a for a in assets))
+    # The build's own web fonts (IBM Plex for the SCOUT tab) live in its <head>,
+    # not in the bundle. Carry them over too, minus the ones the shell already
+    # loads, so a re-run on a wrapped page doesn't duplicate them.
+    fonts = [
+        f for f in re.findall(
+            r'<link\b[^>]*href="https://fonts\.googleapis\.com/css2\?[^"]+"[^>]*>', html
+        )
+        if f not in SHELL
+    ]
+
+    page = SHELL.replace("__APP_ASSETS__", "\n".join("  " + a for a in fonts + assets))
     INDEX.write_text(page, encoding="utf-8")
     print(f"wrapped {INDEX.relative_to(INDEX.parent.parent)} with the pm-brief shell")
-    for a in assets:
+    for a in fonts + assets:
         print("  kept:", a[:90])
 
 
