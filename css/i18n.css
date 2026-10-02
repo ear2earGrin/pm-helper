@@ -1,10 +1,20 @@
 /* ============================================================
-   Bilingual (EN/BG) dual-text visibility + language toggle
+   Multilingual (EN/BG/EL) dual-text visibility + language toggle
    Loaded on every page. Uses var() with fallbacks so it also
    works on the self-contained Lattice page.
    ============================================================ */
 html[lang="en"] [data-lang="bg"],
 html[lang="bg"] [data-lang="en"] { display: none !important; }
+
+/* Greek, with an English fallback. Only the trading desk's Scout tab is
+   translated so far, so Greek must not blank out the static pages: Bulgarian is
+   always hidden, and English is hidden only inside an element that really has a
+   Greek child. Anything with no data-lang="el" sibling keeps showing English
+   until it gets one — which is what makes rolling Greek out page by page safe. */
+html[lang="en"] [data-lang="el"],
+html[lang="bg"] [data-lang="el"] { display: none !important; }
+html[lang="el"] [data-lang="bg"] { display: none !important; }
+html[lang="el"] :has(> [data-lang="el"]) > [data-lang="en"] { display: none !important; }
 
 .yf-langtoggle {
   display: inline-flex; align-items: center;
