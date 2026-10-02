@@ -1,12 +1,18 @@
 'use strict';
-/* Site-wide EN/BG language runtime.
+/* Site-wide EN/BG/EL language runtime.
    - Text is dual-authored in the markup: <span data-lang="en">…</span><span data-lang="bg">…</span>
      css/i18n.css hides the inactive language based on <html lang>.
-   - This script builds the EN|BG toggle, persists the choice, and lets page
-     scripts react via the 'yf:langchange' event and window.YFLang.get(). */
+   - This script builds the EN|BG|EL toggle, persists the choice, and lets page
+     scripts react via the 'yf:langchange' event and window.YFLang.get().
+   - Greek is partial on purpose: the trading desk's Scout tab is translated
+     (the React bundle reads <html lang> through src/i18n.js), and every static
+     page still shows its English text, because css/i18n.css only hides English
+     where a Greek version actually exists. Adding Greek to a page is therefore
+     just a matter of adding data-lang="el" spans next to the English ones. */
 (function () {
   var KEY = 'yf-lang';
-  var SUPPORTED = ['en', 'bg'];
+  var SUPPORTED = ['en', 'bg', 'el'];
+  var LABELS = { en: 'English', bg: 'Български', el: 'Ελληνικά' };
 
   function current() {
     var l = document.documentElement.getAttribute('lang');
@@ -35,7 +41,7 @@
         btn.type = 'button';
         btn.className = 'yf-lang-btn';
         btn.setAttribute('data-set-lang', l);
-        btn.setAttribute('aria-label', l === 'bg' ? 'Български' : 'English');
+        btn.setAttribute('aria-label', LABELS[l]);
         btn.textContent = l.toUpperCase();
         btn.addEventListener('click', function () { apply(l); });
         wrap.appendChild(btn);
